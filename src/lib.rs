@@ -1,7 +1,20 @@
+pub mod actions;
 use async_trait::async_trait;
+use std::fmt;
 
+#[derive(Debug)]
 pub enum AuthError {
     Other(String),
+}
+
+impl std::error::Error for AuthError {}
+
+impl fmt::Display for AuthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AuthError::Other(msg) => write!(f, "{}", msg),
+        }
+    }
 }
 
 #[async_trait]
