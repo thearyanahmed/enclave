@@ -1,5 +1,7 @@
 pub mod actions;
-use async_trait::async_trait;
+pub mod repository;
+
+pub use repository::UserRepository;
 use std::fmt;
 
 #[derive(Debug)]
@@ -15,23 +17,5 @@ impl fmt::Display for AuthError {
             AuthError::Other(msg) => write!(f, "{}", msg),
         }
     }
-}
-
-#[async_trait]
-pub trait UserRepository {
-    type User: Send + Sync;
-
-    // Find a user by their unique identifier.
-    async fn find_user_by_email(
-        &self,
-        email: &str,
-    ) -> Result<Option<Self::User>, AuthError>;
-
-
-    async fn create_user(
-        &self,
-        email: &str,
-        hashed_password: &str,
-    ) -> Result<Self::User, AuthError>;
 }
 
