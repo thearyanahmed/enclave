@@ -57,3 +57,35 @@ pub trait UserRepository {
 
     async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError>;
 }
+
+
+pub struct MockUserRepository {
+    pub users: std::sync::Mutex<Vec<User>>,
+}
+
+#[cfg(test)]
+impl MockUserRepository {
+    pub fn new() -> Self {
+        Self {
+            users: std::sync::Mutex::new(vec![]),
+        }
+    }
+}
+
+#[cfg(test)]
+#[async_trait]
+impl UserRepository for MockUserRepository {
+    async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
+        let users = self.users.lock().unwrap();
+        Ok(users.iter().find(|u| u.email == email).cloned())
+    }
+
+    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
+        let mut users = self.users.lock().unwrap();
+
+        let user = User::mock_from_credentials(email, hashed_password);
+
+        users.push(user.clone());
+        Ok(user)
+    }
+}

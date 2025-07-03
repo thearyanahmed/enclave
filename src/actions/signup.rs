@@ -35,41 +35,11 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use async_trait::async_trait;
-
-    pub struct MockRepo {
-        users: std::sync::Mutex<Vec<User>>,
-    }
-
-    impl MockRepo {
-        pub fn new() -> Self {
-            Self {
-                users: std::sync::Mutex::new(vec![]),
-            }
-        }
-    }
-
-    #[async_trait]
-    impl UserRepository for MockRepo {
-
-        async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
-            let users = self.users.lock().unwrap();
-            Ok(users.iter().find(|u| u.email == email).cloned())
-        }
-
-        async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
-            let mut users = self.users.lock().unwrap();
-        
-            let user = User::mock_from_credentials(email, hashed_password);
-
-            users.push(user.clone());
-            Ok(user)
-        }
-    }
+    use crate::MockUserRepository;
 
     #[tokio::test]
     async fn test_signup_success() {
-        let repo = MockRepo::new();
+        let repo = MockUserRepository::new();
         let signup = SignupAction::new(repo);
 
         let result = signup
@@ -85,7 +55,7 @@ mod tests {
     async fn test_signup_user_already_exists() {
         let existing_user = User::mock();
 
-        let repo = MockRepo {
+        let repo = MockUserRepository {
             users: std::sync::Mutex::new(vec![existing_user]),
         };
 

@@ -4,6 +4,7 @@ pub mod repository;
 pub use repository::UserRepository;
 pub use repository::User;
 
+pub use repository::MockUserRepository;
 use std::fmt;
 
 #[derive(Debug, Clone)]
