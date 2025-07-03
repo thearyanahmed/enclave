@@ -59,7 +59,8 @@ mod tests {
 
         async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
             let mut users = self.users.lock().unwrap();
-            let user = User::mock();
+        
+            let user = User::mock_from_credentials(email, hashed_password);
 
             users.push(user.clone());
             Ok(user)

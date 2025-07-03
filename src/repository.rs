@@ -25,6 +25,18 @@ impl User {
             updated_at: now,
         }
     }
+
+    pub fn mock_from_credentials(email: &str, hashed_password: &str) -> Self {
+        let now = Utc::now();
+        User {
+            id: 1,
+            email: email.to_string(),
+            name: "Test User".to_string(),
+            hashed_password: hashed_password.to_string(),
+            created_at: now,
+            updated_at: now,
+        }
+    }
 }
 
 #[async_trait]
