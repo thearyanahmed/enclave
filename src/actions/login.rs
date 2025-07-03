@@ -47,6 +47,9 @@ mod tests {
 
         let password = "securepassword";
 
+        // TODO: Separate password hashing logic into a utility function
+        // We can extract this to a utility function in the future. The current impl doesn't help
+        // as we are literally copy pasting the same code. 
         let hashed = argon2
             .hash_password(password.as_bytes(), &salt)
             .map_err(|e| AuthError::Other(e.to_string()))
@@ -58,5 +61,12 @@ mod tests {
         let login = LoginAction::new(repo);
         let logged_in_user = login.execute("user@email.com", "securepassword").await;
         assert!(logged_in_user.is_ok());
+
+
+        let failed_attempt = login.execute("user@email.com", "wrongpassword").await;
+        assert!(failed_attempt.is_err());
+
+        let failed_attempt = login.execute("wrong@email.com", "securepassword").await;
+        assert!(failed_attempt.is_err());
     }
 }
