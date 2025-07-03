@@ -90,6 +90,11 @@ mod tests {
         };
 
         let signup = SignupAction::new(repo);
+        // add an user
+        _ = signup
+            .execute("user@example.com", "newpassword")
+            .await;
+
         let result = signup
             .execute("user@example.com", "newpassword")
             .await;
