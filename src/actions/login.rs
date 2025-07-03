@@ -1,4 +1,4 @@
-use crate::{UserRepository, AuthError};
+use crate::{AuthError, User, UserRepository};
 pub struct LoginAction<R: UserRepository> {
     repository: R,
 }
@@ -8,11 +8,11 @@ impl<R: UserRepository> LoginAction<R> {
         LoginAction { repository }
     }
 
-    pub async fn execute(&self, email: &str, password: &str) -> Result<bool, AuthError> {
+    pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
         let user = self.repository.find_user_by_email(email).await?;
         if let Some(user) = user {
             if verify_password(password, &user.hashed_password)? {
-                return Ok(true);
+                return Ok(user);
             }
         }
         Err(AuthError::Other("Invalid email or password".to_string()))
