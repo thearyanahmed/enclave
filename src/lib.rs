@@ -2,9 +2,11 @@ pub mod actions;
 pub mod repository;
 
 pub use repository::UserRepository;
+pub use repository::User;
+
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AuthError {
     Other(String),
 }

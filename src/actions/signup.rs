@@ -1,4 +1,4 @@
-use crate::{UserRepository, AuthError};
+use crate::{UserRepository, AuthError, User};
 use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;
 use rand::rngs::OsRng;
@@ -12,7 +12,7 @@ impl<R: UserRepository> SignupAction<R> {
         SignupAction { repository }
     }
 
-    pub async fn execute(&self, email: &str, password: &str) -> Result<R::User, AuthError> {
+    pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
         if let Some(_) = self.repository.find_user_by_email(email).await? {
             return Err(AuthError::Other("User already exists".to_string()));
         }
@@ -37,14 +37,8 @@ mod tests {
     use super::*;
     use async_trait::async_trait;
 
-    #[derive(Debug, Clone)]
-    pub struct MockUser {
-        pub email: String,
-        pub hashed_password: String,
-    }
-
     pub struct MockRepo {
-        users: std::sync::Mutex<Vec<MockUser>>,
+        users: std::sync::Mutex<Vec<User>>,
     }
 
     impl MockRepo {
@@ -57,19 +51,16 @@ mod tests {
 
     #[async_trait]
     impl UserRepository for MockRepo {
-        type User = MockUser;
 
-        async fn find_user_by_email(&self, email: &str) -> Result<Option<Self::User>, AuthError> {
+        async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
             let users = self.users.lock().unwrap();
             Ok(users.iter().find(|u| u.email == email).cloned())
         }
 
-        async fn create_user(&self, email: &str, hashed_password: &str) -> Result<Self::User, AuthError> {
+        async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
             let mut users = self.users.lock().unwrap();
-            let user = MockUser {
-                email: email.to_string(),
-                hashed_password: hashed_password.to_string(),
-            };
+            let user = User::mock();
+
             users.push(user.clone());
             Ok(user)
         }
@@ -91,10 +82,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_signup_user_already_exists() {
-        let existing_user = MockUser {
-            email: "user@example.com".to_string(),
-            hashed_password: "hashed".to_string(),
-        };
+        let existing_user = User::mock();
 
         let repo = MockRepo {
             users: std::sync::Mutex::new(vec![existing_user]),
