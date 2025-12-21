@@ -90,6 +90,8 @@ pub trait UserRepository {
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError>;
 
     async fn verify_email(&self, user_id: i32) -> Result<(), AuthError>;
+
+    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError>;
 }
 
 #[async_trait]
@@ -173,6 +175,18 @@ impl UserRepository for MockUserRepository {
             user.email_verified_at = Some(Utc::now());
             user.updated_at = Utc::now();
             Ok(())
+        } else {
+            Err(AuthError::UserNotFound)
+        }
+    }
+
+    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
+        let mut users = self.users.lock().unwrap();
+        if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
+            user.name = name.to_string();
+            user.email = email.to_string();
+            user.updated_at = Utc::now();
+            Ok(user.clone())
         } else {
             Err(AuthError::UserNotFound)
         }
