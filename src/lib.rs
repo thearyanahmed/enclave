@@ -36,6 +36,12 @@ pub enum AuthError {
 
 impl std::error::Error for AuthError {}
 
+impl From<validators::ValidationError> for AuthError {
+    fn from(err: validators::ValidationError) -> Self {
+        AuthError::Validation(err)
+    }
+}
+
 impl fmt::Display for AuthError {
     #[allow(deprecated)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

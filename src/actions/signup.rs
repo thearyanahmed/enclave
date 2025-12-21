@@ -1,4 +1,5 @@
 use crate::{UserRepository, AuthError, User};
+use crate::validators::{validate_email, validate_password};
 use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;
 use rand::rngs::OsRng;
@@ -13,7 +14,10 @@ impl<R: UserRepository> SignupAction<R> {
     }
 
     pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
-        if let Some(_) = self.repository.find_user_by_email(email).await? {
+        validate_email(email)?;
+        validate_password(password)?;
+
+        if self.repository.find_user_by_email(email).await?.is_some() {
             return Err(AuthError::UserAlreadyExists);
         }
 
@@ -36,6 +40,7 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 mod tests {
     use super::*;
     use crate::MockUserRepository;
+    use crate::validators::ValidationError;
 
     #[tokio::test]
     async fn test_signup_success() {
@@ -60,17 +65,38 @@ mod tests {
         };
 
         let signup = SignupAction::new(repo);
-        // add an user
         _ = signup
-            .execute("user@example.com", "newpassword")
+            .execute("user@example.com", "newpassword123")
             .await;
 
         let result = signup
-            .execute("user@example.com", "newpassword")
+            .execute("user@example.com", "newpassword123")
             .await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::UserAlreadyExists);
+    }
+
+    #[tokio::test]
+    async fn test_signup_invalid_email() {
+        let repo = MockUserRepository::new();
+        let signup = SignupAction::new(repo);
+
+        let result = signup.execute("notanemail", "securepassword").await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::EmailInvalidFormat));
+    }
+
+    #[tokio::test]
+    async fn test_signup_password_too_short() {
+        let repo = MockUserRepository::new();
+        let signup = SignupAction::new(repo);
+
+        let result = signup.execute("user@example.com", "short").await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::PasswordTooShort));
     }
 }
 

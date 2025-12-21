@@ -1,4 +1,5 @@
 use crate::{AuthError, UserRepository};
+use crate::validators::validate_password;
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use password_hash::{PasswordHash, SaltString};
 use rand::rngs::OsRng;
@@ -20,6 +21,8 @@ impl<U: UserRepository> ChangePasswordAction<U> {
                 if !verify_password(current_password, &user.hashed_password)? {
                     return Err(AuthError::InvalidCredentials);
                 }
+
+                validate_password(new_password)?;
 
                 let hashed = hash_password(new_password)?;
                 self.user_repository.update_password(user_id, &hashed).await
@@ -51,6 +54,7 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 mod tests {
     use super::*;
     use crate::{MockUserRepository, User};
+    use crate::validators::ValidationError;
 
     fn create_user_with_password(email: &str, password: &str) -> User {
         let hashed = hash_password(password).unwrap();
@@ -95,5 +99,20 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::UserNotFound);
+    }
+
+    #[tokio::test]
+    async fn test_change_password_invalid_new_password() {
+        let user_repo = MockUserRepository::new();
+
+        let user = create_user_with_password("user@example.com", "oldpassword");
+        let user_id = user.id;
+        user_repo.users.lock().unwrap().push(user);
+
+        let action = ChangePasswordAction::new(user_repo);
+        let result = action.execute(user_id, "oldpassword", "short").await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::PasswordTooShort));
     }
 }

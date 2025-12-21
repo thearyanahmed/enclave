@@ -1,5 +1,6 @@
 use chrono::Utc;
 use crate::{AuthError, PasswordResetRepository, UserRepository};
+use crate::validators::validate_password;
 use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;
 use rand::rngs::OsRng;
@@ -15,6 +16,8 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
     }
 
     pub async fn execute(&self, token: &str, new_password: &str) -> Result<(), AuthError> {
+        validate_password(new_password)?;
+
         let reset_token = self.reset_repository.find_reset_token(token).await?;
 
         match reset_token {
@@ -49,6 +52,7 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 mod tests {
     use super::*;
     use crate::{MockUserRepository, MockPasswordResetRepository, User};
+    use crate::validators::ValidationError;
     use chrono::Duration;
 
     #[tokio::test]
@@ -102,5 +106,17 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenExpired);
+    }
+
+    #[tokio::test]
+    async fn test_reset_password_invalid_password() {
+        let user_repo = MockUserRepository::new();
+        let reset_repo = MockPasswordResetRepository::new();
+
+        let action = ResetPasswordAction::new(user_repo, reset_repo);
+        let result = action.execute("sometoken", "short").await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::PasswordTooShort));
     }
 }

@@ -1,4 +1,5 @@
 use crate::{AuthError, User, UserRepository};
+use crate::validators::{validate_email, validate_name};
 
 pub struct UpdateUserAction<U: UserRepository> {
     user_repository: U,
@@ -10,6 +11,9 @@ impl<U: UserRepository> UpdateUserAction<U> {
     }
 
     pub async fn execute(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
+        validate_name(name)?;
+        validate_email(email)?;
+
         self.user_repository.update_user(user_id, name, email).await
     }
 }
@@ -18,6 +22,7 @@ impl<U: UserRepository> UpdateUserAction<U> {
 mod tests {
     use super::*;
     use crate::{MockUserRepository, User};
+    use crate::validators::ValidationError;
 
     #[tokio::test]
     async fn test_update_user_success() {
@@ -45,5 +50,27 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::UserNotFound);
+    }
+
+    #[tokio::test]
+    async fn test_update_user_invalid_name() {
+        let user_repo = MockUserRepository::new();
+
+        let action = UpdateUserAction::new(user_repo);
+        let result = action.execute(1, "", "email@example.com").await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::NameEmpty));
+    }
+
+    #[tokio::test]
+    async fn test_update_user_invalid_email() {
+        let user_repo = MockUserRepository::new();
+
+        let action = UpdateUserAction::new(user_repo);
+        let result = action.execute(1, "Name", "notanemail").await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::EmailInvalidFormat));
     }
 }
