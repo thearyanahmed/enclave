@@ -37,6 +37,14 @@ pub struct EmailVerificationToken {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone)]
+pub struct LoginAttempt {
+    pub email: String,
+    pub success: bool,
+    pub ip_address: Option<String>,
+    pub attempted_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 impl User {
     pub fn mock() -> Self {
@@ -123,6 +131,15 @@ pub trait EmailVerificationRepository {
     async fn find_verification_token(&self, token: &str) -> Result<Option<EmailVerificationToken>, AuthError>;
 
     async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError>;
+}
+
+#[async_trait]
+pub trait RateLimiterRepository {
+    async fn record_attempt(&self, email: &str, success: bool, ip_address: Option<&str>) -> Result<(), AuthError>;
+
+    async fn get_recent_failed_attempts(&self, email: &str, since: DateTime<Utc>) -> Result<u32, AuthError>;
+
+    async fn clear_attempts(&self, email: &str) -> Result<(), AuthError>;
 }
 
 pub struct MockUserRepository {
@@ -352,6 +369,49 @@ impl EmailVerificationRepository for MockEmailVerificationRepository {
     async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.token != token);
+        Ok(())
+    }
+}
+
+pub struct MockRateLimiterRepository {
+    pub attempts: std::sync::Mutex<Vec<LoginAttempt>>,
+}
+
+#[cfg(test)]
+impl MockRateLimiterRepository {
+    pub fn new() -> Self {
+        Self {
+            attempts: std::sync::Mutex::new(vec![]),
+        }
+    }
+}
+
+#[cfg(test)]
+#[async_trait]
+impl RateLimiterRepository for MockRateLimiterRepository {
+    async fn record_attempt(&self, email: &str, success: bool, ip_address: Option<&str>) -> Result<(), AuthError> {
+        let mut attempts = self.attempts.lock().unwrap();
+        attempts.push(LoginAttempt {
+            email: email.to_string(),
+            success,
+            ip_address: ip_address.map(|s| s.to_string()),
+            attempted_at: Utc::now(),
+        });
+        Ok(())
+    }
+
+    async fn get_recent_failed_attempts(&self, email: &str, since: DateTime<Utc>) -> Result<u32, AuthError> {
+        let attempts = self.attempts.lock().unwrap();
+        let count = attempts
+            .iter()
+            .filter(|a| a.email == email && !a.success && a.attempted_at >= since)
+            .count() as u32;
+        Ok(count)
+    }
+
+    async fn clear_attempts(&self, email: &str) -> Result<(), AuthError> {
+        let mut attempts = self.attempts.lock().unwrap();
+        attempts.retain(|a| a.email != email);
         Ok(())
     }
 }
