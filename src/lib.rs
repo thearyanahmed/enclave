@@ -13,6 +13,7 @@ pub use repository::EmailVerificationToken;
 pub use repository::MockUserRepository;
 pub use repository::MockTokenRepository;
 pub use repository::MockPasswordResetRepository;
+pub use repository::MockEmailVerificationRepository;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
