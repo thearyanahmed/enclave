@@ -7,6 +7,7 @@ pub use repository::User;
 pub use repository::AccessToken;
 
 pub use repository::MockUserRepository;
+pub use repository::MockTokenRepository;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
