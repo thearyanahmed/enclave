@@ -2,7 +2,9 @@ pub mod actions;
 pub mod repository;
 
 pub use repository::UserRepository;
+pub use repository::TokenRepository;
 pub use repository::User;
+pub use repository::AccessToken;
 
 pub use repository::MockUserRepository;
 use std::fmt;

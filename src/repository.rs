@@ -12,6 +12,14 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone)]
+pub struct AccessToken {
+    pub token: String,
+    pub user_id: i32,
+    pub expires_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 impl User {
     pub fn mock() -> Self {
@@ -56,6 +64,17 @@ pub trait UserRepository {
     async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError>;
 
     async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError>;
+}
+
+#[async_trait]
+pub trait TokenRepository {
+    async fn create_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<AccessToken, AuthError>;
+
+    async fn find_token(&self, token: &str) -> Result<Option<AccessToken>, AuthError>;
+
+    async fn revoke_token(&self, token: &str) -> Result<(), AuthError>;
+
+    async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError>;
 }
 
 
