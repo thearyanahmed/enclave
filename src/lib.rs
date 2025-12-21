@@ -10,6 +10,7 @@ pub use repository::PasswordResetToken;
 
 pub use repository::MockUserRepository;
 pub use repository::MockTokenRepository;
+pub use repository::MockPasswordResetRepository;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]

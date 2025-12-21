@@ -198,3 +198,51 @@ impl TokenRepository for MockTokenRepository {
         Ok(())
     }
 }
+
+pub struct MockPasswordResetRepository {
+    pub tokens: std::sync::Mutex<Vec<PasswordResetToken>>,
+}
+
+#[cfg(test)]
+impl MockPasswordResetRepository {
+    pub fn new() -> Self {
+        Self {
+            tokens: std::sync::Mutex::new(vec![]),
+        }
+    }
+
+    fn generate_token() -> String {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        (0..32)
+            .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+            .collect()
+    }
+}
+
+#[cfg(test)]
+#[async_trait]
+impl PasswordResetRepository for MockPasswordResetRepository {
+    async fn create_reset_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<PasswordResetToken, AuthError> {
+        let mut tokens = self.tokens.lock().unwrap();
+        let token = PasswordResetToken {
+            token: Self::generate_token(),
+            user_id,
+            expires_at,
+            created_at: Utc::now(),
+        };
+        tokens.push(token.clone());
+        Ok(token)
+    }
+
+    async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError> {
+        let tokens = self.tokens.lock().unwrap();
+        Ok(tokens.iter().find(|t| t.token == token).cloned())
+    }
+
+    async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError> {
+        let mut tokens = self.tokens.lock().unwrap();
+        tokens.retain(|t| t.token != token);
+        Ok(())
+    }
+}
