@@ -4,9 +4,11 @@ pub mod repository;
 pub use repository::UserRepository;
 pub use repository::TokenRepository;
 pub use repository::PasswordResetRepository;
+pub use repository::EmailVerificationRepository;
 pub use repository::User;
 pub use repository::AccessToken;
 pub use repository::PasswordResetToken;
+pub use repository::EmailVerificationToken;
 
 pub use repository::MockUserRepository;
 pub use repository::MockTokenRepository;

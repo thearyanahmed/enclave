@@ -8,6 +8,7 @@ pub struct User {
     pub email: String,
     pub name: String,
     pub hashed_password: String,
+    pub email_verified_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -28,6 +29,14 @@ pub struct PasswordResetToken {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone)]
+pub struct EmailVerificationToken {
+    pub token: String,
+    pub user_id: i32,
+    pub expires_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 impl User {
     pub fn mock() -> Self {
@@ -37,6 +46,7 @@ impl User {
             email: "test@example.com".to_string(),
             name: "Test User".to_string(),
             hashed_password: "fakehashedpassword".to_string(),
+            email_verified_at: None,
             created_at: now,
             updated_at: now,
         }
@@ -49,6 +59,7 @@ impl User {
             email: email.to_string(),
             name: "Test User".to_string(),
             hashed_password: hashed_password.to_string(),
+            email_verified_at: None,
             created_at: now,
             updated_at: now,
         }
@@ -61,6 +72,7 @@ impl User {
             email: email.to_string(),
             name: "Test User".to_string(),
             hashed_password: "fakehashedpassword".to_string(),
+            email_verified_at: None,
             created_at: now,
             updated_at: now,
         }
@@ -96,6 +108,15 @@ pub trait PasswordResetRepository {
     async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError>;
 
     async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError>;
+}
+
+#[async_trait]
+pub trait EmailVerificationRepository {
+    async fn create_verification_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<EmailVerificationToken, AuthError>;
+
+    async fn find_verification_token(&self, token: &str) -> Result<Option<EmailVerificationToken>, AuthError>;
+
+    async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError>;
 }
 
 pub struct MockUserRepository {
