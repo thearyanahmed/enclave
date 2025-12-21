@@ -1,18 +1,23 @@
-use crate::{AuthError, User, UserRepository};
-pub struct LoginAction<R: UserRepository> {
-    repository: R,
+use chrono::{Duration, Utc};
+use crate::{AccessToken, AuthError, TokenRepository, User, UserRepository};
+
+pub struct LoginAction<U: UserRepository, T: TokenRepository> {
+    user_repository: U,
+    token_repository: T,
 }
 
-impl<R: UserRepository> LoginAction<R> {
-    pub fn new(repository: R) -> Self {
-        LoginAction { repository }
+impl<U: UserRepository, T: TokenRepository> LoginAction<U, T> {
+    pub fn new(user_repository: U, token_repository: T) -> Self {
+        LoginAction { user_repository, token_repository }
     }
 
-    pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
-        let user = self.repository.find_user_by_email(email).await?;
+    pub async fn execute(&self, email: &str, password: &str) -> Result<(User, AccessToken), AuthError> {
+        let user = self.user_repository.find_user_by_email(email).await?;
         if let Some(user) = user {
             if verify_password(password, &user.hashed_password)? {
-                return Ok(user);
+                let expires_at = Utc::now() + Duration::days(7);
+                let token = self.token_repository.create_token(user.id, expires_at).await?;
+                return Ok((user, token));
             }
         }
         Err(AuthError::InvalidCredentials)
@@ -32,7 +37,7 @@ fn verify_password(password: &str, hashed: &str) -> Result<bool, AuthError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ MockUserRepository, User};
+    use crate::{MockUserRepository, MockTokenRepository, User};
     use super::*;
     use rand::rngs::OsRng;
     use argon2::{Argon2, PasswordHasher};
@@ -40,28 +45,30 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_action() {
-        let repo = MockUserRepository::new();
+        let user_repo = MockUserRepository::new();
+        let token_repo = MockTokenRepository::new();
 
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
 
         let password = "securepassword";
 
-        // TODO: Separate password hashing logic into a utility function
-        // We can extract this to a utility function in the future. The current impl doesn't help
-        // as we are literally copy pasting the same code. 
         let hashed = argon2
             .hash_password(password.as_bytes(), &salt)
             .map_err(|_| AuthError::PasswordHashError)
             .map(|hash| hash.to_string());
 
         let user = User::mock_from_credentials("user@email.com", hashed.unwrap().as_str());
-        repo.users.lock().unwrap().push(user);
+        user_repo.users.lock().unwrap().push(user);
 
-        let login = LoginAction::new(repo);
-        let logged_in_user = login.execute("user@email.com", "securepassword").await;
-        assert!(logged_in_user.is_ok());
+        let login = LoginAction::new(user_repo, token_repo);
 
+        let result = login.execute("user@email.com", "securepassword").await;
+        assert!(result.is_ok());
+        let (user, token) = result.unwrap();
+        assert_eq!(user.email, "user@email.com");
+        assert!(!token.token.is_empty());
+        assert_eq!(token.user_id, user.id);
 
         let failed_attempt = login.execute("user@email.com", "wrongpassword").await;
         assert!(failed_attempt.is_err());
