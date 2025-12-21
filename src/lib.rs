@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod repository;
+pub mod validators;
 
 pub use repository::UserRepository;
 pub use repository::TokenRepository;

@@ -9,6 +9,7 @@ async-trait = "0.1.88"
 chrono = "0.4.41"
 password-hash = "0.5.0"
 rand = "0.8.5"
+regex = "1.11"
 
 [dev-dependencies]
 tokio = { version = "1.46.0", features = ["macros", "rt-multi-thread"] }
