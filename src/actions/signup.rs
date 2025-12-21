@@ -14,7 +14,7 @@ impl<R: UserRepository> SignupAction<R> {
 
     pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
         if let Some(_) = self.repository.find_user_by_email(email).await? {
-            return Err(AuthError::Other("User already exists".to_string()));
+            return Err(AuthError::UserAlreadyExists);
         }
 
         let hashed = hash_password(password)?;
@@ -28,7 +28,7 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 
     argon2
         .hash_password(password.as_bytes(), &salt)
-        .map_err(|e| AuthError::Other(e.to_string()))
+        .map_err(|_| AuthError::PasswordHashError)
         .map(|hash| hash.to_string())
 }
 
@@ -70,10 +70,7 @@ mod tests {
             .await;
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            AuthError::Other("User already exists".into()).to_string()
-        );
+        assert_eq!(result.unwrap_err(), AuthError::UserAlreadyExists);
     }
 }
 

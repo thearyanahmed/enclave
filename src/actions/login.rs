@@ -15,7 +15,7 @@ impl<R: UserRepository> LoginAction<R> {
                 return Ok(user);
             }
         }
-        Err(AuthError::Other("Invalid email or password".to_string()))
+        Err(AuthError::InvalidCredentials)
     }
 }
 
@@ -23,11 +23,11 @@ fn verify_password(password: &str, hashed: &str) -> Result<bool, AuthError> {
     use argon2::{Argon2, PasswordVerifier};
     use password_hash::PasswordHash;
 
-    let parsed_hash = PasswordHash::new(hashed).map_err(|e| AuthError::Other(e.to_string()))?;
+    let parsed_hash = PasswordHash::new(hashed).map_err(|_| AuthError::PasswordHashError)?;
     Argon2::default()
         .verify_password(password.as_bytes(), &parsed_hash)
         .map(|_| true)
-        .map_err(|e| AuthError::Other(e.to_string()))
+        .map_err(|_| AuthError::InvalidCredentials)
 }
 
 #[cfg(test)]
@@ -52,7 +52,7 @@ mod tests {
         // as we are literally copy pasting the same code. 
         let hashed = argon2
             .hash_password(password.as_bytes(), &salt)
-            .map_err(|e| AuthError::Other(e.to_string()))
+            .map_err(|_| AuthError::PasswordHashError)
             .map(|hash| hash.to_string());
 
         let user = User::mock_from_credentials("user@email.com", hashed.unwrap().as_str());
