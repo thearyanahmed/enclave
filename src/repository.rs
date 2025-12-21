@@ -20,6 +20,14 @@ pub struct AccessToken {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone)]
+pub struct PasswordResetToken {
+    pub token: String,
+    pub user_id: i32,
+    pub expires_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 impl User {
     pub fn mock() -> Self {
@@ -81,6 +89,14 @@ pub trait TokenRepository {
     async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError>;
 }
 
+#[async_trait]
+pub trait PasswordResetRepository {
+    async fn create_reset_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<PasswordResetToken, AuthError>;
+
+    async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError>;
+
+    async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError>;
+}
 
 pub struct MockUserRepository {
     pub users: std::sync::Mutex<Vec<User>>,
