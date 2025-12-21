@@ -8,6 +8,7 @@ pub mod verify_email;
 pub mod get_user;
 pub mod update_user;
 pub mod change_password;
+pub mod delete_user;
 
 pub use signup::SignupAction;
 pub use logout::LogoutAction;
@@ -18,5 +19,6 @@ pub use verify_email::VerifyEmailAction;
 pub use get_user::GetUserAction;
 pub use update_user::UpdateUserAction;
 pub use change_password::ChangePasswordAction;
+pub use delete_user::DeleteUserAction;
 
 
