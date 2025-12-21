@@ -28,6 +28,7 @@ pub enum AuthError {
     TokenExpired,
     TokenInvalid,
     EmailAlreadyVerified,
+    Validation(validators::ValidationError),
     DatabaseError(String),
     #[deprecated(note = "Use specific error variants instead")]
     Other(String),
@@ -48,6 +49,7 @@ impl fmt::Display for AuthError {
             AuthError::TokenExpired => write!(f, "Token has expired"),
             AuthError::TokenInvalid => write!(f, "Invalid token"),
             AuthError::EmailAlreadyVerified => write!(f, "Email is already verified"),
+            AuthError::Validation(err) => write!(f, "Validation error: {}", err),
             AuthError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
             AuthError::Other(msg) => write!(f, "{}", msg),
         }

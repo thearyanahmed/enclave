@@ -1,5 +1,6 @@
 use regex::Regex;
 use std::sync::LazyLock;
+use super::ValidationError;
 
 static EMAIL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap()
@@ -20,25 +21,6 @@ pub fn validate_email(email: &str) -> Result<(), ValidationError> {
 
     Ok(())
 }
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ValidationError {
-    EmailEmpty,
-    EmailTooLong,
-    EmailInvalidFormat,
-}
-
-impl std::fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ValidationError::EmailEmpty => write!(f, "Email cannot be empty"),
-            ValidationError::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
-            ValidationError::EmailInvalidFormat => write!(f, "Invalid email format"),
-        }
-    }
-}
-
-impl std::error::Error for ValidationError {}
 
 #[cfg(test)]
 mod tests {
