@@ -61,9 +61,13 @@ impl User {
 
 #[async_trait]
 pub trait UserRepository {
+    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError>;
+
     async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError>;
 
     async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError>;
+
+    async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError>;
 }
 
 #[async_trait]
@@ -94,6 +98,11 @@ impl MockUserRepository {
 #[cfg(test)]
 #[async_trait]
 impl UserRepository for MockUserRepository {
+    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError> {
+        let users = self.users.lock().unwrap();
+        Ok(users.iter().find(|u| u.id == id).cloned())
+    }
+
     async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
         let users = self.users.lock().unwrap();
         Ok(users.iter().find(|u| u.email == email).cloned())
@@ -106,6 +115,17 @@ impl UserRepository for MockUserRepository {
 
         users.push(user.clone());
         Ok(user)
+    }
+
+    async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
+        let mut users = self.users.lock().unwrap();
+        if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
+            user.hashed_password = hashed_password.to_string();
+            user.updated_at = Utc::now();
+            Ok(())
+        } else {
+            Err(AuthError::UserNotFound)
+        }
     }
 }
 
