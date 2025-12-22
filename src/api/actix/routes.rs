@@ -16,7 +16,7 @@ use super::handlers;
 /// ```ignore
 /// use actix_web::{web, App};
 /// use std::sync::Arc;
-/// use enclave::api::actix::configure;
+/// use enclave::api::actix::auth_routes;
 ///
 /// App::new()
 ///     .app_data(web::Data::new(user_repo))
@@ -24,9 +24,9 @@ use super::handlers;
 ///     .app_data(web::Data::new(rate_limiter))
 ///     .app_data(web::Data::new(reset_repo))
 ///     .app_data(web::Data::new(verification_repo))
-///     .configure(configure::<MyUserRepo, MyTokenRepo, MyRateLimiter, MyResetRepo, MyVerificationRepo>);
+///     .configure(auth_routes::<MyUserRepo, MyTokenRepo, MyRateLimiter, MyResetRepo, MyVerificationRepo>);
 /// ```
-pub fn configure<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
+pub fn auth_routes<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     T: TokenRepository + Clone + Send + Sync + 'static,
