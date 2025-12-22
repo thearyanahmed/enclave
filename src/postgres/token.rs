@@ -27,7 +27,6 @@ impl PostgresTokenRepository {
 
 #[derive(FromRow)]
 struct TokenRecord {
-    token_hash: String,
     user_id: i32,
     name: Option<String>,
     abilities: serde_json::Value,
@@ -82,9 +81,9 @@ impl TokenRepository for PostgresTokenRepository {
             .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         let row: TokenRecord = sqlx::query_as(
-            r#"INSERT INTO access_tokens (token_hash, user_id, name, abilities, expires_at)
+            r"INSERT INTO access_tokens (token_hash, user_id, name, abilities, expires_at)
                VALUES ($1, $2, $3, $4, $5)
-               RETURNING token_hash, user_id, name, abilities, expires_at, created_at, last_used_at"#
+               RETURNING user_id, name, abilities, expires_at, created_at, last_used_at"
         )
         .bind(&token_hash)
         .bind(user_id)
@@ -102,15 +101,15 @@ impl TokenRepository for PostgresTokenRepository {
         let token_hash = hash_token(token);
 
         let row: Option<TokenRecord> = sqlx::query_as(
-            r#"SELECT token_hash, user_id, name, abilities, expires_at, created_at, last_used_at
-               FROM access_tokens WHERE token_hash = $1"#
+            r"SELECT user_id, name, abilities, expires_at, created_at, last_used_at
+               FROM access_tokens WHERE token_hash = $1"
         )
         .bind(&token_hash)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
-        Ok(row.map(|r| r.into_access_token(token_hash)))
+        Ok(row.map(|r| r.into_access_token(token.to_owned())))
     }
 
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError> {

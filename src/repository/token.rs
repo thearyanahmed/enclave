@@ -75,7 +75,7 @@ pub trait TokenRepository: Send + Sync {
     /// Revokes all tokens for a user.
     async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError>;
 
-    /// Updates the last_used_at timestamp for a token.
+    /// Updates the `last_used_at` timestamp for a token.
     async fn touch_token(&self, token: &str) -> Result<(), AuthError>;
 
     /// Removes all expired tokens from storage.
