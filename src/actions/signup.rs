@@ -13,6 +13,10 @@ impl<R: UserRepository> SignupAction<R> {
         SignupAction { repository }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "signup", skip_all, err)
+    )]
     pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
         validate_email(email)?;
         validate_password(password)?;

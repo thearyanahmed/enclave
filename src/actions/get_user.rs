@@ -9,6 +9,10 @@ impl<U: UserRepository> GetUserAction<U> {
         GetUserAction { user_repository }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "get_user", skip_all, err)
+    )]
     pub async fn execute(&self, user_id: i32) -> Result<User, AuthError> {
         self.user_repository
             .find_user_by_id(user_id)

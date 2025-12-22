@@ -10,6 +10,10 @@ impl<T: TokenRepository> RefreshTokenAction<T> {
         RefreshTokenAction { token_repository }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "refresh_token", skip_all, err)
+    )]
     pub async fn execute(&self, current_token: &str) -> Result<AccessToken, AuthError> {
         let token = self.token_repository.find_token(current_token).await?;
 

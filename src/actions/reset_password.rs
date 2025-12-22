@@ -18,6 +18,10 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
         }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "reset_password", skip_all, err)
+    )]
     pub async fn execute(&self, token: &str, new_password: &str) -> Result<(), AuthError> {
         validate_password(new_password)?;
 

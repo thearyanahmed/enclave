@@ -10,6 +10,10 @@ impl<U: UserRepository> UpdateUserAction<U> {
         UpdateUserAction { user_repository }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "update_user", skip_all, err)
+    )]
     pub async fn execute(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
         validate_name(name)?;
         validate_email(email)?;

@@ -9,6 +9,10 @@ impl<T: TokenRepository> LogoutAction<T> {
         LogoutAction { token_repository }
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "logout", skip_all, err)
+    )]
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
         self.token_repository.revoke_token(token).await
     }
