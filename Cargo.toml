@@ -24,12 +24,14 @@ sha2 = "0.10"
 hex = "0.4"
 sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "migrate"], optional = true }
 tracing = { version = "0.1", optional = true }
+jsonwebtoken = { version = "9", optional = true }
 
 [features]
 default = []
 actix = ["actix-web", "actix-cors"]
 sqlx_postgres = ["sqlx"]
 tracing = ["dep:tracing"]
+jwt = ["jsonwebtoken"]
 mocks = []
 
 [dev-dependencies]
