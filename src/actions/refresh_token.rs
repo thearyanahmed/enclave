@@ -1,16 +1,55 @@
 use crate::{AccessToken, AuthError, TokenRepository};
 use chrono::{Duration, Utc};
 
+#[cfg(feature = "tracing")]
+use crate::TracingConfig;
+
 pub struct RefreshTokenAction<T: TokenRepository> {
     token_repository: T,
+    #[cfg(feature = "tracing")]
+    tracing: Option<TracingConfig>,
 }
 
 impl<T: TokenRepository> RefreshTokenAction<T> {
     pub fn new(token_repository: T) -> Self {
-        RefreshTokenAction { token_repository }
+        RefreshTokenAction {
+            token_repository,
+            #[cfg(feature = "tracing")]
+            tracing: None,
+        }
+    }
+
+    #[cfg(feature = "tracing")]
+    pub fn with_tracing(mut self) -> Self {
+        self.tracing = Some(TracingConfig::new("refresh_token"));
+        self
+    }
+
+    #[cfg(feature = "tracing")]
+    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
+        self.tracing = Some(config);
+        self
     }
 
     pub async fn execute(&self, current_token: &str) -> Result<AccessToken, AuthError> {
+        #[cfg(feature = "tracing")]
+        {
+            if let Some(ref config) = self.tracing {
+                use tracing::Instrument;
+                let span = tracing::info_span!("action", name = config.span_name);
+                let result = self.execute_inner(current_token).instrument(span).await;
+                match &result {
+                    Ok(_) => tracing::info!("token refreshed"),
+                    Err(e) => tracing::warn!(error = %e, "token refresh failed"),
+                }
+                return result;
+            }
+        }
+
+        self.execute_inner(current_token).await
+    }
+
+    async fn execute_inner(&self, current_token: &str) -> Result<AccessToken, AuthError> {
         let token = self.token_repository.find_token(current_token).await?;
 
         match token {
