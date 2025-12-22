@@ -15,7 +15,7 @@ pub use change_password::ChangePasswordAction;
 pub use delete_user::DeleteUserAction;
 pub use forgot_password::ForgotPasswordAction;
 pub use get_user::GetUserAction;
-pub use login::LoginAction;
+pub use login::{LoginAction, LoginConfig};
 pub use logout::LogoutAction;
 pub use refresh_token::RefreshTokenAction;
 pub use reset_password::ResetPasswordAction;

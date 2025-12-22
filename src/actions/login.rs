@@ -1,21 +1,49 @@
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
-const MAX_FAILED_ATTEMPTS: u32 = 5;
-const LOCKOUT_DURATION_MINUTES: i64 = 15;
+#[derive(Debug, Clone)]
+pub struct LoginConfig {
+    pub max_failed_attempts: u32,
+    pub lockout_duration_minutes: i64,
+}
+
+impl Default for LoginConfig {
+    fn default() -> Self {
+        Self {
+            max_failed_attempts: 5,
+            lockout_duration_minutes: 15,
+        }
+    }
+}
 
 pub struct LoginAction<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> {
     user_repository: U,
     token_repository: T,
     rate_limiter: R,
+    config: LoginConfig,
 }
 
 impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginAction<U, T, R> {
     pub fn new(user_repository: U, token_repository: T, rate_limiter: R) -> Self {
+        Self::with_config(
+            user_repository,
+            token_repository,
+            rate_limiter,
+            LoginConfig::default(),
+        )
+    }
+
+    pub fn with_config(
+        user_repository: U,
+        token_repository: T,
+        rate_limiter: R,
+        config: LoginConfig,
+    ) -> Self {
         LoginAction {
             user_repository,
             token_repository,
             rate_limiter,
+            config,
         }
     }
 
@@ -25,12 +53,12 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
         password: &str,
     ) -> Result<(User, AccessToken), AuthError> {
         // we check if account is locked out
-        let since = Utc::now() - Duration::minutes(LOCKOUT_DURATION_MINUTES);
+        let since = Utc::now() - Duration::minutes(self.config.lockout_duration_minutes);
         let failed_attempts = self
             .rate_limiter
             .get_recent_failed_attempts(email, since)
             .await?;
-        if failed_attempts >= MAX_FAILED_ATTEMPTS {
+        if failed_attempts >= self.config.max_failed_attempts {
             return Err(AuthError::TooManyAttempts);
         }
 
