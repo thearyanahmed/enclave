@@ -105,7 +105,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
             "SELECT id, user_id, event_type, ip_address, user_agent, metadata, created_at FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2"
         )
         .bind(user_id)
-        .bind(limit as i64)
+        .bind(i64::try_from(limit).unwrap_or(i64::MAX))
         .fetch_all(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;

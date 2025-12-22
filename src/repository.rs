@@ -283,7 +283,7 @@ impl MockTokenRepository {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32)
-            .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+            .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
             .collect()
     }
 }
@@ -355,7 +355,7 @@ impl MockPasswordResetRepository {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32)
-            .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+            .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
             .collect()
     }
 }
@@ -407,7 +407,7 @@ impl MockEmailVerificationRepository {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32)
-            .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+            .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
             .collect()
     }
 }
@@ -480,8 +480,9 @@ impl RateLimiterRepository for MockRateLimiterRepository {
             attempts
                 .iter()
                 .filter(|a| a.email == email && !a.success && a.attempted_at >= since)
-                .count() as u32
+                .count()
         };
+        let count = u32::try_from(count).unwrap_or(u32::MAX);
         Ok(count)
     }
 
