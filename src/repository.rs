@@ -212,11 +212,12 @@ impl UserRepository for MockUserRepository {
     }
 
     async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
-        let mut users = self.users.lock().unwrap();
-
         let user = User::mock_from_credentials(email, hashed_password);
 
+        let mut users = self.users.lock().unwrap();
         users.push(user.clone());
+        drop(users);
+
         Ok(user)
     }
 
@@ -291,25 +292,28 @@ impl MockTokenRepository {
 #[async_trait]
 impl TokenRepository for MockTokenRepository {
     async fn create_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<AccessToken, AuthError> {
-        let mut tokens = self.tokens.lock().unwrap();
         let plain_token = Self::generate_token();
         let hashed_token = hash_token(&plain_token);
+        let now = Utc::now();
 
         // Store with hashed token
         let stored_token = AccessToken {
             token: hashed_token,
             user_id,
             expires_at,
-            created_at: Utc::now(),
+            created_at: now,
         };
+
+        let mut tokens = self.tokens.lock().unwrap();
         tokens.push(stored_token);
+        drop(tokens);
 
         // Return with plain token
         Ok(AccessToken {
             token: plain_token,
             user_id,
             expires_at,
-            created_at: Utc::now(),
+            created_at: now,
         })
     }
 
@@ -323,12 +327,14 @@ impl TokenRepository for MockTokenRepository {
         let hashed = hash_token(token);
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.token != hashed);
+        drop(tokens);
         Ok(())
     }
 
     async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.user_id != user_id);
+        drop(tokens);
         Ok(())
     }
 }
@@ -358,14 +364,17 @@ impl MockPasswordResetRepository {
 #[async_trait]
 impl PasswordResetRepository for MockPasswordResetRepository {
     async fn create_reset_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<PasswordResetToken, AuthError> {
-        let mut tokens = self.tokens.lock().unwrap();
         let token = PasswordResetToken {
             token: Self::generate_token(),
             user_id,
             expires_at,
             created_at: Utc::now(),
         };
+
+        let mut tokens = self.tokens.lock().unwrap();
         tokens.push(token.clone());
+        drop(tokens);
+
         Ok(token)
     }
 
@@ -377,6 +386,7 @@ impl PasswordResetRepository for MockPasswordResetRepository {
     async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.token != token);
+        drop(tokens);
         Ok(())
     }
 }
@@ -406,14 +416,17 @@ impl MockEmailVerificationRepository {
 #[async_trait]
 impl EmailVerificationRepository for MockEmailVerificationRepository {
     async fn create_verification_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<EmailVerificationToken, AuthError> {
-        let mut tokens = self.tokens.lock().unwrap();
         let token = EmailVerificationToken {
             token: Self::generate_token(),
             user_id,
             expires_at,
             created_at: Utc::now(),
         };
+
+        let mut tokens = self.tokens.lock().unwrap();
         tokens.push(token.clone());
+        drop(tokens);
+
         Ok(token)
     }
 
@@ -425,6 +438,7 @@ impl EmailVerificationRepository for MockEmailVerificationRepository {
     async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.token != token);
+        drop(tokens);
         Ok(())
     }
 }
@@ -446,28 +460,35 @@ impl MockRateLimiterRepository {
 #[async_trait]
 impl RateLimiterRepository for MockRateLimiterRepository {
     async fn record_attempt(&self, email: &str, success: bool, ip_address: Option<&str>) -> Result<(), AuthError> {
-        let mut attempts = self.attempts.lock().unwrap();
-        attempts.push(LoginAttempt {
+        let attempt = LoginAttempt {
             email: email.to_owned(),
             success,
             ip_address: ip_address.map(ToOwned::to_owned),
             attempted_at: Utc::now(),
-        });
+        };
+
+        let mut attempts = self.attempts.lock().unwrap();
+        attempts.push(attempt);
+        drop(attempts);
+
         Ok(())
     }
 
     async fn get_recent_failed_attempts(&self, email: &str, since: DateTime<Utc>) -> Result<u32, AuthError> {
-        let attempts = self.attempts.lock().unwrap();
-        let count = attempts
-            .iter()
-            .filter(|a| a.email == email && !a.success && a.attempted_at >= since)
-            .count() as u32;
+        let count = {
+            let attempts = self.attempts.lock().unwrap();
+            attempts
+                .iter()
+                .filter(|a| a.email == email && !a.success && a.attempted_at >= since)
+                .count() as u32
+        };
         Ok(count)
     }
 
     async fn clear_attempts(&self, email: &str) -> Result<(), AuthError> {
         let mut attempts = self.attempts.lock().unwrap();
         attempts.retain(|a| a.email != email);
+        drop(attempts);
         Ok(())
     }
 }
@@ -499,11 +520,15 @@ impl AuditLogRepository for MockAuditLogRepository {
         user_agent: Option<&str>,
         metadata: Option<&str>,
     ) -> Result<AuditLog, AuthError> {
-        let mut logs = self.logs.lock().unwrap();
-        let mut next_id = self.next_id.lock().unwrap();
+        let id = {
+            let mut next_id = self.next_id.lock().unwrap();
+            let id = *next_id;
+            *next_id += 1;
+            id
+        };
 
         let log = AuditLog {
-            id: *next_id,
+            id,
             user_id,
             event_type,
             ip_address: ip_address.map(ToOwned::to_owned),
@@ -512,20 +537,23 @@ impl AuditLogRepository for MockAuditLogRepository {
             created_at: Utc::now(),
         };
 
-        *next_id += 1;
+        let mut logs = self.logs.lock().unwrap();
         logs.push(log.clone());
+        drop(logs);
+
         Ok(log)
     }
 
     async fn get_user_events(&self, user_id: i32, limit: usize) -> Result<Vec<AuditLog>, AuthError> {
-        let logs = self.logs.lock().unwrap();
-        let user_logs: Vec<AuditLog> = logs
-            .iter()
-            .filter(|l| l.user_id == Some(user_id))
-            .rev()
-            .take(limit)
-            .cloned()
-            .collect();
+        let user_logs = {
+            let logs = self.logs.lock().unwrap();
+            logs.iter()
+                .filter(|l| l.user_id == Some(user_id))
+                .rev()
+                .take(limit)
+                .cloned()
+                .collect()
+        };
         Ok(user_logs)
     }
 }
