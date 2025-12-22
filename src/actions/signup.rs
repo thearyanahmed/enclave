@@ -62,9 +62,8 @@ mod tests {
     async fn test_signup_user_already_exists() {
         let existing_user = User::mock();
 
-        let repo = MockUserRepository {
-            users: std::sync::Mutex::new(vec![existing_user]),
-        };
+        let repo = MockUserRepository::new();
+        repo.users.lock().unwrap().push(existing_user);
 
         let signup = SignupAction::new(repo);
         _ = signup.execute("user@example.com", "newpassword123").await;

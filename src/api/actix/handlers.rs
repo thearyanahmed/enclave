@@ -1,5 +1,4 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use std::sync::Arc;
 
 use super::middleware::{AuthenticatedUser, extract_bearer_token};
 use crate::actions::{
@@ -11,7 +10,6 @@ use crate::api::{
     MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
     UpdateUserRequest, UserResponse, VerifyEmailRequest,
 };
-use crate::crypto::hash_token;
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     TokenRepository, UserRepository,
@@ -19,12 +17,12 @@ use crate::{
 
 pub async fn register<U>(
     body: web::Json<RegisterRequest>,
-    user_repo: web::Data<Arc<U>>,
+    user_repo: web::Data<U>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
 {
-    let action = SignupAction::new(user_repo.as_ref().as_ref().clone());
+    let action = SignupAction::new(user_repo.get_ref().clone());
 
     match action.execute(&body.email, &body.password).await {
         Ok(user) => HttpResponse::Created().json(UserResponse::from(user)),
@@ -37,9 +35,9 @@ where
 
 pub async fn login<U, T, R>(
     body: web::Json<LoginRequest>,
-    user_repo: web::Data<Arc<U>>,
-    token_repo: web::Data<Arc<T>>,
-    rate_limiter: web::Data<Arc<R>>,
+    user_repo: web::Data<U>,
+    token_repo: web::Data<T>,
+    rate_limiter: web::Data<R>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -47,9 +45,9 @@ where
     R: RateLimiterRepository + Clone + Send + Sync + 'static,
 {
     let action = LoginAction::new(
-        user_repo.as_ref().as_ref().clone(),
-        token_repo.as_ref().as_ref().clone(),
-        rate_limiter.as_ref().as_ref().clone(),
+        user_repo.get_ref().clone(),
+        token_repo.get_ref().clone(),
+        rate_limiter.get_ref().clone(),
     );
 
     match action.execute(&body.email, &body.password).await {
@@ -75,7 +73,7 @@ where
     }
 }
 
-pub async fn logout<T>(req: HttpRequest, token_repo: web::Data<Arc<T>>) -> HttpResponse
+pub async fn logout<T>(req: HttpRequest, token_repo: web::Data<T>) -> HttpResponse
 where
     T: TokenRepository + Clone + Send + Sync + 'static,
 {
@@ -89,10 +87,10 @@ where
         }
     };
 
-    let action = LogoutAction::new(token_repo.as_ref().as_ref().clone());
-    let hashed = hash_token(&token);
+    let action = LogoutAction::new(token_repo.get_ref().clone());
 
-    match action.execute(&hashed).await {
+    // revoke_token handles hashing internally
+    match action.execute(&token).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
             message: "Successfully logged out".to_owned(),
         }),
@@ -105,16 +103,16 @@ where
 
 pub async fn forgot_password<U, P>(
     body: web::Json<ForgotPasswordRequest>,
-    user_repo: web::Data<Arc<U>>,
-    reset_repo: web::Data<Arc<P>>,
+    user_repo: web::Data<U>,
+    reset_repo: web::Data<P>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
 {
     let action = ForgotPasswordAction::new(
-        user_repo.as_ref().as_ref().clone(),
-        reset_repo.as_ref().as_ref().clone(),
+        user_repo.get_ref().clone(),
+        reset_repo.get_ref().clone(),
     );
 
     // Don't reveal whether user exists - always return success regardless of result
@@ -127,16 +125,16 @@ where
 
 pub async fn reset_password<U, P>(
     body: web::Json<ResetPasswordRequest>,
-    user_repo: web::Data<Arc<U>>,
-    reset_repo: web::Data<Arc<P>>,
+    user_repo: web::Data<U>,
+    reset_repo: web::Data<P>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
 {
     let action = ResetPasswordAction::new(
-        user_repo.as_ref().as_ref().clone(),
-        reset_repo.as_ref().as_ref().clone(),
+        user_repo.get_ref().clone(),
+        reset_repo.get_ref().clone(),
     );
 
     match action.execute(&body.token, &body.password).await {
@@ -152,15 +150,15 @@ where
 
 pub async fn refresh_token<T>(
     body: web::Json<RefreshTokenRequest>,
-    token_repo: web::Data<Arc<T>>,
+    token_repo: web::Data<T>,
 ) -> HttpResponse
 where
     T: TokenRepository + Clone + Send + Sync + 'static,
 {
-    let action = RefreshTokenAction::new(token_repo.as_ref().as_ref().clone());
-    let hashed = hash_token(&body.token);
+    let action = RefreshTokenAction::new(token_repo.get_ref().clone());
 
-    match action.execute(&hashed).await {
+    // refresh internally handles token hashing
+    match action.execute(&body.token).await {
         Ok(new_token) => HttpResponse::Ok().json(TokenResponse {
             token: new_token.token,
             expires_at: new_token.expires_at,
@@ -174,16 +172,16 @@ where
 
 pub async fn verify_email<U, E>(
     body: web::Json<VerifyEmailRequest>,
-    user_repo: web::Data<Arc<U>>,
-    verification_repo: web::Data<Arc<E>>,
+    user_repo: web::Data<U>,
+    verification_repo: web::Data<E>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     E: EmailVerificationRepository + Clone + Send + Sync + 'static,
 {
     let action = VerifyEmailAction::new(
-        user_repo.as_ref().as_ref().clone(),
-        verification_repo.as_ref().as_ref().clone(),
+        user_repo.get_ref().clone(),
+        verification_repo.get_ref().clone(),
     );
 
     match action.execute(&body.token).await {
@@ -208,13 +206,13 @@ where
 pub async fn update_user<U, T>(
     user: AuthenticatedUser<U, T>,
     body: web::Json<UpdateUserRequest>,
-    user_repo: web::Data<Arc<U>>,
+    user_repo: web::Data<U>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     T: TokenRepository + Clone + Send + Sync + 'static,
 {
-    let action = UpdateUserAction::new(user_repo.as_ref().as_ref().clone());
+    let action = UpdateUserAction::new(user_repo.get_ref().clone());
 
     match action
         .execute(user.user().id, &body.name, &body.email)
@@ -231,13 +229,13 @@ where
 pub async fn change_password<U, T>(
     user: AuthenticatedUser<U, T>,
     body: web::Json<ChangePasswordRequest>,
-    user_repo: web::Data<Arc<U>>,
+    user_repo: web::Data<U>,
 ) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     T: TokenRepository + Clone + Send + Sync + 'static,
 {
-    let action = ChangePasswordAction::new(user_repo.as_ref().as_ref().clone());
+    let action = ChangePasswordAction::new(user_repo.get_ref().clone());
 
     match action
         .execute(user.user().id, &body.current_password, &body.new_password)

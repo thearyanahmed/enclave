@@ -1,18 +1,20 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
 
 use super::rate_limiter::{LoginAttempt, RateLimiterRepository};
 
+#[derive(Clone)]
 pub struct MockRateLimiterRepository {
-    pub attempts: std::sync::Mutex<Vec<LoginAttempt>>,
+    pub attempts: Arc<Mutex<Vec<LoginAttempt>>>,
 }
 
 impl MockRateLimiterRepository {
     pub fn new() -> Self {
         Self {
-            attempts: std::sync::Mutex::new(vec![]),
+            attempts: Arc::new(Mutex::new(vec![])),
         }
     }
 }

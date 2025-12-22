@@ -15,7 +15,7 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 impl User {
     pub fn mock() -> Self {
         let now = Utc::now();

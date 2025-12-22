@@ -32,15 +32,15 @@ pub use token::TokenRepository;
 pub use user::User;
 pub use user::UserRepository;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 pub use audit_log_mock::MockAuditLogRepository;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 pub use email_verification_mock::MockEmailVerificationRepository;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 pub use password_reset_mock::MockPasswordResetRepository;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 pub use rate_limiter_mock::MockRateLimiterRepository;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 pub use token_mock::MockTokenRepository;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 pub use user_mock::MockUserRepository;

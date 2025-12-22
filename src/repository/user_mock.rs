@@ -1,18 +1,20 @@
 use async_trait::async_trait;
 use chrono::Utc;
+use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
 
 use super::user::{User, UserRepository};
 
+#[derive(Clone)]
 pub struct MockUserRepository {
-    pub users: std::sync::Mutex<Vec<User>>,
+    pub users: Arc<Mutex<Vec<User>>>,
 }
 
 impl MockUserRepository {
     pub fn new() -> Self {
         Self {
-            users: std::sync::Mutex::new(vec![]),
+            users: Arc::new(Mutex::new(vec![])),
         }
     }
 }

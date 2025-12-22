@@ -1,13 +1,12 @@
 //! End-to-end tests for the actix-web HTTP API layer.
 //!
 //! These tests use mock repositories - no database required.
-//! Run with: `cargo test --features actix --test e2e_actix`
+//! Run with: `cargo test --features "actix mocks" --test e2e_actix`
 
-#![cfg(feature = "actix")]
+#![cfg(all(feature = "actix", feature = "mocks"))]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use actix_web::{App, http::StatusCode, test, web};
-use std::sync::Arc;
 
 use enclave::api::actix::auth_routes;
 use enclave::{
@@ -15,48 +14,47 @@ use enclave::{
     MockTokenRepository, MockUserRepository,
 };
 
-type UserRepo = Arc<MockUserRepository>;
-type TokenRepo = Arc<MockTokenRepository>;
-type RateLimiterRepo = Arc<MockRateLimiterRepository>;
-type PasswordResetRepo = Arc<MockPasswordResetRepository>;
-type EmailVerificationRepo = Arc<MockEmailVerificationRepository>;
-
-fn create_test_app() -> (
-    UserRepo,
-    TokenRepo,
-    RateLimiterRepo,
-    PasswordResetRepo,
-    EmailVerificationRepo,
+fn create_repos() -> (
+    MockUserRepository,
+    MockTokenRepository,
+    MockRateLimiterRepository,
+    MockPasswordResetRepository,
+    MockEmailVerificationRepository,
 ) {
     (
-        Arc::new(MockUserRepository::new()),
-        Arc::new(MockTokenRepository::new()),
-        Arc::new(MockRateLimiterRepository::new()),
-        Arc::new(MockPasswordResetRepository::new()),
-        Arc::new(MockEmailVerificationRepository::new()),
+        MockUserRepository::new(),
+        MockTokenRepository::new(),
+        MockRateLimiterRepository::new(),
+        MockPasswordResetRepository::new(),
+        MockEmailVerificationRepository::new(),
     )
+}
+
+macro_rules! test_app {
+    ($user:expr, $token:expr, $rate:expr, $reset:expr, $verify:expr) => {
+        test::init_service(
+            App::new()
+                .app_data(web::Data::new($user))
+                .app_data(web::Data::new($token))
+                .app_data(web::Data::new($rate))
+                .app_data(web::Data::new($reset))
+                .app_data(web::Data::new($verify))
+                .configure(auth_routes::<
+                    MockUserRepository,
+                    MockTokenRepository,
+                    MockRateLimiterRepository,
+                    MockPasswordResetRepository,
+                    MockEmailVerificationRepository,
+                >),
+        )
+        .await
+    };
 }
 
 #[actix_rt::test]
 async fn test_register_success() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo))
-            .app_data(web::Data::new(token_repo))
-            .app_data(web::Data::new(rate_repo))
-            .app_data(web::Data::new(reset_repo))
-            .app_data(web::Data::new(verification_repo))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
 
     let req = test::TestRequest::post()
         .uri("/auth/register")
@@ -75,24 +73,8 @@ async fn test_register_success() {
 
 #[actix_rt::test]
 async fn test_register_invalid_email() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo))
-            .app_data(web::Data::new(token_repo))
-            .app_data(web::Data::new(rate_repo))
-            .app_data(web::Data::new(reset_repo))
-            .app_data(web::Data::new(verification_repo))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
 
     let req = test::TestRequest::post()
         .uri("/auth/register")
@@ -111,24 +93,8 @@ async fn test_register_invalid_email() {
 
 #[actix_rt::test]
 async fn test_register_password_too_short() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo))
-            .app_data(web::Data::new(token_repo))
-            .app_data(web::Data::new(rate_repo))
-            .app_data(web::Data::new(reset_repo))
-            .app_data(web::Data::new(verification_repo))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
 
     let req = test::TestRequest::post()
         .uri("/auth/register")
@@ -144,25 +110,14 @@ async fn test_register_password_too_short() {
 
 #[actix_rt::test]
 async fn test_login_success() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    // First register a user
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo.clone()))
-            .app_data(web::Data::new(token_repo.clone()))
-            .app_data(web::Data::new(rate_repo.clone()))
-            .app_data(web::Data::new(reset_repo.clone()))
-            .app_data(web::Data::new(verification_repo.clone()))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(
+        user_repo.clone(),
+        token_repo.clone(),
+        rate_repo.clone(),
+        reset_repo.clone(),
+        verification_repo.clone()
+    );
 
     // Register
     let req = test::TestRequest::post()
@@ -194,24 +149,8 @@ async fn test_login_success() {
 
 #[actix_rt::test]
 async fn test_login_invalid_credentials() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo))
-            .app_data(web::Data::new(token_repo))
-            .app_data(web::Data::new(rate_repo))
-            .app_data(web::Data::new(reset_repo))
-            .app_data(web::Data::new(verification_repo))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
 
     let req = test::TestRequest::post()
         .uri("/auth/login")
@@ -227,24 +166,14 @@ async fn test_login_invalid_credentials() {
 
 #[actix_rt::test]
 async fn test_get_me_authenticated() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo.clone()))
-            .app_data(web::Data::new(token_repo.clone()))
-            .app_data(web::Data::new(rate_repo.clone()))
-            .app_data(web::Data::new(reset_repo.clone()))
-            .app_data(web::Data::new(verification_repo.clone()))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(
+        user_repo.clone(),
+        token_repo.clone(),
+        rate_repo.clone(),
+        reset_repo.clone(),
+        verification_repo.clone()
+    );
 
     // Register
     let req = test::TestRequest::post()
@@ -283,24 +212,8 @@ async fn test_get_me_authenticated() {
 
 #[actix_rt::test]
 async fn test_get_me_unauthenticated() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo))
-            .app_data(web::Data::new(token_repo))
-            .app_data(web::Data::new(rate_repo))
-            .app_data(web::Data::new(reset_repo))
-            .app_data(web::Data::new(verification_repo))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
 
     let req = test::TestRequest::get().uri("/auth/me").to_request();
 
@@ -310,24 +223,14 @@ async fn test_get_me_unauthenticated() {
 
 #[actix_rt::test]
 async fn test_logout() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo.clone()))
-            .app_data(web::Data::new(token_repo.clone()))
-            .app_data(web::Data::new(rate_repo.clone()))
-            .app_data(web::Data::new(reset_repo.clone()))
-            .app_data(web::Data::new(verification_repo.clone()))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(
+        user_repo.clone(),
+        token_repo.clone(),
+        rate_repo.clone(),
+        reset_repo.clone(),
+        verification_repo.clone()
+    );
 
     // Register and login
     let req = test::TestRequest::post()
@@ -369,24 +272,14 @@ async fn test_logout() {
 
 #[actix_rt::test]
 async fn test_update_user() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo.clone()))
-            .app_data(web::Data::new(token_repo.clone()))
-            .app_data(web::Data::new(rate_repo.clone()))
-            .app_data(web::Data::new(reset_repo.clone()))
-            .app_data(web::Data::new(verification_repo.clone()))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(
+        user_repo.clone(),
+        token_repo.clone(),
+        rate_repo.clone(),
+        reset_repo.clone(),
+        verification_repo.clone()
+    );
 
     // Register and login
     let req = test::TestRequest::post()
@@ -429,24 +322,14 @@ async fn test_update_user() {
 
 #[actix_rt::test]
 async fn test_change_password() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo.clone()))
-            .app_data(web::Data::new(token_repo.clone()))
-            .app_data(web::Data::new(rate_repo.clone()))
-            .app_data(web::Data::new(reset_repo.clone()))
-            .app_data(web::Data::new(verification_repo.clone()))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(
+        user_repo.clone(),
+        token_repo.clone(),
+        rate_repo.clone(),
+        reset_repo.clone(),
+        verification_repo.clone()
+    );
 
     // Register and login
     let req = test::TestRequest::post()
@@ -496,24 +379,8 @@ async fn test_change_password() {
 
 #[actix_rt::test]
 async fn test_forgot_password_always_returns_ok() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_test_app();
-
-    let app = test::init_service(
-        App::new()
-            .app_data(web::Data::new(user_repo))
-            .app_data(web::Data::new(token_repo))
-            .app_data(web::Data::new(rate_repo))
-            .app_data(web::Data::new(reset_repo))
-            .app_data(web::Data::new(verification_repo))
-            .configure(auth_routes::<
-                MockUserRepository,
-                MockTokenRepository,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >),
-    )
-    .await;
+    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
+    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
 
     // Should return OK even for non-existent email (security: don't reveal if email exists)
     let req = test::TestRequest::post()

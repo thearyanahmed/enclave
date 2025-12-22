@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
 
@@ -13,14 +14,15 @@ fn generate_token() -> String {
         .collect()
 }
 
+#[derive(Clone)]
 pub struct MockPasswordResetRepository {
-    pub tokens: std::sync::Mutex<Vec<PasswordResetToken>>,
+    pub tokens: Arc<Mutex<Vec<PasswordResetToken>>>,
 }
 
 impl MockPasswordResetRepository {
     pub fn new() -> Self {
         Self {
-            tokens: std::sync::Mutex::new(vec![]),
+            tokens: Arc::new(Mutex::new(vec![])),
         }
     }
 }

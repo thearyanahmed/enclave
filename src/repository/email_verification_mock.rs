@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
 
@@ -13,14 +14,15 @@ fn generate_token() -> String {
         .collect()
 }
 
+#[derive(Clone)]
 pub struct MockEmailVerificationRepository {
-    pub tokens: std::sync::Mutex<Vec<EmailVerificationToken>>,
+    pub tokens: Arc<Mutex<Vec<EmailVerificationToken>>>,
 }
 
 impl MockEmailVerificationRepository {
     pub fn new() -> Self {
         Self {
-            tokens: std::sync::Mutex::new(vec![]),
+            tokens: Arc::new(Mutex::new(vec![])),
         }
     }
 }

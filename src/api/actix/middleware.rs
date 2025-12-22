@@ -1,9 +1,7 @@
 use actix_web::{FromRequest, HttpRequest, HttpResponse, dev::Payload, http::header, web};
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
 
-use crate::crypto::hash_token;
 use crate::{AuthError, TokenRepository, User, UserRepository};
 
 /// Authenticated user extractor.
@@ -94,12 +92,12 @@ where
         let token = extract_bearer_token(req);
 
         let token_repo = req
-            .app_data::<web::Data<Arc<T>>>()
-            .map(|data| Arc::clone(data.as_ref()));
+            .app_data::<web::Data<T>>()
+            .map(|data| data.get_ref().clone());
 
         let user_repo = req
-            .app_data::<web::Data<Arc<U>>>()
-            .map(|data| Arc::clone(data.as_ref()));
+            .app_data::<web::Data<U>>()
+            .map(|data| data.get_ref().clone());
 
         Box::pin(async move {
             let token = token.ok_or(AuthenticationError {
@@ -114,10 +112,9 @@ where
                 error: AuthError::TokenInvalid,
             })?;
 
-            let hashed_token = hash_token(&token);
-
+            // find_token handles hashing internally
             let access_token = token_repo
-                .find_token(&hashed_token)
+                .find_token(&token)
                 .await
                 .map_err(|e| AuthenticationError { error: e })?
                 .ok_or(AuthenticationError {

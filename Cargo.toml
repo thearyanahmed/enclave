@@ -30,6 +30,7 @@ default = []
 actix = ["actix-web", "actix-cors"]
 sqlx_postgres = ["sqlx"]
 tracing = ["dep:tracing"]
+mocks = []
 
 [dev-dependencies]
 actix-rt = "2"

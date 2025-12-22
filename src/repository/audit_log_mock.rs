@@ -1,20 +1,22 @@
 use async_trait::async_trait;
 use chrono::Utc;
+use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
 
 use super::audit_log::{AuditEventType, AuditLog, AuditLogRepository};
 
+#[derive(Clone)]
 pub struct MockAuditLogRepository {
-    pub logs: std::sync::Mutex<Vec<AuditLog>>,
-    next_id: std::sync::Mutex<i64>,
+    pub logs: Arc<Mutex<Vec<AuditLog>>>,
+    next_id: Arc<Mutex<i64>>,
 }
 
 impl MockAuditLogRepository {
     pub fn new() -> Self {
         Self {
-            logs: std::sync::Mutex::new(vec![]),
-            next_id: std::sync::Mutex::new(1),
+            logs: Arc::new(Mutex::new(vec![])),
+            next_id: Arc::new(Mutex::new(1)),
         }
     }
 }
