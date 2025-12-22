@@ -120,12 +120,9 @@ impl UserRepository for PostgresUserRepository {
         .bind(user_id)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| {
-            if e.to_string().contains("no rows") {
-                AuthError::UserNotFound
-            } else {
-                AuthError::DatabaseError(e.to_string())
-            }
+        .map_err(|e| match e {
+            sqlx::Error::RowNotFound => AuthError::UserNotFound,
+            _ => AuthError::DatabaseError(e.to_string()),
         })?;
 
         Ok(row.into())
