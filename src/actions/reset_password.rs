@@ -5,9 +5,14 @@ use chrono::Utc;
 use password_hash::SaltString;
 use rand::rngs::OsRng;
 
+#[cfg(feature = "tracing")]
+use crate::TracingConfig;
+
 pub struct ResetPasswordAction<U: UserRepository, P: PasswordResetRepository> {
     user_repository: U,
     reset_repository: P,
+    #[cfg(feature = "tracing")]
+    tracing: Option<TracingConfig>,
 }
 
 impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
@@ -15,10 +20,42 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
         ResetPasswordAction {
             user_repository,
             reset_repository,
+            #[cfg(feature = "tracing")]
+            tracing: None,
         }
     }
 
+    #[cfg(feature = "tracing")]
+    pub fn with_tracing(mut self) -> Self {
+        self.tracing = Some(TracingConfig::new("reset_password"));
+        self
+    }
+
+    #[cfg(feature = "tracing")]
+    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
+        self.tracing = Some(config);
+        self
+    }
+
     pub async fn execute(&self, token: &str, new_password: &str) -> Result<(), AuthError> {
+        #[cfg(feature = "tracing")]
+        {
+            if let Some(ref config) = self.tracing {
+                use tracing::Instrument;
+                let span = tracing::info_span!("action", name = config.span_name);
+                let result = self.execute_inner(token, new_password).instrument(span).await;
+                match &result {
+                    Ok(()) => tracing::info!("password reset successful"),
+                    Err(e) => tracing::warn!(error = %e, "password reset failed"),
+                }
+                return result;
+            }
+        }
+
+        self.execute_inner(token, new_password).await
+    }
+
+    async fn execute_inner(&self, token: &str, new_password: &str) -> Result<(), AuthError> {
         validate_password(new_password)?;
 
         let reset_token = self.reset_repository.find_reset_token(token).await?;
