@@ -40,9 +40,6 @@ pub trait AuditLogRepository {
         user_agent: Option<&str>,
         metadata: Option<&str>,
     ) -> Result<AuditLog, AuthError>;
-    async fn get_user_events(
-        &self,
-        user_id: i32,
-        limit: usize,
-    ) -> Result<Vec<AuditLog>, AuthError>;
+    async fn get_user_events(&self, user_id: i32, limit: usize)
+    -> Result<Vec<AuditLog>, AuthError>;
 }
