@@ -1,11 +1,11 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use std::sync::Arc;
 
+use super::middleware::{AuthenticatedUser, extract_bearer_token};
 use crate::actions::{
     ChangePasswordAction, ForgotPasswordAction, LoginAction, LogoutAction, RefreshTokenAction,
     ResetPasswordAction, SignupAction, UpdateUserAction, VerifyEmailAction,
 };
-use crate::api::middleware::{AuthenticatedUser, extract_bearer_token};
 use crate::api::{
     AuthResponse, ChangePasswordRequest, ErrorResponse, ForgotPasswordRequest, LoginRequest,
     MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
