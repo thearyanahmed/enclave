@@ -3,8 +3,9 @@ use crate::AuthError;
 #[cfg(test)]
 use crate::crypto::hash_token;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub email: String,
@@ -15,7 +16,7 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessToken {
     pub token: String,
     pub user_id: i32,
@@ -23,7 +24,7 @@ pub struct AccessToken {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordResetToken {
     pub token: String,
     pub user_id: i32,
@@ -31,7 +32,7 @@ pub struct PasswordResetToken {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailVerificationToken {
     pub token: String,
     pub user_id: i32,
@@ -39,7 +40,7 @@ pub struct EmailVerificationToken {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginAttempt {
     pub email: String,
     pub success: bool,
@@ -47,7 +48,7 @@ pub struct LoginAttempt {
     pub attempted_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AuditEventType {
     Signup,
     LoginSuccess,
@@ -62,7 +63,7 @@ pub enum AuditEventType {
     AccountDeleted,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditLog {
     pub id: i64,
     pub user_id: Option<i32>,

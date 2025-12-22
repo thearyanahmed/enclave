@@ -6,7 +6,9 @@ pub use email::validate_email;
 pub use password::validate_password;
 pub use name::validate_name;
 
-#[derive(Debug, Clone, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ValidationError {
     EmailEmpty,
     EmailTooLong,

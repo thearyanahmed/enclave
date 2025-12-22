@@ -25,9 +25,10 @@ pub use repository::MockPasswordResetRepository;
 pub use repository::MockEmailVerificationRepository;
 pub use repository::MockRateLimiterRepository;
 pub use repository::MockAuditLogRepository;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AuthError {
     UserNotFound,
     UserAlreadyExists,
