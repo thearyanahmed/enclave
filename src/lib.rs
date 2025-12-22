@@ -2,6 +2,8 @@ pub mod actions;
 #[cfg(feature = "actix")]
 pub mod api;
 pub mod crypto;
+#[cfg(feature = "sqlx_postgres")]
+pub mod postgres;
 pub mod repository;
 pub mod validators;
 
