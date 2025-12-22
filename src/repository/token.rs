@@ -49,9 +49,14 @@ pub struct CreateTokenOptions {
     pub abilities: Vec<String>,
 }
 
+/// Storage abstraction for access tokens.
+///
+/// Implementations must hash tokens before storage using [`hash_token`].
+/// The plain-text token is returned to the client; only the hash is stored.
+///
+/// [`hash_token`]: crate::hash_token
 #[async_trait]
 pub trait TokenRepository: Send + Sync {
-    /// Creates a new token for a user.
     async fn create_token(
         &self,
         user_id: i32,

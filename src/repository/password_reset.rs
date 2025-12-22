@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::AuthError;
 
+/// A one-time token for password reset requests.
+///
+/// Tokens are hashed before storage and single-use (deleted after password change).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordResetToken {
     pub token: String,
@@ -12,6 +15,9 @@ pub struct PasswordResetToken {
     pub created_at: DateTime<Utc>,
 }
 
+/// Storage for password reset tokens.
+///
+/// Tokens should be deleted after use or expiration. Consider running periodic cleanup.
 #[async_trait]
 pub trait PasswordResetRepository {
     async fn create_reset_token(

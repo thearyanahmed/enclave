@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::AuthError;
 
+/// A one-time token sent to users to verify their email address.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailVerificationToken {
     pub token: String,
@@ -12,6 +13,7 @@ pub struct EmailVerificationToken {
     pub created_at: DateTime<Utc>,
 }
 
+/// Storage for email verification tokens.
 #[async_trait]
 pub trait EmailVerificationRepository {
     async fn create_verification_token(
