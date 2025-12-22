@@ -15,10 +15,7 @@ use crate::{
     TokenRepository, UserRepository,
 };
 
-pub async fn register<U>(
-    body: web::Json<RegisterRequest>,
-    user_repo: web::Data<U>,
-) -> HttpResponse
+pub async fn register<U>(body: web::Json<RegisterRequest>, user_repo: web::Data<U>) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
 {
@@ -110,10 +107,8 @@ where
     U: UserRepository + Clone + Send + Sync + 'static,
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
 {
-    let action = ForgotPasswordAction::new(
-        user_repo.get_ref().clone(),
-        reset_repo.get_ref().clone(),
-    );
+    let action =
+        ForgotPasswordAction::new(user_repo.get_ref().clone(), reset_repo.get_ref().clone());
 
     // Don't reveal whether user exists - always return success regardless of result
     let _ = action.execute(&body.email).await;
@@ -132,10 +127,8 @@ where
     U: UserRepository + Clone + Send + Sync + 'static,
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
 {
-    let action = ResetPasswordAction::new(
-        user_repo.get_ref().clone(),
-        reset_repo.get_ref().clone(),
-    );
+    let action =
+        ResetPasswordAction::new(user_repo.get_ref().clone(), reset_repo.get_ref().clone());
 
     match action.execute(&body.token, &body.password).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {

@@ -39,13 +39,15 @@ macro_rules! test_app {
                 .app_data(web::Data::new($rate))
                 .app_data(web::Data::new($reset))
                 .app_data(web::Data::new($verify))
-                .configure(auth_routes::<
-                    MockUserRepository,
-                    MockTokenRepository,
-                    MockRateLimiterRepository,
-                    MockPasswordResetRepository,
-                    MockEmailVerificationRepository,
-                >),
+                .configure(
+                    auth_routes::<
+                        MockUserRepository,
+                        MockTokenRepository,
+                        MockRateLimiterRepository,
+                        MockPasswordResetRepository,
+                        MockEmailVerificationRepository,
+                    >,
+                ),
         )
         .await
     };
@@ -54,7 +56,13 @@ macro_rules! test_app {
 #[actix_rt::test]
 async fn test_register_success() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     let req = test::TestRequest::post()
         .uri("/auth/register")
@@ -74,7 +82,13 @@ async fn test_register_success() {
 #[actix_rt::test]
 async fn test_register_invalid_email() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     let req = test::TestRequest::post()
         .uri("/auth/register")
@@ -94,7 +108,13 @@ async fn test_register_invalid_email() {
 #[actix_rt::test]
 async fn test_register_password_too_short() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     let req = test::TestRequest::post()
         .uri("/auth/register")
@@ -150,7 +170,13 @@ async fn test_login_success() {
 #[actix_rt::test]
 async fn test_login_invalid_credentials() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     let req = test::TestRequest::post()
         .uri("/auth/login")
@@ -213,7 +239,13 @@ async fn test_get_me_authenticated() {
 #[actix_rt::test]
 async fn test_get_me_unauthenticated() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     let req = test::TestRequest::get().uri("/auth/me").to_request();
 
@@ -380,7 +412,13 @@ async fn test_change_password() {
 #[actix_rt::test]
 async fn test_forgot_password_always_returns_ok() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     // Should return OK even for non-existent email (security: don't reveal if email exists)
     let req = test::TestRequest::post()
