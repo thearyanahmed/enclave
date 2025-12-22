@@ -1,4 +1,6 @@
 pub mod actions;
+#[cfg(feature = "actix")]
+pub mod api;
 pub mod crypto;
 pub mod repository;
 pub mod validators;
