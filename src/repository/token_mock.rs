@@ -109,6 +109,7 @@ impl TokenRepository for MockTokenRepository {
         if let Some(t) = tokens.iter_mut().find(|t| t.token == hashed) {
             t.last_used_at = Some(Utc::now());
         }
+        drop(tokens);
         Ok(())
     }
 
@@ -118,6 +119,7 @@ impl TokenRepository for MockTokenRepository {
         let before = tokens.len();
         tokens.retain(|t| t.expires_at > now);
         let removed = before - tokens.len();
-        Ok(removed as u64)
+        drop(tokens);
+        Ok(u64::try_from(removed).unwrap_or(u64::MAX))
     }
 }
