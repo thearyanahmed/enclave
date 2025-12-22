@@ -47,6 +47,32 @@ pub struct LoginAttempt {
     pub attempted_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum AuditEventType {
+    Signup,
+    LoginSuccess,
+    LoginFailed,
+    Logout,
+    PasswordChanged,
+    PasswordResetRequested,
+    PasswordReset,
+    EmailVerificationSent,
+    EmailVerified,
+    TokenRefreshed,
+    AccountDeleted,
+}
+
+#[derive(Debug, Clone)]
+pub struct AuditLog {
+    pub id: i64,
+    pub user_id: Option<i32>,
+    pub event_type: AuditEventType,
+    pub ip_address: Option<String>,
+    pub user_agent: Option<String>,
+    pub metadata: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 impl User {
     pub fn mock() -> Self {
@@ -142,6 +168,20 @@ pub trait RateLimiterRepository {
     async fn get_recent_failed_attempts(&self, email: &str, since: DateTime<Utc>) -> Result<u32, AuthError>;
 
     async fn clear_attempts(&self, email: &str) -> Result<(), AuthError>;
+}
+
+#[async_trait]
+pub trait AuditLogRepository {
+    async fn log_event(
+        &self,
+        user_id: Option<i32>,
+        event_type: AuditEventType,
+        ip_address: Option<&str>,
+        user_agent: Option<&str>,
+        metadata: Option<&str>,
+    ) -> Result<AuditLog, AuthError>;
+
+    async fn get_user_events(&self, user_id: i32, limit: usize) -> Result<Vec<AuditLog>, AuthError>;
 }
 
 pub struct MockUserRepository {
@@ -428,5 +468,63 @@ impl RateLimiterRepository for MockRateLimiterRepository {
         let mut attempts = self.attempts.lock().unwrap();
         attempts.retain(|a| a.email != email);
         Ok(())
+    }
+}
+
+pub struct MockAuditLogRepository {
+    pub logs: std::sync::Mutex<Vec<AuditLog>>,
+    #[allow(dead_code)]
+    next_id: std::sync::Mutex<i64>,
+}
+
+#[cfg(test)]
+impl MockAuditLogRepository {
+    pub fn new() -> Self {
+        Self {
+            logs: std::sync::Mutex::new(vec![]),
+            next_id: std::sync::Mutex::new(1),
+        }
+    }
+}
+
+#[cfg(test)]
+#[async_trait]
+impl AuditLogRepository for MockAuditLogRepository {
+    async fn log_event(
+        &self,
+        user_id: Option<i32>,
+        event_type: AuditEventType,
+        ip_address: Option<&str>,
+        user_agent: Option<&str>,
+        metadata: Option<&str>,
+    ) -> Result<AuditLog, AuthError> {
+        let mut logs = self.logs.lock().unwrap();
+        let mut next_id = self.next_id.lock().unwrap();
+
+        let log = AuditLog {
+            id: *next_id,
+            user_id,
+            event_type,
+            ip_address: ip_address.map(|s| s.to_string()),
+            user_agent: user_agent.map(|s| s.to_string()),
+            metadata: metadata.map(|s| s.to_string()),
+            created_at: Utc::now(),
+        };
+
+        *next_id += 1;
+        logs.push(log.clone());
+        Ok(log)
+    }
+
+    async fn get_user_events(&self, user_id: i32, limit: usize) -> Result<Vec<AuditLog>, AuthError> {
+        let logs = self.logs.lock().unwrap();
+        let user_logs: Vec<AuditLog> = logs
+            .iter()
+            .filter(|l| l.user_id == Some(user_id))
+            .rev()
+            .take(limit)
+            .cloned()
+            .collect();
+        Ok(user_logs)
     }
 }

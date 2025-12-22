@@ -10,17 +10,21 @@ pub use repository::TokenRepository;
 pub use repository::PasswordResetRepository;
 pub use repository::EmailVerificationRepository;
 pub use repository::RateLimiterRepository;
+pub use repository::AuditLogRepository;
 pub use repository::User;
 pub use repository::AccessToken;
 pub use repository::PasswordResetToken;
 pub use repository::EmailVerificationToken;
 pub use repository::LoginAttempt;
+pub use repository::AuditLog;
+pub use repository::AuditEventType;
 
 pub use repository::MockUserRepository;
 pub use repository::MockTokenRepository;
 pub use repository::MockPasswordResetRepository;
 pub use repository::MockEmailVerificationRepository;
 pub use repository::MockRateLimiterRepository;
+pub use repository::MockAuditLogRepository;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
