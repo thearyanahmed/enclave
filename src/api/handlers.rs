@@ -1,11 +1,23 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use std::sync::Arc;
 
-use crate::api::{AuthResponse, ErrorResponse, LoginRequest, RegisterRequest, UserResponse};
-use crate::actions::{LoginAction, SignupAction};
-use crate::{RateLimiterRepository, TokenRepository, UserRepository};
+use crate::actions::{
+    ChangePasswordAction, ForgotPasswordAction, LogoutAction, RefreshTokenAction,
+    ResetPasswordAction, SignupAction, UpdateUserAction, VerifyEmailAction, LoginAction,
+};
+use crate::api::middleware::{extract_bearer_token, AuthenticatedUser};
+use crate::api::{
+    AuthResponse, ChangePasswordRequest, ErrorResponse, ForgotPasswordRequest, LoginRequest,
+    MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
+    UpdateUserRequest, UserResponse, VerifyEmailRequest,
+};
+use crate::crypto::hash_token;
+use crate::{
+    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository, TokenRepository,
+    UserRepository,
+};
 
-pub async fn register<U, T, R>(
+pub async fn register<U, T, R, P, E>(
     body: web::Json<RegisterRequest>,
     user_repo: web::Data<Arc<U>>,
 ) -> HttpResponse
@@ -23,7 +35,7 @@ where
     }
 }
 
-pub async fn login<U, T, R>(
+pub async fn login<U, T, R, P, E>(
     body: web::Json<LoginRequest>,
     user_repo: web::Data<Arc<U>>,
     token_repo: web::Data<Arc<T>>,
@@ -49,6 +61,194 @@ where
         Err(err) => {
             let error_response = ErrorResponse::from(err);
             HttpResponse::Unauthorized().json(error_response)
+        }
+    }
+}
+
+pub async fn logout<U, T, R, P, E>(
+    req: HttpRequest,
+    token_repo: web::Data<Arc<T>>,
+) -> HttpResponse
+where
+    T: TokenRepository + Clone + Send + Sync + 'static,
+{
+    let token = match extract_bearer_token(&req) {
+        Some(t) => t,
+        None => {
+            return HttpResponse::Unauthorized().json(ErrorResponse {
+                error: "Missing authorization token".to_string(),
+                code: "TOKEN_INVALID".to_string(),
+            })
+        }
+    };
+
+    let action = LogoutAction::new(token_repo.as_ref().as_ref().clone());
+    let hashed = hash_token(&token);
+
+    match action.execute(&hashed).await {
+        Ok(()) => HttpResponse::Ok().json(MessageResponse {
+            message: "Successfully logged out".to_string(),
+        }),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::BadRequest().json(error_response)
+        }
+    }
+}
+
+pub async fn forgot_password<U, T, R, P, E>(
+    body: web::Json<ForgotPasswordRequest>,
+    user_repo: web::Data<Arc<U>>,
+    reset_repo: web::Data<Arc<P>>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    P: PasswordResetRepository + Clone + Send + Sync + 'static,
+{
+    let action = ForgotPasswordAction::new(
+        user_repo.as_ref().as_ref().clone(),
+        reset_repo.as_ref().as_ref().clone(),
+    );
+
+    match action.execute(&body.email).await {
+        Ok(_token) => {
+            // Don't reveal whether user exists - always return success
+            HttpResponse::Ok().json(MessageResponse {
+                message: "If the email exists, a password reset link has been sent".to_string(),
+            })
+        }
+        Err(_) => {
+            // Don't reveal whether user exists
+            HttpResponse::Ok().json(MessageResponse {
+                message: "If the email exists, a password reset link has been sent".to_string(),
+            })
+        }
+    }
+}
+
+pub async fn reset_password<U, T, R, P, E>(
+    body: web::Json<ResetPasswordRequest>,
+    user_repo: web::Data<Arc<U>>,
+    reset_repo: web::Data<Arc<P>>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    P: PasswordResetRepository + Clone + Send + Sync + 'static,
+{
+    let action = ResetPasswordAction::new(
+        user_repo.as_ref().as_ref().clone(),
+        reset_repo.as_ref().as_ref().clone(),
+    );
+
+    match action.execute(&body.token, &body.password).await {
+        Ok(()) => HttpResponse::Ok().json(MessageResponse {
+            message: "Password has been reset successfully".to_string(),
+        }),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::BadRequest().json(error_response)
+        }
+    }
+}
+
+pub async fn refresh_token<U, T, R, P, E>(
+    body: web::Json<RefreshTokenRequest>,
+    token_repo: web::Data<Arc<T>>,
+) -> HttpResponse
+where
+    T: TokenRepository + Clone + Send + Sync + 'static,
+{
+    let action = RefreshTokenAction::new(token_repo.as_ref().as_ref().clone());
+    let hashed = hash_token(&body.token);
+
+    match action.execute(&hashed).await {
+        Ok(new_token) => HttpResponse::Ok().json(TokenResponse {
+            token: new_token.token,
+            expires_at: new_token.expires_at,
+        }),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::Unauthorized().json(error_response)
+        }
+    }
+}
+
+pub async fn verify_email<U, T, R, P, E>(
+    body: web::Json<VerifyEmailRequest>,
+    user_repo: web::Data<Arc<U>>,
+    verification_repo: web::Data<Arc<E>>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    E: EmailVerificationRepository + Clone + Send + Sync + 'static,
+{
+    let action = VerifyEmailAction::new(
+        user_repo.as_ref().as_ref().clone(),
+        verification_repo.as_ref().as_ref().clone(),
+    );
+
+    match action.execute(&body.token).await {
+        Ok(()) => HttpResponse::Ok().json(MessageResponse {
+            message: "Email verified successfully".to_string(),
+        }),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::BadRequest().json(error_response)
+        }
+    }
+}
+
+pub async fn get_current_user<U, T, R, P, E>(
+    user: AuthenticatedUser<U, T>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    T: TokenRepository + Clone + Send + Sync + 'static,
+{
+    HttpResponse::Ok().json(UserResponse::from(user.into_inner()))
+}
+
+pub async fn update_user<U, T, R, P, E>(
+    user: AuthenticatedUser<U, T>,
+    body: web::Json<UpdateUserRequest>,
+    user_repo: web::Data<Arc<U>>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    T: TokenRepository + Clone + Send + Sync + 'static,
+{
+    let action = UpdateUserAction::new(user_repo.as_ref().as_ref().clone());
+
+    match action.execute(user.user().id, &body.name, &body.email).await {
+        Ok(updated_user) => HttpResponse::Ok().json(UserResponse::from(updated_user)),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::BadRequest().json(error_response)
+        }
+    }
+}
+
+pub async fn change_password<U, T, R, P, E>(
+    user: AuthenticatedUser<U, T>,
+    body: web::Json<ChangePasswordRequest>,
+    user_repo: web::Data<Arc<U>>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    T: TokenRepository + Clone + Send + Sync + 'static,
+{
+    let action = ChangePasswordAction::new(user_repo.as_ref().as_ref().clone());
+
+    match action
+        .execute(user.user().id, &body.current_password, &body.new_password)
+        .await
+    {
+        Ok(()) => HttpResponse::Ok().json(MessageResponse {
+            message: "Password changed successfully".to_string(),
+        }),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::BadRequest().json(error_response)
         }
     }
 }
