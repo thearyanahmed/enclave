@@ -1,9 +1,40 @@
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
+/// Configuration for login rate limiting behavior.
+///
+/// Controls how the login system handles repeated failed attempts to prevent
+/// brute-force attacks while avoiding excessive lockouts for legitimate users.
+///
+/// # Default Values
+///
+/// - `max_failed_attempts`: 5
+/// - `lockout_duration_minutes`: 15
+///
+/// # Example
+///
+/// ```rust
+/// use enclave::actions::LoginConfig;
+///
+/// // Use stricter settings for sensitive applications
+/// let config = LoginConfig {
+///     max_failed_attempts: 3,
+///     lockout_duration_minutes: 30,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub struct LoginConfig {
+    /// Maximum number of failed login attempts before the account is locked out.
+    ///
+    /// Once this threshold is reached, further login attempts will be rejected
+    /// with `AuthError::TooManyAttempts` until the lockout period expires.
     pub max_failed_attempts: u32,
+
+    /// Duration in minutes that an account remains locked after exceeding
+    /// the maximum failed attempts.
+    ///
+    /// After this period, the failed attempt counter resets and the user
+    /// can attempt to log in again.
     pub lockout_duration_minutes: i64,
 }
 
