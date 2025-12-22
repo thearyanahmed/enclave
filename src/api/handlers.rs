@@ -17,7 +17,7 @@ use crate::{
     UserRepository,
 };
 
-pub async fn register<U, T, R, P, E>(
+pub async fn register<U>(
     body: web::Json<RegisterRequest>,
     user_repo: web::Data<Arc<U>>,
 ) -> HttpResponse
@@ -35,7 +35,7 @@ where
     }
 }
 
-pub async fn login<U, T, R, P, E>(
+pub async fn login<U, T, R>(
     body: web::Json<LoginRequest>,
     user_repo: web::Data<Arc<U>>,
     token_repo: web::Data<Arc<T>>,
@@ -65,7 +65,7 @@ where
     }
 }
 
-pub async fn logout<U, T, R, P, E>(
+pub async fn logout<T>(
     req: HttpRequest,
     token_repo: web::Data<Arc<T>>,
 ) -> HttpResponse
@@ -96,7 +96,7 @@ where
     }
 }
 
-pub async fn forgot_password<U, T, R, P, E>(
+pub async fn forgot_password<U, P>(
     body: web::Json<ForgotPasswordRequest>,
     user_repo: web::Data<Arc<U>>,
     reset_repo: web::Data<Arc<P>>,
@@ -126,7 +126,7 @@ where
     }
 }
 
-pub async fn reset_password<U, T, R, P, E>(
+pub async fn reset_password<U, P>(
     body: web::Json<ResetPasswordRequest>,
     user_repo: web::Data<Arc<U>>,
     reset_repo: web::Data<Arc<P>>,
@@ -151,7 +151,7 @@ where
     }
 }
 
-pub async fn refresh_token<U, T, R, P, E>(
+pub async fn refresh_token<T>(
     body: web::Json<RefreshTokenRequest>,
     token_repo: web::Data<Arc<T>>,
 ) -> HttpResponse
@@ -173,7 +173,7 @@ where
     }
 }
 
-pub async fn verify_email<U, T, R, P, E>(
+pub async fn verify_email<U, E>(
     body: web::Json<VerifyEmailRequest>,
     user_repo: web::Data<Arc<U>>,
     verification_repo: web::Data<Arc<E>>,
@@ -198,7 +198,7 @@ where
     }
 }
 
-pub async fn get_current_user<U, T, R, P, E>(
+pub async fn get_current_user<U, T>(
     user: AuthenticatedUser<U, T>,
 ) -> HttpResponse
 where
@@ -208,7 +208,7 @@ where
     HttpResponse::Ok().json(UserResponse::from(user.into_inner()))
 }
 
-pub async fn update_user<U, T, R, P, E>(
+pub async fn update_user<U, T>(
     user: AuthenticatedUser<U, T>,
     body: web::Json<UpdateUserRequest>,
     user_repo: web::Data<Arc<U>>,
@@ -228,7 +228,7 @@ where
     }
 }
 
-pub async fn change_password<U, T, R, P, E>(
+pub async fn change_password<U, T>(
     user: AuthenticatedUser<U, T>,
     body: web::Json<ChangePasswordRequest>,
     user_repo: web::Data<Arc<U>>,
