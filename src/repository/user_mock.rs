@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use async_trait::async_trait;
 use chrono::Utc;
 use std::sync::{Arc, Mutex};

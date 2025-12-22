@@ -4,7 +4,7 @@
 //! Run with: `cargo test --features "actix mocks" --test e2e_actix`
 
 #![cfg(all(feature = "actix", feature = "mocks"))]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
 use actix_web::{App, http::StatusCode, test, web};
 
