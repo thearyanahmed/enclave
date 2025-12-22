@@ -79,6 +79,7 @@ impl JwtService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use jsonwebtoken::Header;
 
     #[test]
     fn test_encode_decode() {
@@ -118,11 +119,20 @@ mod tests {
 
     #[test]
     fn test_expired_token() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!")
-            .with_expiry(Duration::seconds(-1)); // Already expired
-
+        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
         let service = JwtService::new(config);
-        let token = service.encode(42).unwrap();
+
+        // Manually create an expired token
+        let claims = JwtClaims {
+            sub: "42".to_owned(),
+            exp: Utc::now().timestamp() - 3600, // 1 hour in the past
+            iat: Utc::now().timestamp() - 7200,
+            iss: None,
+            aud: None,
+        };
+
+        let encoding_key = EncodingKey::from_secret(b"test-secret-key-32-bytes-long!!");
+        let token = jsonwebtoken::encode(&Header::default(), &claims, &encoding_key).unwrap();
 
         let result = service.decode(&token);
         assert!(result.is_err());
