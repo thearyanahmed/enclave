@@ -5,17 +5,17 @@ mod rate_limiter;
 mod token;
 mod user;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 mod audit_log_mock;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 mod email_verification_mock;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 mod password_reset_mock;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 mod rate_limiter_mock;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 mod token_mock;
-#[cfg(test)]
+#[cfg(any(test, feature = "mocks"))]
 mod user_mock;
 
 pub use audit_log::AuditEventType;
