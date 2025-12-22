@@ -37,8 +37,8 @@ struct TokenRecord {
 
 impl TokenRecord {
     fn into_access_token(self, plain_token: String) -> AccessToken {
-        let abilities: Vec<String> = serde_json::from_value(self.abilities)
-            .unwrap_or_else(|_| vec!["*".to_owned()]);
+        let abilities: Vec<String> =
+            serde_json::from_value(self.abilities).unwrap_or_else(|_| vec!["*".to_owned()]);
 
         AccessToken {
             token: plain_token,
@@ -83,7 +83,7 @@ impl TokenRepository for PostgresTokenRepository {
         let row: TokenRecord = sqlx::query_as(
             r"INSERT INTO access_tokens (token_hash, user_id, name, abilities, expires_at)
                VALUES ($1, $2, $3, $4, $5)
-               RETURNING user_id, name, abilities, expires_at, created_at, last_used_at"
+               RETURNING user_id, name, abilities, expires_at, created_at, last_used_at",
         )
         .bind(&token_hash)
         .bind(user_id)
@@ -102,7 +102,7 @@ impl TokenRepository for PostgresTokenRepository {
 
         let row: Option<TokenRecord> = sqlx::query_as(
             r"SELECT user_id, name, abilities, expires_at, created_at, last_used_at
-               FROM access_tokens WHERE token_hash = $1"
+               FROM access_tokens WHERE token_hash = $1",
         )
         .bind(&token_hash)
         .fetch_optional(&self.pool)

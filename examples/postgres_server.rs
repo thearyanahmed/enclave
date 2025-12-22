@@ -37,8 +37,7 @@ use sqlx::postgres::PgPoolOptions;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Load database URL from environment
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // Create connection pool
     let pool = PgPoolOptions::new()
@@ -77,13 +76,15 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(rate_limiter.clone()))
             .app_data(web::Data::new(password_reset.clone()))
             .app_data(web::Data::new(email_verification.clone()))
-            .configure(auth_routes::<
-                PostgresUserRepository,
-                PostgresTokenRepository,
-                PostgresRateLimiterRepository,
-                PostgresPasswordResetRepository,
-                PostgresEmailVerificationRepository,
-            >)
+            .configure(
+                auth_routes::<
+                    PostgresUserRepository,
+                    PostgresTokenRepository,
+                    PostgresRateLimiterRepository,
+                    PostgresPasswordResetRepository,
+                    PostgresEmailVerificationRepository,
+                >,
+            )
     })
     .bind("127.0.0.1:8080")?
     .run()

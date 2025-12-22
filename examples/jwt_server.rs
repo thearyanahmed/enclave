@@ -81,13 +81,15 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(rate_limiter.clone()))
             .app_data(web::Data::new(password_reset.clone()))
             .app_data(web::Data::new(email_verification.clone()))
-            .configure(auth_routes::<
-                MockUserRepository,
-                JwtTokenProvider,
-                MockRateLimiterRepository,
-                MockPasswordResetRepository,
-                MockEmailVerificationRepository,
-            >)
+            .configure(
+                auth_routes::<
+                    MockUserRepository,
+                    JwtTokenProvider,
+                    MockRateLimiterRepository,
+                    MockPasswordResetRepository,
+                    MockEmailVerificationRepository,
+                >,
+            )
     })
     .bind("127.0.0.1:8080")?
     .run()

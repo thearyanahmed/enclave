@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::crypto::hash_token;
 use crate::AuthError;
+use crate::crypto::hash_token;
 
 use super::token::{AccessToken, CreateTokenOptions, TokenRepository};
 

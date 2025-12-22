@@ -97,7 +97,11 @@ async fn test_jwt_register_and_login() {
     let token = body["token"].as_str().unwrap();
 
     // JWT tokens have 3 parts separated by dots
-    assert_eq!(token.split('.').count(), 3, "Token should be a JWT (3 parts)");
+    assert_eq!(
+        token.split('.').count(),
+        3,
+        "Token should be a JWT (3 parts)"
+    );
     assert_eq!(body["user"]["email"], "jwt@example.com");
 }
 
@@ -149,7 +153,13 @@ async fn test_jwt_protected_route() {
 #[actix_rt::test]
 async fn test_jwt_invalid_token_rejected() {
     let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(user_repo, token_repo, rate_repo, reset_repo, verification_repo);
+    let app = test_app!(
+        user_repo,
+        token_repo,
+        rate_repo,
+        reset_repo,
+        verification_repo
+    );
 
     // Try to access protected route with invalid JWT
     let req = test::TestRequest::get()

@@ -81,10 +81,10 @@ impl TokenRepository for JwtTokenProvider {
         match self.service.decode(token) {
             Ok(claims) => {
                 let user_id = claims.user_id()?;
-                let expires_at = DateTime::from_timestamp(claims.exp, 0)
-                    .ok_or(AuthError::TokenInvalid)?;
-                let created_at = DateTime::from_timestamp(claims.iat, 0)
-                    .ok_or(AuthError::TokenInvalid)?;
+                let expires_at =
+                    DateTime::from_timestamp(claims.exp, 0).ok_or(AuthError::TokenInvalid)?;
+                let created_at =
+                    DateTime::from_timestamp(claims.iat, 0).ok_or(AuthError::TokenInvalid)?;
 
                 Ok(Some(AccessToken {
                     token: token.to_owned(),
