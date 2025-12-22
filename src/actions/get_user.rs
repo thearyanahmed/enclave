@@ -10,12 +10,10 @@ impl<U: UserRepository> GetUserAction<U> {
     }
 
     pub async fn execute(&self, user_id: i32) -> Result<User, AuthError> {
-        let user = self.user_repository.find_user_by_id(user_id).await?;
-
-        match user {
-            Some(user) => Ok(user),
-            None => Err(AuthError::UserNotFound),
-        }
+        self.user_repository
+            .find_user_by_id(user_id)
+            .await?
+            .ok_or(AuthError::UserNotFound)
     }
 }
 

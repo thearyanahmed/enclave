@@ -8,7 +8,7 @@ pub use name::validate_name;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ValidationError {
     EmailEmpty,
     EmailTooLong,

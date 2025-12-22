@@ -95,11 +95,11 @@ where
 
         let token_repo = req
             .app_data::<web::Data<Arc<T>>>()
-            .map(|data| data.as_ref().clone());
+            .map(|data| Arc::clone(data.as_ref()));
 
         let user_repo = req
             .app_data::<web::Data<Arc<U>>>()
-            .map(|data| data.as_ref().clone());
+            .map(|data| Arc::clone(data.as_ref()));
 
         Box::pin(async move {
             let token = token.ok_or(AuthenticationError {

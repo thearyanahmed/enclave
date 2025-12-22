@@ -110,20 +110,12 @@ where
         reset_repo.as_ref().as_ref().clone(),
     );
 
-    match action.execute(&body.email).await {
-        Ok(_token) => {
-            // Don't reveal whether user exists - always return success
-            HttpResponse::Ok().json(MessageResponse {
-                message: "If the email exists, a password reset link has been sent".to_owned(),
-            })
-        }
-        Err(_) => {
-            // Don't reveal whether user exists
-            HttpResponse::Ok().json(MessageResponse {
-                message: "If the email exists, a password reset link has been sent".to_owned(),
-            })
-        }
-    }
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email).await;
+
+    HttpResponse::Ok().json(MessageResponse {
+        message: "If the email exists, a password reset link has been sent".to_owned(),
+    })
 }
 
 pub async fn reset_password<U, P>(

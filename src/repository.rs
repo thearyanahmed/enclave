@@ -48,7 +48,7 @@ pub struct LoginAttempt {
     pub attempted_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuditEventType {
     Signup,
     LoginSuccess,
@@ -224,7 +224,7 @@ impl UserRepository for MockUserRepository {
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
-            user.hashed_password = hashed_password.to_owned();
+            hashed_password.clone_into(&mut user.hashed_password);
             user.updated_at = Utc::now();
             Ok(())
         } else {
@@ -246,8 +246,8 @@ impl UserRepository for MockUserRepository {
     async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
-            user.name = name.to_owned();
-            user.email = email.to_owned();
+            name.clone_into(&mut user.name);
+            email.clone_into(&mut user.email);
             user.updated_at = Utc::now();
             Ok(user.clone())
         } else {
