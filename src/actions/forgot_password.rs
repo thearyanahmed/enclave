@@ -1,9 +1,14 @@
 use crate::{AuthError, PasswordResetRepository, PasswordResetToken, UserRepository};
 use chrono::{Duration, Utc};
 
+#[cfg(feature = "tracing")]
+use crate::TracingConfig;
+
 pub struct ForgotPasswordAction<U: UserRepository, P: PasswordResetRepository> {
     user_repository: U,
     reset_repository: P,
+    #[cfg(feature = "tracing")]
+    tracing: Option<TracingConfig>,
 }
 
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
@@ -11,10 +16,42 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         ForgotPasswordAction {
             user_repository,
             reset_repository,
+            #[cfg(feature = "tracing")]
+            tracing: None,
         }
     }
 
+    #[cfg(feature = "tracing")]
+    pub fn with_tracing(mut self) -> Self {
+        self.tracing = Some(TracingConfig::new("forgot_password"));
+        self
+    }
+
+    #[cfg(feature = "tracing")]
+    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
+        self.tracing = Some(config);
+        self
+    }
+
     pub async fn execute(&self, email: &str) -> Result<PasswordResetToken, AuthError> {
+        #[cfg(feature = "tracing")]
+        {
+            if let Some(ref config) = self.tracing {
+                use tracing::Instrument;
+                let span = tracing::info_span!("action", name = config.span_name);
+                let result = self.execute_inner(email).instrument(span).await;
+                match &result {
+                    Ok(_) => tracing::info!("forgot password token created"),
+                    Err(e) => tracing::warn!(error = %e, "forgot password failed"),
+                }
+                return result;
+            }
+        }
+
+        self.execute_inner(email).await
+    }
+
+    async fn execute_inner(&self, email: &str) -> Result<PasswordResetToken, AuthError> {
         let user = self.user_repository.find_user_by_email(email).await?;
 
         match user {
