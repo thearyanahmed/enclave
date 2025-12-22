@@ -13,8 +13,8 @@ use crate::api::{
 };
 use crate::crypto::hash_token;
 use crate::{
-    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository, TokenRepository,
-    UserRepository,
+    AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
+    TokenRepository, UserRepository,
 };
 
 pub async fn register<U>(
@@ -59,8 +59,18 @@ where
             expires_at: token.expires_at,
         }),
         Err(err) => {
-            let error_response = ErrorResponse::from(err);
-            HttpResponse::Unauthorized().json(error_response)
+            // Clone required: err is consumed by ErrorResponse::from() but also needed for match
+            let error_response = ErrorResponse::from(err.clone());
+            match err {
+                AuthError::TooManyAttempts => HttpResponse::TooManyRequests().json(error_response),
+                AuthError::InvalidEmail | AuthError::InvalidPassword | AuthError::Validation(_) => {
+                    HttpResponse::BadRequest().json(error_response)
+                }
+                AuthError::InvalidCredentials | AuthError::UserNotFound => {
+                    HttpResponse::Unauthorized().json(error_response)
+                }
+                _ => HttpResponse::InternalServerError().json(error_response),
+            }
         }
     }
 }
