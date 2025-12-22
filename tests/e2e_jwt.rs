@@ -8,7 +8,7 @@
 
 use actix_web::{App, http::StatusCode, test, web};
 
-use enclave::api::actix::{auth_routes, private_routes, public_routes};
+use enclave::api::actix::auth_routes;
 use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,
