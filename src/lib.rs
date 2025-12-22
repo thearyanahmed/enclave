@@ -1,6 +1,9 @@
 pub mod actions;
+pub mod crypto;
 pub mod repository;
 pub mod validators;
+
+pub use crypto::hash_token;
 
 pub use repository::UserRepository;
 pub use repository::TokenRepository;

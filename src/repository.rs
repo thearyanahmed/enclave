@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 use crate::AuthError;
+#[cfg(test)]
+use crate::crypto::hash_token;
 use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone)]
@@ -249,24 +251,37 @@ impl MockTokenRepository {
 impl TokenRepository for MockTokenRepository {
     async fn create_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<AccessToken, AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
-        let token = AccessToken {
-            token: Self::generate_token(),
+        let plain_token = Self::generate_token();
+        let hashed_token = hash_token(&plain_token);
+
+        // Store with hashed token
+        let stored_token = AccessToken {
+            token: hashed_token,
             user_id,
             expires_at,
             created_at: Utc::now(),
         };
-        tokens.push(token.clone());
-        Ok(token)
+        tokens.push(stored_token);
+
+        // Return with plain token
+        Ok(AccessToken {
+            token: plain_token,
+            user_id,
+            expires_at,
+            created_at: Utc::now(),
+        })
     }
 
     async fn find_token(&self, token: &str) -> Result<Option<AccessToken>, AuthError> {
+        let hashed = hash_token(token);
         let tokens = self.tokens.lock().unwrap();
-        Ok(tokens.iter().find(|t| t.token == token).cloned())
+        Ok(tokens.iter().find(|t| t.token == hashed).cloned())
     }
 
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError> {
+        let hashed = hash_token(token);
         let mut tokens = self.tokens.lock().unwrap();
-        tokens.retain(|t| t.token != token);
+        tokens.retain(|t| t.token != hashed);
         Ok(())
     }
 
