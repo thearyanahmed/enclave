@@ -3,9 +3,9 @@
 // with each other's data.
 #![allow(clippy::indexing_slicing)]
 
-//! End-to-end tests for PostgreSQL repositories.
+//! End-to-end tests for `PostgreSQL` repositories.
 //!
-//! These tests require a running PostgreSQL database.
+//! These tests require a running `PostgreSQL` database.
 //! Run with: `cargo test --features sqlx_postgres --test e2e_postgres`
 //!
 //! Before running, start the database:

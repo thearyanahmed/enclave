@@ -35,7 +35,6 @@ fn string_to_event_type(s: &str) -> AuditEventType {
     match s {
         "signup" => AuditEventType::Signup,
         "login_success" => AuditEventType::LoginSuccess,
-        "login_failed" => AuditEventType::LoginFailed,
         "logout" => AuditEventType::Logout,
         "password_changed" => AuditEventType::PasswordChanged,
         "password_reset_requested" => AuditEventType::PasswordResetRequested,
@@ -44,6 +43,7 @@ fn string_to_event_type(s: &str) -> AuditEventType {
         "email_verified" => AuditEventType::EmailVerified,
         "token_refreshed" => AuditEventType::TokenRefreshed,
         "account_deleted" => AuditEventType::AccountDeleted,
+        // "login_failed" and any unknown strings default to LoginFailed
         _ => AuditEventType::LoginFailed,
     }
 }

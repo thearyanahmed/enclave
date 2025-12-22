@@ -36,7 +36,8 @@ serial_test = "3"
 [lints.rust]
 unsafe_code = "deny"
 unused = { level = "warn", priority = -1 }
-missing_debug_implementations = "warn"
+# Allowing: generic structs would need Debug bounds on all type params
+missing_debug_implementations = "allow"
 rust_2018_idioms = { level = "warn", priority = -1 }
 
 [lints.clippy]
@@ -97,3 +98,5 @@ future_not_send = "allow"
 missing_const_for_fn = "allow"
 use_self = "allow"
 new_without_default = "allow"
+manual_let_else = "allow"
+single_match_else = "allow"

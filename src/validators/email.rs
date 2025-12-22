@@ -2,11 +2,11 @@ use regex::Regex;
 use std::sync::LazyLock;
 use super::ValidationError;
 
+// Panic is intentional: regex compilation failure is a programmer error
+#[allow(clippy::expect_used)]
 static EMAIL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    match Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$") {
-        Ok(re) => re,
-        Err(e) => panic!("failed to compile email regex: {e}"),
-    }
+    Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .expect("failed to compile email regex")
 });
 
 pub fn validate_email(email: &str) -> Result<(), ValidationError> {

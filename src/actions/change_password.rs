@@ -35,7 +35,7 @@ impl<U: UserRepository> ChangePasswordAction<U> {
 fn verify_password(password: &str, hashed: &str) -> Result<bool, AuthError> {
     let parsed_hash = PasswordHash::new(hashed).map_err(|_| AuthError::PasswordHashError)?;
     match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
-        Ok(_) => Ok(true),
+        Ok(()) => Ok(true),
         Err(_) => Ok(false),
     }
 }

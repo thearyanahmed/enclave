@@ -35,7 +35,7 @@ pub use repository::MockAuditLogRepository;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuthError {
     UserNotFound,
     UserAlreadyExists,
