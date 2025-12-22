@@ -29,12 +29,18 @@ mod tests {
     #[test]
     fn test_name_empty() {
         assert_eq!(validate_name("").unwrap_err(), ValidationError::NameEmpty);
-        assert_eq!(validate_name("   ").unwrap_err(), ValidationError::NameEmpty);
+        assert_eq!(
+            validate_name("   ").unwrap_err(),
+            ValidationError::NameEmpty
+        );
     }
 
     #[test]
     fn test_name_too_long() {
         let long_name = "a".repeat(101);
-        assert_eq!(validate_name(&long_name).unwrap_err(), ValidationError::NameTooLong);
+        assert_eq!(
+            validate_name(&long_name).unwrap_err(),
+            ValidationError::NameTooLong
+        );
     }
 }

@@ -1,7 +1,7 @@
-use async_trait::async_trait;
 use crate::AuthError;
 #[cfg(test)]
 use crate::crypto::hash_token;
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -135,7 +135,11 @@ pub trait UserRepository {
 
 #[async_trait]
 pub trait TokenRepository {
-    async fn create_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<AccessToken, AuthError>;
+    async fn create_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<AccessToken, AuthError>;
 
     async fn find_token(&self, token: &str) -> Result<Option<AccessToken>, AuthError>;
 
@@ -146,7 +150,11 @@ pub trait TokenRepository {
 
 #[async_trait]
 pub trait PasswordResetRepository {
-    async fn create_reset_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<PasswordResetToken, AuthError>;
+    async fn create_reset_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<PasswordResetToken, AuthError>;
 
     async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError>;
 
@@ -155,18 +163,34 @@ pub trait PasswordResetRepository {
 
 #[async_trait]
 pub trait EmailVerificationRepository {
-    async fn create_verification_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<EmailVerificationToken, AuthError>;
+    async fn create_verification_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<EmailVerificationToken, AuthError>;
 
-    async fn find_verification_token(&self, token: &str) -> Result<Option<EmailVerificationToken>, AuthError>;
+    async fn find_verification_token(
+        &self,
+        token: &str,
+    ) -> Result<Option<EmailVerificationToken>, AuthError>;
 
     async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError>;
 }
 
 #[async_trait]
 pub trait RateLimiterRepository {
-    async fn record_attempt(&self, email: &str, success: bool, ip_address: Option<&str>) -> Result<(), AuthError>;
+    async fn record_attempt(
+        &self,
+        email: &str,
+        success: bool,
+        ip_address: Option<&str>,
+    ) -> Result<(), AuthError>;
 
-    async fn get_recent_failed_attempts(&self, email: &str, since: DateTime<Utc>) -> Result<u32, AuthError>;
+    async fn get_recent_failed_attempts(
+        &self,
+        email: &str,
+        since: DateTime<Utc>,
+    ) -> Result<u32, AuthError>;
 
     async fn clear_attempts(&self, email: &str) -> Result<(), AuthError>;
 }
@@ -182,7 +206,8 @@ pub trait AuditLogRepository {
         metadata: Option<&str>,
     ) -> Result<AuditLog, AuthError>;
 
-    async fn get_user_events(&self, user_id: i32, limit: usize) -> Result<Vec<AuditLog>, AuthError>;
+    async fn get_user_events(&self, user_id: i32, limit: usize)
+    -> Result<Vec<AuditLog>, AuthError>;
 }
 
 pub struct MockUserRepository {
@@ -291,7 +316,11 @@ impl MockTokenRepository {
 #[cfg(test)]
 #[async_trait]
 impl TokenRepository for MockTokenRepository {
-    async fn create_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<AccessToken, AuthError> {
+    async fn create_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<AccessToken, AuthError> {
         let plain_token = Self::generate_token();
         let hashed_token = hash_token(&plain_token);
         let now = Utc::now();
@@ -363,7 +392,11 @@ impl MockPasswordResetRepository {
 #[cfg(test)]
 #[async_trait]
 impl PasswordResetRepository for MockPasswordResetRepository {
-    async fn create_reset_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<PasswordResetToken, AuthError> {
+    async fn create_reset_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<PasswordResetToken, AuthError> {
         let token = PasswordResetToken {
             token: Self::generate_token(),
             user_id,
@@ -415,7 +448,11 @@ impl MockEmailVerificationRepository {
 #[cfg(test)]
 #[async_trait]
 impl EmailVerificationRepository for MockEmailVerificationRepository {
-    async fn create_verification_token(&self, user_id: i32, expires_at: DateTime<Utc>) -> Result<EmailVerificationToken, AuthError> {
+    async fn create_verification_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<EmailVerificationToken, AuthError> {
         let token = EmailVerificationToken {
             token: Self::generate_token(),
             user_id,
@@ -430,7 +467,10 @@ impl EmailVerificationRepository for MockEmailVerificationRepository {
         Ok(token)
     }
 
-    async fn find_verification_token(&self, token: &str) -> Result<Option<EmailVerificationToken>, AuthError> {
+    async fn find_verification_token(
+        &self,
+        token: &str,
+    ) -> Result<Option<EmailVerificationToken>, AuthError> {
         let tokens = self.tokens.lock().unwrap();
         Ok(tokens.iter().find(|t| t.token == token).cloned())
     }
@@ -459,7 +499,12 @@ impl MockRateLimiterRepository {
 #[cfg(test)]
 #[async_trait]
 impl RateLimiterRepository for MockRateLimiterRepository {
-    async fn record_attempt(&self, email: &str, success: bool, ip_address: Option<&str>) -> Result<(), AuthError> {
+    async fn record_attempt(
+        &self,
+        email: &str,
+        success: bool,
+        ip_address: Option<&str>,
+    ) -> Result<(), AuthError> {
         let attempt = LoginAttempt {
             email: email.to_owned(),
             success,
@@ -474,7 +519,11 @@ impl RateLimiterRepository for MockRateLimiterRepository {
         Ok(())
     }
 
-    async fn get_recent_failed_attempts(&self, email: &str, since: DateTime<Utc>) -> Result<u32, AuthError> {
+    async fn get_recent_failed_attempts(
+        &self,
+        email: &str,
+        since: DateTime<Utc>,
+    ) -> Result<u32, AuthError> {
         let count = {
             let attempts = self.attempts.lock().unwrap();
             attempts
@@ -545,7 +594,11 @@ impl AuditLogRepository for MockAuditLogRepository {
         Ok(log)
     }
 
-    async fn get_user_events(&self, user_id: i32, limit: usize) -> Result<Vec<AuditLog>, AuthError> {
+    async fn get_user_events(
+        &self,
+        user_id: i32,
+        limit: usize,
+    ) -> Result<Vec<AuditLog>, AuthError> {
         let user_logs = {
             let logs = self.logs.lock().unwrap();
             logs.iter()

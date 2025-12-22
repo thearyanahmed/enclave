@@ -70,8 +70,8 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         metadata: Option<&str>,
     ) -> Result<AuditLog, AuthError> {
         let event_type_str = event_type_to_string(&event_type);
-        let metadata_json: Option<serde_json::Value> = metadata
-            .and_then(|m| serde_json::from_str(m).ok());
+        let metadata_json: Option<serde_json::Value> =
+            metadata.and_then(|m| serde_json::from_str(m).ok());
 
         let row: AuditLogRecord = sqlx::query_as(
             "INSERT INTO audit_logs (user_id, event_type, ip_address, user_agent, metadata) VALUES ($1, $2, $3, $4, $5) RETURNING id, user_id, event_type, ip_address, user_agent, metadata, created_at"

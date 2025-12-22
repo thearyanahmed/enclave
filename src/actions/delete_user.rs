@@ -33,7 +33,11 @@ mod tests {
         assert!(result.is_ok());
 
         // User should be deleted
-        let found = action.user_repository.find_user_by_id(user_id).await.unwrap();
+        let found = action
+            .user_repository
+            .find_user_by_id(user_id)
+            .await
+            .unwrap();
         assert!(found.is_none());
     }
 

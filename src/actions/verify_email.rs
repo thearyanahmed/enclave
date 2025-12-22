@@ -1,5 +1,5 @@
-use chrono::Utc;
 use crate::{AuthError, EmailVerificationRepository, UserRepository};
+use chrono::Utc;
 
 pub struct VerifyEmailAction<U: UserRepository, E: EmailVerificationRepository> {
     user_repository: U,
@@ -8,21 +8,33 @@ pub struct VerifyEmailAction<U: UserRepository, E: EmailVerificationRepository> 
 
 impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> {
     pub fn new(user_repository: U, verification_repository: E) -> Self {
-        VerifyEmailAction { user_repository, verification_repository }
+        VerifyEmailAction {
+            user_repository,
+            verification_repository,
+        }
     }
 
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
-        let verification_token = self.verification_repository.find_verification_token(token).await?;
+        let verification_token = self
+            .verification_repository
+            .find_verification_token(token)
+            .await?;
 
         match verification_token {
             Some(verification_token) => {
                 if verification_token.expires_at < Utc::now() {
-                    self.verification_repository.delete_verification_token(token).await?;
+                    self.verification_repository
+                        .delete_verification_token(token)
+                        .await?;
                     return Err(AuthError::TokenExpired);
                 }
 
-                self.user_repository.verify_email(verification_token.user_id).await?;
-                self.verification_repository.delete_verification_token(token).await?;
+                self.user_repository
+                    .verify_email(verification_token.user_id)
+                    .await?;
+                self.verification_repository
+                    .delete_verification_token(token)
+                    .await?;
 
                 Ok(())
             }
@@ -34,7 +46,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, MockEmailVerificationRepository, User};
+    use crate::{MockEmailVerificationRepository, MockUserRepository, User};
     use chrono::Duration;
 
     #[tokio::test]
@@ -47,7 +59,10 @@ mod tests {
         user_repo.users.lock().unwrap().push(user);
 
         let expires_at = Utc::now() + Duration::hours(24);
-        let token = verification_repo.create_verification_token(user_id, expires_at).await.unwrap();
+        let token = verification_repo
+            .create_verification_token(user_id, expires_at)
+            .await
+            .unwrap();
 
         let action = VerifyEmailAction::new(user_repo, verification_repo);
         let result = action.execute(&token.token).await;
@@ -55,11 +70,20 @@ mod tests {
         assert!(result.is_ok());
 
         // User should be verified
-        let user = action.user_repository.find_user_by_id(user_id).await.unwrap().unwrap();
+        let user = action
+            .user_repository
+            .find_user_by_id(user_id)
+            .await
+            .unwrap()
+            .unwrap();
         assert!(user.email_verified_at.is_some());
 
         // Token should be deleted
-        let found = action.verification_repository.find_verification_token(&token.token).await.unwrap();
+        let found = action
+            .verification_repository
+            .find_verification_token(&token.token)
+            .await
+            .unwrap();
         assert!(found.is_none());
     }
 
@@ -85,7 +109,10 @@ mod tests {
         user_repo.users.lock().unwrap().push(user);
 
         let expires_at = Utc::now() - Duration::hours(1); // Already expired
-        let token = verification_repo.create_verification_token(user_id, expires_at).await.unwrap();
+        let token = verification_repo
+            .create_verification_token(user_id, expires_at)
+            .await
+            .unwrap();
 
         let action = VerifyEmailAction::new(user_repo, verification_repo);
         let result = action.execute(&token.token).await;

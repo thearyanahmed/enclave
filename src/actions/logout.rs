@@ -34,7 +34,11 @@ mod tests {
         let result = logout.execute(&token.token).await;
         assert!(result.is_ok());
 
-        let found = logout.token_repository.find_token(&token.token).await.unwrap();
+        let found = logout
+            .token_repository
+            .find_token(&token.token)
+            .await
+            .unwrap();
         assert!(found.is_none());
     }
 }

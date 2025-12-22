@@ -1,6 +1,6 @@
+use super::ValidationError;
 use regex::Regex;
 use std::sync::LazyLock;
-use super::ValidationError;
 
 // Panic is intentional: regex compilation failure is a programmer error
 #[allow(clippy::expect_used)]
@@ -40,15 +40,30 @@ mod tests {
     #[test]
     fn test_invalid_emails() {
         assert_eq!(validate_email("").unwrap_err(), ValidationError::EmailEmpty);
-        assert_eq!(validate_email("notanemail").unwrap_err(), ValidationError::EmailInvalidFormat);
-        assert_eq!(validate_email("missing@domain").unwrap_err(), ValidationError::EmailInvalidFormat);
-        assert_eq!(validate_email("@nodomain.com").unwrap_err(), ValidationError::EmailInvalidFormat);
-        assert_eq!(validate_email("spaces in@email.com").unwrap_err(), ValidationError::EmailInvalidFormat);
+        assert_eq!(
+            validate_email("notanemail").unwrap_err(),
+            ValidationError::EmailInvalidFormat
+        );
+        assert_eq!(
+            validate_email("missing@domain").unwrap_err(),
+            ValidationError::EmailInvalidFormat
+        );
+        assert_eq!(
+            validate_email("@nodomain.com").unwrap_err(),
+            ValidationError::EmailInvalidFormat
+        );
+        assert_eq!(
+            validate_email("spaces in@email.com").unwrap_err(),
+            ValidationError::EmailInvalidFormat
+        );
     }
 
     #[test]
     fn test_email_too_long() {
         let long_email = format!("{}@example.com", "a".repeat(250));
-        assert_eq!(validate_email(&long_email).unwrap_err(), ValidationError::EmailTooLong);
+        assert_eq!(
+            validate_email(&long_email).unwrap_err(),
+            ValidationError::EmailTooLong
+        );
     }
 }

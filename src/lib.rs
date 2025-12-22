@@ -12,26 +12,26 @@ pub mod validators;
 
 pub use crypto::hash_token;
 
-pub use repository::UserRepository;
-pub use repository::TokenRepository;
-pub use repository::PasswordResetRepository;
-pub use repository::EmailVerificationRepository;
-pub use repository::RateLimiterRepository;
-pub use repository::AuditLogRepository;
-pub use repository::User;
 pub use repository::AccessToken;
-pub use repository::PasswordResetToken;
+pub use repository::AuditEventType;
+pub use repository::AuditLog;
+pub use repository::AuditLogRepository;
+pub use repository::EmailVerificationRepository;
 pub use repository::EmailVerificationToken;
 pub use repository::LoginAttempt;
-pub use repository::AuditLog;
-pub use repository::AuditEventType;
+pub use repository::PasswordResetRepository;
+pub use repository::PasswordResetToken;
+pub use repository::RateLimiterRepository;
+pub use repository::TokenRepository;
+pub use repository::User;
+pub use repository::UserRepository;
 
-pub use repository::MockUserRepository;
-pub use repository::MockTokenRepository;
-pub use repository::MockPasswordResetRepository;
-pub use repository::MockEmailVerificationRepository;
-pub use repository::MockRateLimiterRepository;
 pub use repository::MockAuditLogRepository;
+pub use repository::MockEmailVerificationRepository;
+pub use repository::MockPasswordResetRepository;
+pub use repository::MockRateLimiterRepository;
+pub use repository::MockTokenRepository;
+pub use repository::MockUserRepository;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -74,11 +74,12 @@ impl fmt::Display for AuthError {
             AuthError::TokenExpired => write!(f, "Token has expired"),
             AuthError::TokenInvalid => write!(f, "Invalid token"),
             AuthError::EmailAlreadyVerified => write!(f, "Email is already verified"),
-            AuthError::TooManyAttempts => write!(f, "Too many failed attempts, please try again later"),
+            AuthError::TooManyAttempts => {
+                write!(f, "Too many failed attempts, please try again later")
+            }
             AuthError::Validation(err) => write!(f, "Validation error: {err}"),
             AuthError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
             AuthError::Other(msg) => write!(f, "{msg}"),
         }
     }
 }
-

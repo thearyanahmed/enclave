@@ -1,10 +1,10 @@
 pub mod email;
-pub mod password;
 pub mod name;
+pub mod password;
 
 pub use email::validate_email;
-pub use password::validate_password;
 pub use name::validate_name;
+pub use password::validate_password;
 
 use serde::{Deserialize, Serialize};
 
@@ -27,8 +27,12 @@ impl std::fmt::Display for ValidationError {
             ValidationError::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
             ValidationError::EmailInvalidFormat => write!(f, "Invalid email format"),
             ValidationError::PasswordEmpty => write!(f, "Password cannot be empty"),
-            ValidationError::PasswordTooShort => write!(f, "Password must be at least 8 characters"),
-            ValidationError::PasswordTooLong => write!(f, "Password is too long (max 128 characters)"),
+            ValidationError::PasswordTooShort => {
+                write!(f, "Password must be at least 8 characters")
+            }
+            ValidationError::PasswordTooLong => {
+                write!(f, "Password is too long (max 128 characters)")
+            }
             ValidationError::NameEmpty => write!(f, "Name cannot be empty"),
             ValidationError::NameTooLong => write!(f, "Name is too long (max 100 characters)"),
         }

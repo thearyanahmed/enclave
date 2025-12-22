@@ -1,5 +1,5 @@
-use chrono::{Duration, Utc};
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
+use chrono::{Duration, Utc};
 
 pub struct SendVerificationAction<U: UserRepository, E: EmailVerificationRepository> {
     user_repository: U,
@@ -8,7 +8,10 @@ pub struct SendVerificationAction<U: UserRepository, E: EmailVerificationReposit
 
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
     pub fn new(user_repository: U, verification_repository: E) -> Self {
-        SendVerificationAction { user_repository, verification_repository }
+        SendVerificationAction {
+            user_repository,
+            verification_repository,
+        }
     }
 
     pub async fn execute(&self, user_id: i32) -> Result<EmailVerificationToken, AuthError> {
@@ -21,7 +24,9 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
                 }
 
                 let expires_at = Utc::now() + Duration::hours(24);
-                self.verification_repository.create_verification_token(user.id, expires_at).await
+                self.verification_repository
+                    .create_verification_token(user.id, expires_at)
+                    .await
             }
             None => Err(AuthError::UserNotFound),
         }
@@ -31,7 +36,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, MockEmailVerificationRepository, User};
+    use crate::{MockEmailVerificationRepository, MockUserRepository, User};
 
     #[tokio::test]
     async fn test_send_verification_creates_token() {

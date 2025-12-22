@@ -1,5 +1,5 @@
-use chrono::{Duration, Utc};
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
+use chrono::{Duration, Utc};
 
 const MAX_FAILED_ATTEMPTS: u32 = 5;
 const LOCKOUT_DURATION_MINUTES: i64 = 15;
@@ -12,13 +12,24 @@ pub struct LoginAction<U: UserRepository, T: TokenRepository, R: RateLimiterRepo
 
 impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginAction<U, T, R> {
     pub fn new(user_repository: U, token_repository: T, rate_limiter: R) -> Self {
-        LoginAction { user_repository, token_repository, rate_limiter }
+        LoginAction {
+            user_repository,
+            token_repository,
+            rate_limiter,
+        }
     }
 
-    pub async fn execute(&self, email: &str, password: &str) -> Result<(User, AccessToken), AuthError> {
+    pub async fn execute(
+        &self,
+        email: &str,
+        password: &str,
+    ) -> Result<(User, AccessToken), AuthError> {
         // we check if account is locked out
         let since = Utc::now() - Duration::minutes(LOCKOUT_DURATION_MINUTES);
-        let failed_attempts = self.rate_limiter.get_recent_failed_attempts(email, since).await?;
+        let failed_attempts = self
+            .rate_limiter
+            .get_recent_failed_attempts(email, since)
+            .await?;
         if failed_attempts >= MAX_FAILED_ATTEMPTS {
             return Err(AuthError::TooManyAttempts);
         }
@@ -41,7 +52,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
         self.rate_limiter.record_attempt(email, true, None).await?;
 
         let expires_at = Utc::now() + Duration::days(7);
-        let token = self.token_repository.create_token(user.id, expires_at).await?;
+        let token = self
+            .token_repository
+            .create_token(user.id, expires_at)
+            .await?;
         Ok((user, token))
     }
 }
@@ -58,11 +72,11 @@ fn verify_password(password: &str, hashed: &str) -> Result<bool, AuthError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{MockUserRepository, MockTokenRepository, MockRateLimiterRepository, User};
     use super::*;
-    use rand::rngs::OsRng;
+    use crate::{MockRateLimiterRepository, MockTokenRepository, MockUserRepository, User};
     use argon2::{Argon2, PasswordHasher};
     use password_hash::SaltString;
+    use rand::rngs::OsRng;
 
     fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);

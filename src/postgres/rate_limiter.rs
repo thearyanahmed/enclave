@@ -23,15 +23,13 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
         success: bool,
         ip_address: Option<&str>,
     ) -> Result<(), AuthError> {
-        sqlx::query(
-            "INSERT INTO login_attempts (email, success, ip_address) VALUES ($1, $2, $3)"
-        )
-        .bind(email)
-        .bind(success)
-        .bind(ip_address)
-        .execute(&self.pool)
-        .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        sqlx::query("INSERT INTO login_attempts (email, success, ip_address) VALUES ($1, $2, $3)")
+            .bind(email)
+            .bind(success)
+            .bind(ip_address)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         Ok(())
     }

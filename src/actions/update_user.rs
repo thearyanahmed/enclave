@@ -1,5 +1,5 @@
-use crate::{AuthError, User, UserRepository};
 use crate::validators::{validate_email, validate_name};
+use crate::{AuthError, User, UserRepository};
 
 pub struct UpdateUserAction<U: UserRepository> {
     user_repository: U,
@@ -21,8 +21,8 @@ impl<U: UserRepository> UpdateUserAction<U> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, User};
     use crate::validators::ValidationError;
+    use crate::{MockUserRepository, User};
 
     #[tokio::test]
     async fn test_update_user_success() {
@@ -60,7 +60,10 @@ mod tests {
         let result = action.execute(1, "", "email@example.com").await;
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::NameEmpty));
+        assert_eq!(
+            result.unwrap_err(),
+            AuthError::Validation(ValidationError::NameEmpty)
+        );
     }
 
     #[tokio::test]
@@ -71,6 +74,9 @@ mod tests {
         let result = action.execute(1, "Name", "notanemail").await;
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::EmailInvalidFormat));
+        assert_eq!(
+            result.unwrap_err(),
+            AuthError::Validation(ValidationError::EmailInvalidFormat)
+        );
     }
 }

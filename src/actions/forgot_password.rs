@@ -1,5 +1,5 @@
-use chrono::{Duration, Utc};
 use crate::{AuthError, PasswordResetRepository, PasswordResetToken, UserRepository};
+use chrono::{Duration, Utc};
 
 pub struct ForgotPasswordAction<U: UserRepository, P: PasswordResetRepository> {
     user_repository: U,
@@ -8,7 +8,10 @@ pub struct ForgotPasswordAction<U: UserRepository, P: PasswordResetRepository> {
 
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
     pub fn new(user_repository: U, reset_repository: P) -> Self {
-        ForgotPasswordAction { user_repository, reset_repository }
+        ForgotPasswordAction {
+            user_repository,
+            reset_repository,
+        }
     }
 
     pub async fn execute(&self, email: &str) -> Result<PasswordResetToken, AuthError> {
@@ -17,7 +20,9 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         match user {
             Some(user) => {
                 let expires_at = Utc::now() + Duration::hours(1);
-                self.reset_repository.create_reset_token(user.id, expires_at).await
+                self.reset_repository
+                    .create_reset_token(user.id, expires_at)
+                    .await
             }
             None => Err(AuthError::UserNotFound),
         }
@@ -27,7 +32,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, MockPasswordResetRepository, User};
+    use crate::{MockPasswordResetRepository, MockUserRepository, User};
 
     #[tokio::test]
     async fn test_forgot_password_creates_token() {

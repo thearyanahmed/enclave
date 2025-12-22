@@ -1,5 +1,5 @@
-use crate::{AuthError, UserRepository};
 use crate::validators::validate_password;
+use crate::{AuthError, UserRepository};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use password_hash::{PasswordHash, SaltString};
 use rand::rngs::OsRng;
@@ -13,7 +13,12 @@ impl<U: UserRepository> ChangePasswordAction<U> {
         ChangePasswordAction { user_repository }
     }
 
-    pub async fn execute(&self, user_id: i32, current_password: &str, new_password: &str) -> Result<(), AuthError> {
+    pub async fn execute(
+        &self,
+        user_id: i32,
+        current_password: &str,
+        new_password: &str,
+    ) -> Result<(), AuthError> {
         let user = self.user_repository.find_user_by_id(user_id).await?;
 
         match user {
@@ -53,8 +58,8 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, User};
     use crate::validators::ValidationError;
+    use crate::{MockUserRepository, User};
 
     fn create_user_with_password(email: &str, password: &str) -> User {
         let hashed = hash_password(password).unwrap();
@@ -84,7 +89,9 @@ mod tests {
         user_repo.users.lock().unwrap().push(user);
 
         let action = ChangePasswordAction::new(user_repo);
-        let result = action.execute(user_id, "wrongpassword", "newpassword").await;
+        let result = action
+            .execute(user_id, "wrongpassword", "newpassword")
+            .await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::InvalidCredentials);
@@ -113,6 +120,9 @@ mod tests {
         let result = action.execute(user_id, "oldpassword", "short").await;
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::PasswordTooShort));
+        assert_eq!(
+            result.unwrap_err(),
+            AuthError::Validation(ValidationError::PasswordTooShort)
+        );
     }
 }

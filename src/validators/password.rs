@@ -29,18 +29,30 @@ mod tests {
 
     #[test]
     fn test_password_empty() {
-        assert_eq!(validate_password("").unwrap_err(), ValidationError::PasswordEmpty);
+        assert_eq!(
+            validate_password("").unwrap_err(),
+            ValidationError::PasswordEmpty
+        );
     }
 
     #[test]
     fn test_password_too_short() {
-        assert_eq!(validate_password("1234567").unwrap_err(), ValidationError::PasswordTooShort);
-        assert_eq!(validate_password("abc").unwrap_err(), ValidationError::PasswordTooShort);
+        assert_eq!(
+            validate_password("1234567").unwrap_err(),
+            ValidationError::PasswordTooShort
+        );
+        assert_eq!(
+            validate_password("abc").unwrap_err(),
+            ValidationError::PasswordTooShort
+        );
     }
 
     #[test]
     fn test_password_too_long() {
         let long_password = "a".repeat(129);
-        assert_eq!(validate_password(&long_password).unwrap_err(), ValidationError::PasswordTooLong);
+        assert_eq!(
+            validate_password(&long_password).unwrap_err(),
+            ValidationError::PasswordTooLong
+        );
     }
 }

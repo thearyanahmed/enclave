@@ -17,7 +17,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
-use serial_test::serial;
 use enclave::actions::{LoginAction, SignupAction};
 use enclave::postgres::{
     PostgresAuditLogRepository, PostgresEmailVerificationRepository,
@@ -28,14 +27,13 @@ use enclave::{
     AuditEventType, AuditLogRepository, EmailVerificationRepository, PasswordResetRepository,
     RateLimiterRepository, TokenRepository, UserRepository,
 };
-use sqlx::postgres::PgPoolOptions;
+use serial_test::serial;
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 
 async fn setup_db() -> PgPool {
-    let database_url =
-        std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-            "postgres://enclave:enclave@localhost:5432/enclave_test".to_owned()
-        });
+    let database_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgres://enclave:enclave@localhost:5432/enclave_test".to_owned());
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -122,7 +120,10 @@ async fn test_user_repository_crud() {
     repo.delete_user(user.id)
         .await
         .expect("Failed to delete user");
-    let deleted = repo.find_user_by_id(user.id).await.expect("Failed to query");
+    let deleted = repo
+        .find_user_by_id(user.id)
+        .await
+        .expect("Failed to query");
     assert!(deleted.is_none());
 }
 

@@ -4,5 +4,5 @@ mod middleware;
 mod routes;
 
 pub use dto::*;
-pub use middleware::{extract_bearer_token, AuthenticatedUser, AuthenticationError};
+pub use middleware::{AuthenticatedUser, AuthenticationError, extract_bearer_token};
 pub use routes::configure;

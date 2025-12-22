@@ -1,5 +1,5 @@
-use crate::{UserRepository, AuthError, User};
 use crate::validators::{validate_email, validate_password};
+use crate::{AuthError, User, UserRepository};
 use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;
 use rand::rngs::OsRng;
@@ -47,9 +47,7 @@ mod tests {
         let repo = MockUserRepository::new();
         let signup = SignupAction::new(repo);
 
-        let result = signup
-            .execute("user@example.com", "securepassword")
-            .await;
+        let result = signup.execute("user@example.com", "securepassword").await;
 
         assert!(result.is_ok());
         let user = result.unwrap();
@@ -65,13 +63,9 @@ mod tests {
         };
 
         let signup = SignupAction::new(repo);
-        _ = signup
-            .execute("user@example.com", "newpassword123")
-            .await;
+        _ = signup.execute("user@example.com", "newpassword123").await;
 
-        let result = signup
-            .execute("user@example.com", "newpassword123")
-            .await;
+        let result = signup.execute("user@example.com", "newpassword123").await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::UserAlreadyExists);
@@ -85,7 +79,10 @@ mod tests {
         let result = signup.execute("notanemail", "securepassword").await;
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::EmailInvalidFormat));
+        assert_eq!(
+            result.unwrap_err(),
+            AuthError::Validation(ValidationError::EmailInvalidFormat)
+        );
     }
 
     #[tokio::test]
@@ -96,7 +93,9 @@ mod tests {
         let result = signup.execute("user@example.com", "short").await;
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), AuthError::Validation(ValidationError::PasswordTooShort));
+        assert_eq!(
+            result.unwrap_err(),
+            AuthError::Validation(ValidationError::PasswordTooShort)
+        );
     }
 }
-

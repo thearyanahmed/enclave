@@ -42,14 +42,29 @@ where
             // Public routes
             .route("/register", web::post().to(handlers::register::<U>))
             .route("/login", web::post().to(handlers::login::<U, T, R>))
-            .route("/forgot-password", web::post().to(handlers::forgot_password::<U, P>))
-            .route("/reset-password", web::post().to(handlers::reset_password::<U, P>))
-            .route("/refresh-token", web::post().to(handlers::refresh_token::<T>))
-            .route("/verify-email", web::post().to(handlers::verify_email::<U, E>))
+            .route(
+                "/forgot-password",
+                web::post().to(handlers::forgot_password::<U, P>),
+            )
+            .route(
+                "/reset-password",
+                web::post().to(handlers::reset_password::<U, P>),
+            )
+            .route(
+                "/refresh-token",
+                web::post().to(handlers::refresh_token::<T>),
+            )
+            .route(
+                "/verify-email",
+                web::post().to(handlers::verify_email::<U, E>),
+            )
             // Authenticated routes
             .route("/logout", web::post().to(handlers::logout::<T>))
             .route("/me", web::get().to(handlers::get_current_user::<U, T>))
             .route("/me", web::put().to(handlers::update_user::<U, T>))
-            .route("/change-password", web::post().to(handlers::change_password::<U, T>)),
+            .route(
+                "/change-password",
+                web::post().to(handlers::change_password::<U, T>),
+            ),
     );
 }

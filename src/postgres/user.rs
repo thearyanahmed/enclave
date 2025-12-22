@@ -80,14 +80,13 @@ impl UserRepository for PostgresUserRepository {
     }
 
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
-        let result = sqlx::query(
-            "UPDATE users SET hashed_password = $1, updated_at = NOW() WHERE id = $2"
-        )
-        .bind(hashed_password)
-        .bind(user_id)
-        .execute(&self.pool)
-        .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        let result =
+            sqlx::query("UPDATE users SET hashed_password = $1, updated_at = NOW() WHERE id = $2")
+                .bind(hashed_password)
+                .bind(user_id)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         if result.rows_affected() == 0 {
             return Err(AuthError::UserNotFound);
@@ -98,7 +97,7 @@ impl UserRepository for PostgresUserRepository {
 
     async fn verify_email(&self, user_id: i32) -> Result<(), AuthError> {
         let result = sqlx::query(
-            "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1"
+            "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1",
         )
         .bind(user_id)
         .execute(&self.pool)

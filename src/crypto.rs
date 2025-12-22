@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 /// Hashes a token using SHA-256 for secure storage.
 /// Unlike passwords, tokens are high-entropy random strings,

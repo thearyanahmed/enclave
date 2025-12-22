@@ -1,11 +1,11 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use std::sync::Arc;
 
 use crate::actions::{
-    ChangePasswordAction, ForgotPasswordAction, LogoutAction, RefreshTokenAction,
-    ResetPasswordAction, SignupAction, UpdateUserAction, VerifyEmailAction, LoginAction,
+    ChangePasswordAction, ForgotPasswordAction, LoginAction, LogoutAction, RefreshTokenAction,
+    ResetPasswordAction, SignupAction, UpdateUserAction, VerifyEmailAction,
 };
-use crate::api::middleware::{extract_bearer_token, AuthenticatedUser};
+use crate::api::middleware::{AuthenticatedUser, extract_bearer_token};
 use crate::api::{
     AuthResponse, ChangePasswordRequest, ErrorResponse, ForgotPasswordRequest, LoginRequest,
     MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
@@ -65,10 +65,7 @@ where
     }
 }
 
-pub async fn logout<T>(
-    req: HttpRequest,
-    token_repo: web::Data<Arc<T>>,
-) -> HttpResponse
+pub async fn logout<T>(req: HttpRequest, token_repo: web::Data<Arc<T>>) -> HttpResponse
 where
     T: TokenRepository + Clone + Send + Sync + 'static,
 {
@@ -78,7 +75,7 @@ where
             return HttpResponse::Unauthorized().json(ErrorResponse {
                 error: "Missing authorization token".to_owned(),
                 code: "TOKEN_INVALID".to_owned(),
-            })
+            });
         }
     };
 
@@ -190,9 +187,7 @@ where
     }
 }
 
-pub async fn get_current_user<U, T>(
-    user: AuthenticatedUser<U, T>,
-) -> HttpResponse
+pub async fn get_current_user<U, T>(user: AuthenticatedUser<U, T>) -> HttpResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
     T: TokenRepository + Clone + Send + Sync + 'static,
@@ -211,7 +206,10 @@ where
 {
     let action = UpdateUserAction::new(user_repo.as_ref().as_ref().clone());
 
-    match action.execute(user.user().id, &body.name, &body.email).await {
+    match action
+        .execute(user.user().id, &body.name, &body.email)
+        .await
+    {
         Ok(updated_user) => HttpResponse::Ok().json(UserResponse::from(updated_user)),
         Err(err) => {
             let error_response = ErrorResponse::from(err);

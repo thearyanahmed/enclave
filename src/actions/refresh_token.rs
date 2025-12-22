@@ -1,5 +1,5 @@
-use chrono::{Duration, Utc};
 use crate::{AccessToken, AuthError, TokenRepository};
+use chrono::{Duration, Utc};
 
 pub struct RefreshTokenAction<T: TokenRepository> {
     token_repository: T,
@@ -23,7 +23,9 @@ impl<T: TokenRepository> RefreshTokenAction<T> {
                 // Revoke old token and create new one
                 self.token_repository.revoke_token(current_token).await?;
                 let new_expires_at = Utc::now() + Duration::days(7);
-                self.token_repository.create_token(token.user_id, new_expires_at).await
+                self.token_repository
+                    .create_token(token.user_id, new_expires_at)
+                    .await
             }
             None => Err(AuthError::TokenInvalid),
         }
@@ -52,7 +54,11 @@ mod tests {
         assert_ne!(new_token.token, original_token.token);
 
         // Old token should be revoked
-        let old_found = action.token_repository.find_token(&original_token.token).await.unwrap();
+        let old_found = action
+            .token_repository
+            .find_token(&original_token.token)
+            .await
+            .unwrap();
         assert!(old_found.is_none());
     }
 
