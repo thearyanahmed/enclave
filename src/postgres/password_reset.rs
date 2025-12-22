@@ -19,7 +19,7 @@ impl PostgresPasswordResetRepository {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32)
-            .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+            .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
             .collect()
     }
 }

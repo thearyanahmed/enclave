@@ -23,22 +23,26 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
             return Err(AuthError::TooManyAttempts);
         }
 
-        let user = self.user_repository.find_user_by_email(email).await?;
-        if let Some(user) = user {
-            if verify_password(password, &user.hashed_password)? {
-                // Clear failed attempts on successful login
-                self.rate_limiter.clear_attempts(email).await?;
-                self.rate_limiter.record_attempt(email, true, None).await?;
-
-                let expires_at = Utc::now() + Duration::days(7);
-                let token = self.token_repository.create_token(user.id, expires_at).await?;
-                return Ok((user, token));
+        let user = match self.user_repository.find_user_by_email(email).await? {
+            Some(u) => u,
+            None => {
+                self.rate_limiter.record_attempt(email, false, None).await?;
+                return Err(AuthError::InvalidCredentials);
             }
+        };
+
+        if !verify_password(password, &user.hashed_password)? {
+            self.rate_limiter.record_attempt(email, false, None).await?;
+            return Err(AuthError::InvalidCredentials);
         }
 
-        // record failed attempt
-        self.rate_limiter.record_attempt(email, false, None).await?;
-        Err(AuthError::InvalidCredentials)
+        // Clear failed attempts on successful login
+        self.rate_limiter.clear_attempts(email).await?;
+        self.rate_limiter.record_attempt(email, true, None).await?;
+
+        let expires_at = Utc::now() + Duration::days(7);
+        let token = self.token_repository.create_token(user.id, expires_at).await?;
+        Ok((user, token))
     }
 }
 

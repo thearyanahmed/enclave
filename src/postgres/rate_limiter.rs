@@ -50,7 +50,7 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
-        Ok(row.0 as u32)
+        Ok(u32::try_from(row.0).unwrap_or(u32::MAX))
     }
 
     async fn clear_attempts(&self, email: &str) -> Result<(), AuthError> {

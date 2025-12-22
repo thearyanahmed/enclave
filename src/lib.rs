@@ -1,3 +1,6 @@
+// allow unwrap/expect in test code
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 pub mod actions;
 #[cfg(feature = "actix")]
 pub mod api;
@@ -32,7 +35,7 @@ pub use repository::MockAuditLogRepository;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuthError {
     UserNotFound,
     UserAlreadyExists,
@@ -72,9 +75,9 @@ impl fmt::Display for AuthError {
             AuthError::TokenInvalid => write!(f, "Invalid token"),
             AuthError::EmailAlreadyVerified => write!(f, "Email is already verified"),
             AuthError::TooManyAttempts => write!(f, "Too many failed attempts, please try again later"),
-            AuthError::Validation(err) => write!(f, "Validation error: {}", err),
-            AuthError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
-            AuthError::Other(msg) => write!(f, "{}", msg),
+            AuthError::Validation(err) => write!(f, "Validation error: {err}"),
+            AuthError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
+            AuthError::Other(msg) => write!(f, "{msg}"),
         }
     }
 }

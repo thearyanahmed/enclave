@@ -116,7 +116,7 @@ impl From<crate::AuthError> for ErrorResponse {
 
         ErrorResponse {
             error: err.to_string(),
-            code: code.to_string(),
+            code: code.to_owned(),
         }
     }
 }

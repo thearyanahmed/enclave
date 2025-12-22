@@ -17,7 +17,7 @@ use crate::{
     UserRepository,
 };
 
-pub async fn register<U, T, R, P, E>(
+pub async fn register<U>(
     body: web::Json<RegisterRequest>,
     user_repo: web::Data<Arc<U>>,
 ) -> HttpResponse
@@ -35,7 +35,7 @@ where
     }
 }
 
-pub async fn login<U, T, R, P, E>(
+pub async fn login<U, T, R>(
     body: web::Json<LoginRequest>,
     user_repo: web::Data<Arc<U>>,
     token_repo: web::Data<Arc<T>>,
@@ -65,7 +65,7 @@ where
     }
 }
 
-pub async fn logout<U, T, R, P, E>(
+pub async fn logout<T>(
     req: HttpRequest,
     token_repo: web::Data<Arc<T>>,
 ) -> HttpResponse
@@ -76,8 +76,8 @@ where
         Some(t) => t,
         None => {
             return HttpResponse::Unauthorized().json(ErrorResponse {
-                error: "Missing authorization token".to_string(),
-                code: "TOKEN_INVALID".to_string(),
+                error: "Missing authorization token".to_owned(),
+                code: "TOKEN_INVALID".to_owned(),
             })
         }
     };
@@ -87,7 +87,7 @@ where
 
     match action.execute(&hashed).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Successfully logged out".to_string(),
+            message: "Successfully logged out".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -96,7 +96,7 @@ where
     }
 }
 
-pub async fn forgot_password<U, T, R, P, E>(
+pub async fn forgot_password<U, P>(
     body: web::Json<ForgotPasswordRequest>,
     user_repo: web::Data<Arc<U>>,
     reset_repo: web::Data<Arc<P>>,
@@ -110,23 +110,15 @@ where
         reset_repo.as_ref().as_ref().clone(),
     );
 
-    match action.execute(&body.email).await {
-        Ok(_token) => {
-            // Don't reveal whether user exists - always return success
-            HttpResponse::Ok().json(MessageResponse {
-                message: "If the email exists, a password reset link has been sent".to_string(),
-            })
-        }
-        Err(_) => {
-            // Don't reveal whether user exists
-            HttpResponse::Ok().json(MessageResponse {
-                message: "If the email exists, a password reset link has been sent".to_string(),
-            })
-        }
-    }
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email).await;
+
+    HttpResponse::Ok().json(MessageResponse {
+        message: "If the email exists, a password reset link has been sent".to_owned(),
+    })
 }
 
-pub async fn reset_password<U, T, R, P, E>(
+pub async fn reset_password<U, P>(
     body: web::Json<ResetPasswordRequest>,
     user_repo: web::Data<Arc<U>>,
     reset_repo: web::Data<Arc<P>>,
@@ -142,7 +134,7 @@ where
 
     match action.execute(&body.token, &body.password).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Password has been reset successfully".to_string(),
+            message: "Password has been reset successfully".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -151,7 +143,7 @@ where
     }
 }
 
-pub async fn refresh_token<U, T, R, P, E>(
+pub async fn refresh_token<T>(
     body: web::Json<RefreshTokenRequest>,
     token_repo: web::Data<Arc<T>>,
 ) -> HttpResponse
@@ -173,7 +165,7 @@ where
     }
 }
 
-pub async fn verify_email<U, T, R, P, E>(
+pub async fn verify_email<U, E>(
     body: web::Json<VerifyEmailRequest>,
     user_repo: web::Data<Arc<U>>,
     verification_repo: web::Data<Arc<E>>,
@@ -189,7 +181,7 @@ where
 
     match action.execute(&body.token).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Email verified successfully".to_string(),
+            message: "Email verified successfully".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -198,7 +190,7 @@ where
     }
 }
 
-pub async fn get_current_user<U, T, R, P, E>(
+pub async fn get_current_user<U, T>(
     user: AuthenticatedUser<U, T>,
 ) -> HttpResponse
 where
@@ -208,7 +200,7 @@ where
     HttpResponse::Ok().json(UserResponse::from(user.into_inner()))
 }
 
-pub async fn update_user<U, T, R, P, E>(
+pub async fn update_user<U, T>(
     user: AuthenticatedUser<U, T>,
     body: web::Json<UpdateUserRequest>,
     user_repo: web::Data<Arc<U>>,
@@ -228,7 +220,7 @@ where
     }
 }
 
-pub async fn change_password<U, T, R, P, E>(
+pub async fn change_password<U, T>(
     user: AuthenticatedUser<U, T>,
     body: web::Json<ChangePasswordRequest>,
     user_repo: web::Data<Arc<U>>,
@@ -244,7 +236,7 @@ where
         .await
     {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Password changed successfully".to_string(),
+            message: "Password changed successfully".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);

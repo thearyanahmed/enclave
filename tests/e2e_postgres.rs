@@ -1,10 +1,11 @@
 // these tests use #[serial] to run sequentially because setup_db() truncates
 // all tables before each test. without serial, parallel tests would interfere
 // with each other's data.
+#![allow(clippy::indexing_slicing)]
 
-//! End-to-end tests for PostgreSQL repositories.
+//! End-to-end tests for `PostgreSQL` repositories.
 //!
-//! These tests require a running PostgreSQL database.
+//! These tests require a running `PostgreSQL` database.
 //! Run with: `cargo test --features sqlx_postgres --test e2e_postgres`
 //!
 //! Before running, start the database:
@@ -13,6 +14,7 @@
 //! ```
 
 #![cfg(feature = "sqlx_postgres")]
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
 use serial_test::serial;
@@ -32,7 +34,7 @@ use sqlx::PgPool;
 async fn setup_db() -> PgPool {
     let database_url =
         std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-            "postgres://enclave:enclave@localhost:5432/enclave_test".to_string()
+            "postgres://enclave:enclave@localhost:5432/enclave_test".to_owned()
         });
 
     let pool = PgPoolOptions::new()

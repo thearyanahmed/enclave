@@ -35,7 +35,6 @@ fn string_to_event_type(s: &str) -> AuditEventType {
     match s {
         "signup" => AuditEventType::Signup,
         "login_success" => AuditEventType::LoginSuccess,
-        "login_failed" => AuditEventType::LoginFailed,
         "logout" => AuditEventType::Logout,
         "password_changed" => AuditEventType::PasswordChanged,
         "password_reset_requested" => AuditEventType::PasswordResetRequested,
@@ -44,6 +43,7 @@ fn string_to_event_type(s: &str) -> AuditEventType {
         "email_verified" => AuditEventType::EmailVerified,
         "token_refreshed" => AuditEventType::TokenRefreshed,
         "account_deleted" => AuditEventType::AccountDeleted,
+        // "login_failed" and any unknown strings default to LoginFailed
         _ => AuditEventType::LoginFailed,
     }
 }
@@ -105,7 +105,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
             "SELECT id, user_id, event_type, ip_address, user_agent, metadata, created_at FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2"
         )
         .bind(user_id)
-        .bind(limit as i64)
+        .bind(i64::try_from(limit).unwrap_or(i64::MAX))
         .fetch_all(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;

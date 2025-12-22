@@ -79,7 +79,7 @@ pub fn extract_bearer_token(req: &HttpRequest) -> Option<String> {
         .to_str()
         .ok()
         .and_then(|auth| auth.strip_prefix("Bearer "))
-        .map(|token| token.to_string())
+        .map(ToOwned::to_owned)
 }
 
 impl<U, T> FromRequest for AuthenticatedUser<U, T>
@@ -95,11 +95,11 @@ where
 
         let token_repo = req
             .app_data::<web::Data<Arc<T>>>()
-            .map(|data| data.as_ref().clone());
+            .map(|data| Arc::clone(data.as_ref()));
 
         let user_repo = req
             .app_data::<web::Data<Arc<U>>>()
-            .map(|data| data.as_ref().clone());
+            .map(|data| Arc::clone(data.as_ref()));
 
         Box::pin(async move {
             let token = token.ok_or(AuthenticationError {
