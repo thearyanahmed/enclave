@@ -21,7 +21,6 @@ use actix_web::http::{Method, header};
 ///     .wrap(cors::default(&["https://example.com"]))
 ///     .configure(configure::<...>);
 /// ```
-
 /// Creates a permissive CORS configuration that allows all origins.
 ///
 /// **Warning**: This is intended for development only. Do not use in production.
