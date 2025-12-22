@@ -5,6 +5,8 @@ pub mod actions;
 #[cfg(feature = "actix")]
 pub mod api;
 pub mod crypto;
+#[cfg(feature = "jwt")]
+pub mod jwt;
 #[cfg(feature = "sqlx_postgres")]
 pub mod postgres;
 pub mod repository;
