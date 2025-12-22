@@ -1,0 +1,83 @@
+#![allow(
+    clippy::print_stdout,
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::str_to_string,
+    clippy::missing_docs_in_private_items,
+    clippy::doc_markdown
+)]
+
+//! JWT Authentication Server Example
+//!
+//! A complete example showing how to set up an auth server with JWT tokens.
+//! JWT tokens are stateless - no database needed for token storage.
+//!
+//! Run with: `cargo run --example jwt_server --features "actix jwt mocks"`
+//!
+//! Test endpoints:
+//!   curl -X POST http://localhost:8080/auth/register \
+//!     -H "Content-Type: application/json" \
+//!     -d '{"email": "user@example.com", "password": "securepassword"}'
+//!
+//!   curl -X POST http://localhost:8080/auth/login \
+//!     -H "Content-Type: application/json" \
+//!     -d '{"email": "user@example.com", "password": "securepassword"}'
+//!
+//!   curl http://localhost:8080/auth/me \
+//!     -H "Authorization: Bearer <token>"
+
+use actix_web::{App, HttpServer, web};
+use enclave::api::actix::auth_routes;
+use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
+use enclave::{
+    MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,
+    MockUserRepository,
+};
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // In production, load secret from environment variable
+    let jwt_secret = std::env::var("JWT_SECRET")
+        .unwrap_or_else(|_| "your-super-secret-key-at-least-32-bytes!".to_string());
+
+    // Configure JWT with 1 hour expiry
+    let jwt_config = JwtConfig::new(jwt_secret)
+        .with_expiry(chrono::Duration::hours(1))
+        .with_issuer("enclave-example");
+
+    let jwt_service = JwtService::new(jwt_config);
+    let jwt_provider = JwtTokenProvider::new(jwt_service);
+
+    // Using mock repositories for this example
+    // In production, replace with PostgresUserRepository, etc.
+    let user_repo = MockUserRepository::new();
+    let rate_limiter = MockRateLimiterRepository::new();
+    let password_reset = MockPasswordResetRepository::new();
+    let email_verification = MockEmailVerificationRepository::new();
+
+    println!("Starting JWT auth server on http://localhost:8080");
+    println!("Endpoints:");
+    println!("  POST /auth/register - Create account");
+    println!("  POST /auth/login    - Login (returns JWT)");
+    println!("  GET  /auth/me       - Get current user (requires JWT)");
+    println!("  POST /auth/logout   - Logout (no-op for JWT)");
+
+    HttpServer::new(move || {
+        App::new()
+            .app_data(web::Data::new(user_repo.clone()))
+            .app_data(web::Data::new(jwt_provider.clone()))
+            .app_data(web::Data::new(rate_limiter.clone()))
+            .app_data(web::Data::new(password_reset.clone()))
+            .app_data(web::Data::new(email_verification.clone()))
+            .configure(auth_routes::<
+                MockUserRepository,
+                JwtTokenProvider,
+                MockRateLimiterRepository,
+                MockPasswordResetRepository,
+                MockEmailVerificationRepository,
+            >)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}

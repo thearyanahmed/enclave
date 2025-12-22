@@ -109,3 +109,11 @@ use_self = "allow"
 new_without_default = "allow"
 manual_let_else = "allow"
 single_match_else = "allow"
+
+[[example]]
+name = "jwt_server"
+required-features = ["actix", "jwt", "mocks"]
+
+[[example]]
+name = "postgres_server"
+required-features = ["actix", "sqlx_postgres"]
