@@ -1,6 +1,7 @@
 // these tests use #[serial] to run sequentially because setup_db() truncates
 // all tables before each test. without serial, parallel tests would interfere
 // with each other's data.
+#![allow(clippy::indexing_slicing)]
 
 //! End-to-end tests for PostgreSQL repositories.
 //!
