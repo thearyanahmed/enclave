@@ -1,9 +1,6 @@
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
-#[cfg(feature = "tracing")]
-use crate::TracingConfig;
-
 /// Configuration for login rate limiting behavior.
 ///
 /// Controls how the login system handles repeated failed attempts to prevent
@@ -55,8 +52,6 @@ pub struct LoginAction<U: UserRepository, T: TokenRepository, R: RateLimiterRepo
     token_repository: T,
     rate_limiter: R,
     config: LoginConfig,
-    #[cfg(feature = "tracing")]
-    tracing: Option<TracingConfig>,
 }
 
 impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginAction<U, T, R> {
@@ -80,48 +75,11 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
             token_repository,
             rate_limiter,
             config,
-            #[cfg(feature = "tracing")]
-            tracing: None,
         }
     }
 
-    /// Enables tracing for this action with a default span name.
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing(mut self) -> Self {
-        self.tracing = Some(TracingConfig::new("login"));
-        self
-    }
-
-    /// Enables tracing for this action with a custom configuration.
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
-        self.tracing = Some(config);
-        self
-    }
-
+    #[cfg_attr(feature = "tracing", tracing::instrument(name = "login", skip_all, err))]
     pub async fn execute(
-        &self,
-        email: &str,
-        password: &str,
-    ) -> Result<(User, AccessToken), AuthError> {
-        #[cfg(feature = "tracing")]
-        {
-            if let Some(ref config) = self.tracing {
-                use tracing::Instrument;
-                let span = tracing::info_span!("action", name = config.span_name);
-                let result = self.execute_inner(email, password).instrument(span).await;
-                match &result {
-                    Ok(_) => tracing::info!("login successful"),
-                    Err(e) => tracing::warn!(error = %e, "login failed"),
-                }
-                return result;
-            }
-        }
-
-        self.execute_inner(email, password).await
-    }
-
-    async fn execute_inner(
         &self,
         email: &str,
         password: &str,

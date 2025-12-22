@@ -1,14 +1,9 @@
 use crate::{AuthError, EmailVerificationRepository, UserRepository};
 use chrono::Utc;
 
-#[cfg(feature = "tracing")]
-use crate::TracingConfig;
-
 pub struct VerifyEmailAction<U: UserRepository, E: EmailVerificationRepository> {
     user_repository: U,
     verification_repository: E,
-    #[cfg(feature = "tracing")]
-    tracing: Option<TracingConfig>,
 }
 
 impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> {
@@ -16,42 +11,11 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
         VerifyEmailAction {
             user_repository,
             verification_repository,
-            #[cfg(feature = "tracing")]
-            tracing: None,
         }
     }
 
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing(mut self) -> Self {
-        self.tracing = Some(TracingConfig::new("verify_email"));
-        self
-    }
-
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
-        self.tracing = Some(config);
-        self
-    }
-
+    #[cfg_attr(feature = "tracing", tracing::instrument(name = "verify_email", skip_all, err))]
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
-        #[cfg(feature = "tracing")]
-        {
-            if let Some(ref config) = self.tracing {
-                use tracing::Instrument;
-                let span = tracing::info_span!("action", name = config.span_name);
-                let result = self.execute_inner(token).instrument(span).await;
-                match &result {
-                    Ok(()) => tracing::info!("email verified"),
-                    Err(e) => tracing::warn!(error = %e, "email verification failed"),
-                }
-                return result;
-            }
-        }
-
-        self.execute_inner(token).await
-    }
-
-    async fn execute_inner(&self, token: &str) -> Result<(), AuthError> {
         let verification_token = self
             .verification_repository
             .find_verification_token(token)

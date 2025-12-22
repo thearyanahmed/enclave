@@ -4,55 +4,17 @@ use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;
 use rand::rngs::OsRng;
 
-#[cfg(feature = "tracing")]
-use crate::TracingConfig;
-
 pub struct SignupAction<R> {
     repository: R,
-    #[cfg(feature = "tracing")]
-    tracing: Option<TracingConfig>,
 }
 
 impl<R: UserRepository> SignupAction<R> {
     pub fn new(repository: R) -> Self {
-        SignupAction {
-            repository,
-            #[cfg(feature = "tracing")]
-            tracing: None,
-        }
+        SignupAction { repository }
     }
 
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing(mut self) -> Self {
-        self.tracing = Some(TracingConfig::new("signup"));
-        self
-    }
-
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
-        self.tracing = Some(config);
-        self
-    }
-
+    #[cfg_attr(feature = "tracing", tracing::instrument(name = "signup", skip_all, err))]
     pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
-        #[cfg(feature = "tracing")]
-        {
-            if let Some(ref config) = self.tracing {
-                use tracing::Instrument;
-                let span = tracing::info_span!("action", name = config.span_name);
-                let result = self.execute_inner(email, password).instrument(span).await;
-                match &result {
-                    Ok(_) => tracing::info!("signup successful"),
-                    Err(e) => tracing::warn!(error = %e, "signup failed"),
-                }
-                return result;
-            }
-        }
-
-        self.execute_inner(email, password).await
-    }
-
-    async fn execute_inner(&self, email: &str, password: &str) -> Result<User, AuthError> {
         validate_email(email)?;
         validate_password(password)?;
 

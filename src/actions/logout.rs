@@ -1,50 +1,16 @@
 use crate::{AuthError, TokenRepository};
 
-#[cfg(feature = "tracing")]
-use crate::TracingConfig;
-
 pub struct LogoutAction<T: TokenRepository> {
     token_repository: T,
-    #[cfg(feature = "tracing")]
-    tracing: Option<TracingConfig>,
 }
 
 impl<T: TokenRepository> LogoutAction<T> {
     pub fn new(token_repository: T) -> Self {
-        LogoutAction {
-            token_repository,
-            #[cfg(feature = "tracing")]
-            tracing: None,
-        }
+        LogoutAction { token_repository }
     }
 
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing(mut self) -> Self {
-        self.tracing = Some(TracingConfig::new("logout"));
-        self
-    }
-
-    #[cfg(feature = "tracing")]
-    pub fn with_tracing_config(mut self, config: TracingConfig) -> Self {
-        self.tracing = Some(config);
-        self
-    }
-
+    #[cfg_attr(feature = "tracing", tracing::instrument(name = "logout", skip_all, err))]
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
-        #[cfg(feature = "tracing")]
-        {
-            if let Some(ref config) = self.tracing {
-                use tracing::Instrument;
-                let span = tracing::info_span!("action", name = config.span_name);
-                let result = self.token_repository.revoke_token(token).instrument(span).await;
-                match &result {
-                    Ok(()) => tracing::info!("logout successful"),
-                    Err(e) => tracing::warn!(error = %e, "logout failed"),
-                }
-                return result;
-            }
-        }
-
         self.token_repository.revoke_token(token).await
     }
 }
