@@ -14,7 +14,10 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
         }
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(name = "verify_email", skip_all, err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "verify_email", skip_all, err)
+    )]
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
         let verification_token = self
             .verification_repository

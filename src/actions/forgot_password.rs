@@ -14,7 +14,10 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         }
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(name = "forgot_password", skip_all, err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "forgot_password", skip_all, err)
+    )]
     pub async fn execute(&self, email: &str) -> Result<PasswordResetToken, AuthError> {
         let user = self.user_repository.find_user_by_email(email).await?;
 

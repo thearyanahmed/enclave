@@ -78,7 +78,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
         }
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(name = "login", skip_all, err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "login", skip_all, err)
+    )]
     pub async fn execute(
         &self,
         email: &str,

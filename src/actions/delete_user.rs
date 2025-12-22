@@ -9,7 +9,10 @@ impl<U: UserRepository> DeleteUserAction<U> {
         DeleteUserAction { user_repository }
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(name = "delete_user", skip_all, err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "delete_user", skip_all, err)
+    )]
     pub async fn execute(&self, user_id: i32) -> Result<(), AuthError> {
         self.user_repository.delete_user(user_id).await
     }

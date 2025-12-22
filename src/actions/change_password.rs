@@ -13,7 +13,10 @@ impl<U: UserRepository> ChangePasswordAction<U> {
         ChangePasswordAction { user_repository }
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(name = "change_password", skip_all, err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(name = "change_password", skip_all, err)
+    )]
     pub async fn execute(
         &self,
         user_id: i32,
