@@ -8,17 +8,20 @@
 //! ```ignore
 //! use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 //!
-//! // Create JWT configuration
+//! // Create JWT configuration with short-lived access tokens
 //! let config = JwtConfig::new("your-secret-key")
-//!     .with_expiry(chrono::Duration::hours(1));
+//!     .with_access_expiry(chrono::Duration::minutes(15))
+//!     .with_refresh_expiry(chrono::Duration::days(7));
 //!
 //! // Create service and provider
 //! let service = JwtService::new(config);
-//! let provider = JwtTokenProvider::new(service);
+//! let provider = JwtTokenProvider::new(service.clone());
 //!
-//! // Use provider in your app (same interface as opaque tokens)
-//! let token = provider.create_token(user_id).await?;
-//! let validated = provider.validate_token(&token.token).await?;
+//! // Create token pair (access + refresh)
+//! let pair = service.create_token_pair(user_id)?;
+//!
+//! // Refresh access token when it expires
+//! let new_access_token = service.refresh_access_token(&pair.refresh_token)?;
 //! ```
 
 mod claims;
@@ -26,7 +29,7 @@ mod config;
 mod provider;
 mod service;
 
-pub use claims::JwtClaims;
+pub use claims::{JwtClaims, TokenType};
 pub use config::JwtConfig;
 pub use provider::JwtTokenProvider;
-pub use service::JwtService;
+pub use service::{JwtService, TokenPair};
