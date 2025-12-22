@@ -96,12 +96,6 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run migrations
-        run: |
-          for f in migrations/*.sql; do
-            PGPASSWORD=postgres psql -h localhost -U postgres -d enclave_test -f "$f"
-          done
-
       - name: Run e2e tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/enclave_test
