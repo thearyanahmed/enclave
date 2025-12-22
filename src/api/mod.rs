@@ -1,3 +1,4 @@
+pub mod cors;
 mod dto;
 mod handlers;
 mod middleware;
