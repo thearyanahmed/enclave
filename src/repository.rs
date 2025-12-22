@@ -78,7 +78,7 @@ pub struct AuditLog {
 impl User {
     pub fn mock() -> Self {
         let now = Utc::now();
-        Self {
+        User {
             id: 1,
             email: "test@example.com".to_owned(),
             name: "Test User".to_owned(),
@@ -91,7 +91,7 @@ impl User {
 
     pub fn mock_from_credentials(email: &str, hashed_password: &str) -> Self {
         let now = Utc::now();
-        Self {
+        User {
             id: 1,
             email: email.to_owned(),
             name: "Test User".to_owned(),
@@ -104,7 +104,7 @@ impl User {
 
     pub fn mock_from_email(email: &str) -> Self {
         let now = Utc::now();
-        Self {
+        User {
             id: 1,
             email: email.to_owned(),
             name: "Test User".to_owned(),

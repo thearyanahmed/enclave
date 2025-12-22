@@ -6,7 +6,7 @@ pub struct LogoutAction<T: TokenRepository> {
 
 impl<T: TokenRepository> LogoutAction<T> {
     pub fn new(token_repository: T) -> Self {
-        Self { token_repository }
+        LogoutAction { token_repository }
     }
 
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {

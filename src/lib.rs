@@ -57,7 +57,7 @@ impl std::error::Error for AuthError {}
 
 impl From<validators::ValidationError> for AuthError {
     fn from(err: validators::ValidationError) -> Self {
-        Self::Validation(err)
+        AuthError::Validation(err)
     }
 }
 
@@ -65,19 +65,19 @@ impl fmt::Display for AuthError {
     #[allow(deprecated)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UserNotFound => write!(f, "User not found"),
-            Self::UserAlreadyExists => write!(f, "User already exists"),
-            Self::InvalidCredentials => write!(f, "Invalid email or password"),
-            Self::InvalidEmail => write!(f, "Invalid email format"),
-            Self::InvalidPassword => write!(f, "Invalid password"),
-            Self::PasswordHashError => write!(f, "Failed to hash password"),
-            Self::TokenExpired => write!(f, "Token has expired"),
-            Self::TokenInvalid => write!(f, "Invalid token"),
-            Self::EmailAlreadyVerified => write!(f, "Email is already verified"),
-            Self::TooManyAttempts => write!(f, "Too many failed attempts, please try again later"),
-            Self::Validation(err) => write!(f, "Validation error: {err}"),
-            Self::DatabaseError(msg) => write!(f, "Database error: {msg}"),
-            Self::Other(msg) => write!(f, "{msg}"),
+            AuthError::UserNotFound => write!(f, "User not found"),
+            AuthError::UserAlreadyExists => write!(f, "User already exists"),
+            AuthError::InvalidCredentials => write!(f, "Invalid email or password"),
+            AuthError::InvalidEmail => write!(f, "Invalid email format"),
+            AuthError::InvalidPassword => write!(f, "Invalid password"),
+            AuthError::PasswordHashError => write!(f, "Failed to hash password"),
+            AuthError::TokenExpired => write!(f, "Token has expired"),
+            AuthError::TokenInvalid => write!(f, "Invalid token"),
+            AuthError::EmailAlreadyVerified => write!(f, "Email is already verified"),
+            AuthError::TooManyAttempts => write!(f, "Too many failed attempts, please try again later"),
+            AuthError::Validation(err) => write!(f, "Validation error: {err}"),
+            AuthError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
+            AuthError::Other(msg) => write!(f, "{msg}"),
         }
     }
 }

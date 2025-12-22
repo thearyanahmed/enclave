@@ -138,7 +138,7 @@ where
                     error: AuthError::UserNotFound,
                 })?;
 
-            Ok(Self {
+            Ok(AuthenticatedUser {
                 user,
                 _marker: std::marker::PhantomData,
             })

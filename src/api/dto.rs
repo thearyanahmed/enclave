@@ -85,7 +85,7 @@ pub struct ErrorResponse {
 
 impl From<crate::User> for UserResponse {
     fn from(user: crate::User) -> Self {
-        Self {
+        UserResponse {
             id: user.id,
             email: user.email,
             name: user.name,
@@ -114,7 +114,7 @@ impl From<crate::AuthError> for ErrorResponse {
             crate::AuthError::Other(_) => "UNKNOWN_ERROR",
         };
 
-        Self {
+        ErrorResponse {
             error: err.to_string(),
             code: code.to_owned(),
         }

@@ -12,7 +12,7 @@ pub struct LoginAction<U: UserRepository, T: TokenRepository, R: RateLimiterRepo
 
 impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginAction<U, T, R> {
     pub fn new(user_repository: U, token_repository: T, rate_limiter: R) -> Self {
-        Self { user_repository, token_repository, rate_limiter }
+        LoginAction { user_repository, token_repository, rate_limiter }
     }
 
     pub async fn execute(&self, email: &str, password: &str) -> Result<(User, AccessToken), AuthError> {

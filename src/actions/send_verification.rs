@@ -8,7 +8,7 @@ pub struct SendVerificationAction<U: UserRepository, E: EmailVerificationReposit
 
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
     pub fn new(user_repository: U, verification_repository: E) -> Self {
-        Self { user_repository, verification_repository }
+        SendVerificationAction { user_repository, verification_repository }
     }
 
     pub async fn execute(&self, user_id: i32) -> Result<EmailVerificationToken, AuthError> {
