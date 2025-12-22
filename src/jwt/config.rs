@@ -5,8 +5,10 @@ use chrono::Duration;
 pub struct JwtConfig {
     /// Secret key used for signing tokens (HS256).
     pub(crate) secret: String,
-    /// Token expiry duration. Default: 1 hour.
-    pub(crate) expiry: Duration,
+    /// Access token expiry duration. Default: 15 minutes.
+    pub(crate) access_expiry: Duration,
+    /// Refresh token expiry duration. Default: 7 days.
+    pub(crate) refresh_expiry: Duration,
     /// Issuer claim (optional).
     pub(crate) issuer: Option<String>,
     /// Audience claim (optional).
@@ -21,16 +23,31 @@ impl JwtConfig {
     pub fn new(secret: impl Into<String>) -> Self {
         Self {
             secret: secret.into(),
-            expiry: Duration::hours(1),
+            access_expiry: Duration::minutes(15),
+            refresh_expiry: Duration::days(7),
             issuer: None,
             audience: None,
         }
     }
 
-    /// Sets the token expiry duration.
+    /// Sets the access token expiry duration.
+    #[must_use]
+    pub fn with_access_expiry(mut self, expiry: Duration) -> Self {
+        self.access_expiry = expiry;
+        self
+    }
+
+    /// Sets the refresh token expiry duration.
+    #[must_use]
+    pub fn with_refresh_expiry(mut self, expiry: Duration) -> Self {
+        self.refresh_expiry = expiry;
+        self
+    }
+
+    /// Sets the token expiry duration (alias for `with_access_expiry`).
     #[must_use]
     pub fn with_expiry(mut self, expiry: Duration) -> Self {
-        self.expiry = expiry;
+        self.access_expiry = expiry;
         self
     }
 
@@ -48,8 +65,18 @@ impl JwtConfig {
         self
     }
 
-    /// Returns the configured expiry duration.
+    /// Returns the configured access token expiry duration.
     pub fn expiry(&self) -> Duration {
-        self.expiry
+        self.access_expiry
+    }
+
+    /// Returns the configured access token expiry duration.
+    pub fn access_expiry(&self) -> Duration {
+        self.access_expiry
+    }
+
+    /// Returns the configured refresh token expiry duration.
+    pub fn refresh_expiry(&self) -> Duration {
+        self.refresh_expiry
     }
 }

@@ -28,6 +28,7 @@ pub use password_reset::PasswordResetToken;
 pub use rate_limiter::LoginAttempt;
 pub use rate_limiter::RateLimiterRepository;
 pub use token::AccessToken;
+pub use token::CreateTokenOptions;
 pub use token::TokenRepository;
 pub use user::User;
 pub use user::UserRepository;

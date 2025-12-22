@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
+use crate::repository::CreateTokenOptions;
 use crate::{AccessToken, AuthError, TokenRepository};
 
 use super::JwtService;
@@ -43,17 +44,36 @@ impl TokenRepository for JwtTokenProvider {
         user_id: i32,
         _expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError> {
+        self.create_token_with_options(user_id, _expires_at, CreateTokenOptions::default())
+            .await
+    }
+
+    async fn create_token_with_options(
+        &self,
+        user_id: i32,
+        _expires_at: DateTime<Utc>,
+        options: CreateTokenOptions,
+    ) -> Result<AccessToken, AuthError> {
         // Note: We ignore the provided expires_at and use the JWT config's expiry
         // This ensures consistency with JWT validation
         let token = self.service.encode(user_id)?;
         let now = Utc::now();
         let expires_at = now + self.service.expiry();
 
+        let abilities = if options.abilities.is_empty() {
+            vec!["*".to_owned()]
+        } else {
+            options.abilities
+        };
+
         Ok(AccessToken {
             token,
             user_id,
+            name: options.name,
+            abilities,
             expires_at,
             created_at: now,
+            last_used_at: None,
         })
     }
 
@@ -69,8 +89,11 @@ impl TokenRepository for JwtTokenProvider {
                 Ok(Some(AccessToken {
                     token: token.to_owned(),
                     user_id,
+                    name: None,
+                    abilities: vec!["*".to_owned()],
                     expires_at,
                     created_at,
+                    last_used_at: None,
                 }))
             }
             Err(AuthError::TokenExpired) => Err(AuthError::TokenExpired),
@@ -91,6 +114,16 @@ impl TokenRepository for JwtTokenProvider {
         // tracking issued tokens or using a blocklist.
         // This is a no-op for basic JWT support.
         Ok(())
+    }
+
+    async fn touch_token(&self, _token: &str) -> Result<(), AuthError> {
+        // JWT tokens are stateless - no last_used_at tracking
+        Ok(())
+    }
+
+    async fn prune_expired(&self) -> Result<u64, AuthError> {
+        // JWT tokens are stateless - no storage to prune
+        Ok(0)
     }
 }
 
