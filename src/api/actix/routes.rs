@@ -12,20 +12,7 @@ use super::handlers;
 /// This is the simplest way to add all auth routes. For custom middleware per route group,
 /// use [`public_routes`] and [`private_routes`] separately.
 ///
-/// # Example
-/// ```ignore
-/// use actix_web::{web, App};
-/// use std::sync::Arc;
-/// use enclave::api::actix::auth_routes;
-///
-/// App::new()
-///     .app_data(web::Data::new(user_repo))
-///     .app_data(web::Data::new(token_repo))
-///     .app_data(web::Data::new(rate_limiter))
-///     .app_data(web::Data::new(reset_repo))
-///     .app_data(web::Data::new(verification_repo))
-///     .configure(auth_routes::<MyUserRepo, MyTokenRepo, MyRateLimiter, MyResetRepo, MyVerificationRepo>);
-/// ```
+/// Requires `web::Data` for all repository types to be registered in the app.
 pub fn auth_routes<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -50,20 +37,6 @@ where
 /// - `POST /reset-password` - Reset password with token
 /// - `POST /refresh-token` - Refresh access token
 /// - `POST /verify-email` - Verify email with token
-///
-/// # Example
-/// ```ignore
-/// use actix_web::{web, App};
-/// use enclave::api::actix::public_routes;
-///
-/// // With custom middleware
-/// App::new()
-///     .service(
-///         web::scope("/auth")
-///             .wrap(MyRateLimiter::new())
-///             .configure(public_routes::<U, T, R, P, E>)
-///     );
-/// ```
 pub fn public_routes<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -94,25 +67,13 @@ where
 
 /// Configures private authentication routes (authentication required).
 ///
+/// These routes require a valid bearer token in the `Authorization` header.
+///
 /// Routes:
 /// - `POST /logout` - Revoke current token
 /// - `GET /me` - Get current user profile
 /// - `PUT /me` - Update current user profile
 /// - `POST /change-password` - Change password
-///
-/// # Example
-/// ```ignore
-/// use actix_web::{web, App};
-/// use enclave::api::actix::private_routes;
-///
-/// // With custom middleware
-/// App::new()
-///     .service(
-///         web::scope("/auth")
-///             .wrap(MyAuditLogger::new())
-///             .configure(private_routes::<U, T>)
-///     );
-/// ```
 pub fn private_routes<U, T>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,

@@ -6,25 +6,15 @@ use crate::{AccessToken, AuthError, TokenRepository};
 
 use super::JwtService;
 
-/// JWT-based token provider that implements `TokenRepository`.
+/// JWT-based token provider that implements [`TokenRepository`].
 ///
-/// This allows using JWT tokens with existing handlers that expect `TokenRepository`.
+/// This allows using JWT tokens with existing handlers that expect [`TokenRepository`].
 /// Swap out your opaque token repository with this to use JWT instead.
 ///
-/// # Example
+/// Note: JWT tokens are stateless, so `revoke_token`, `touch_token`, and `prune_expired`
+/// are no-ops. For true revocation, implement a blocklist.
 ///
-/// ```ignore
-/// use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
-/// use enclave::actions::LoginAction;
-///
-/// let config = JwtConfig::new("your-secret-key");
-/// let service = JwtService::new(config);
-/// let jwt_provider = JwtTokenProvider::new(service);
-///
-/// // Use with existing LoginAction - same as with opaque tokens!
-/// let login = LoginAction::new(user_repo, jwt_provider, rate_limiter);
-/// let (user, token) = login.execute(email, password).await?;
-/// ```
+/// [`TokenRepository`]: crate::TokenRepository
 #[derive(Clone)]
 pub struct JwtTokenProvider {
     service: JwtService,

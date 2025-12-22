@@ -1,26 +1,6 @@
 use actix_cors::Cors;
 use actix_web::http::{Method, header};
 
-/// CORS configuration helpers for authentication APIs.
-///
-/// This module provides convenient CORS configurations for common use cases.
-/// All functions return `actix_cors::Cors` which can be used with `.wrap()`.
-///
-/// # Example
-/// ```ignore
-/// use actix_web::App;
-/// use enclave::api::cors;
-///
-/// // Development: allow all origins
-/// App::new()
-///     .wrap(cors::permissive())
-///     .configure(configure::<...>);
-///
-/// // Production: specify allowed origins
-/// App::new()
-///     .wrap(cors::default(&["https://example.com"]))
-///     .configure(configure::<...>);
-/// ```
 /// Creates a permissive CORS configuration that allows all origins.
 ///
 /// **Warning**: This is intended for development only. Do not use in production.

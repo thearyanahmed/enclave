@@ -4,19 +4,11 @@ use std::pin::Pin;
 
 use crate::{AuthError, TokenRepository, User, UserRepository};
 
-/// Authenticated user extractor.
+/// Authenticated user extractor for actix-web handlers.
 ///
 /// Use this in handler parameters to require authentication.
-/// The extractor validates the bearer token and retrieves the associated user.
-///
-/// # Example
-/// ```ignore
-/// async fn protected_handler(
-///     user: AuthenticatedUser<MyUserRepo, MyTokenRepo>,
-/// ) -> impl Responder {
-///     format!("Hello, {}!", user.user().email)
-/// }
-/// ```
+/// The extractor validates the bearer token from the `Authorization` header
+/// and retrieves the associated user from the repository.
 #[derive(Debug, Clone)]
 pub struct AuthenticatedUser<U, T>
 where
