@@ -59,7 +59,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run unit tests
-        run: cargo test --no-fail-fast
+        run: cargo test --no-fail-fast --all-features --lib
 
   e2e-tests:
     name: E2E Tests
@@ -99,4 +99,4 @@ jobs:
       - name: Run e2e tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/enclave_test
-        run: cargo test --no-fail-fast --features "actix sqlx_postgres" --test e2e_postgres
+        run: cargo test --no-fail-fast --all-features --test e2e_actix --test e2e_jwt --test e2e_postgres
