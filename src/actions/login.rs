@@ -1,6 +1,9 @@
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
+#[cfg(feature = "tracing")]
+use crate::TracingConfig;
+
 /// Configuration for login rate limiting behavior.
 ///
 /// Controls how the login system handles repeated failed attempts to prevent

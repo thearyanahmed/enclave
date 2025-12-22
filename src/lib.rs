@@ -8,7 +8,12 @@ pub mod crypto;
 #[cfg(feature = "sqlx_postgres")]
 pub mod postgres;
 pub mod repository;
+#[cfg(feature = "tracing")]
+mod tracing_config;
 pub mod validators;
+
+#[cfg(feature = "tracing")]
+pub use tracing_config::TracingConfig;
 
 pub use crypto::hash_token;
 
