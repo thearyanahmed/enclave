@@ -26,11 +26,17 @@ pub use repository::TokenRepository;
 pub use repository::User;
 pub use repository::UserRepository;
 
+#[cfg(test)]
 pub use repository::MockAuditLogRepository;
+#[cfg(test)]
 pub use repository::MockEmailVerificationRepository;
+#[cfg(test)]
 pub use repository::MockPasswordResetRepository;
+#[cfg(test)]
 pub use repository::MockRateLimiterRepository;
+#[cfg(test)]
 pub use repository::MockTokenRepository;
+#[cfg(test)]
 pub use repository::MockUserRepository;
 use serde::{Deserialize, Serialize};
 use std::fmt;

@@ -1,0 +1,63 @@
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+
+use crate::AuthError;
+
+use super::email_verification::{EmailVerificationRepository, EmailVerificationToken};
+
+fn generate_token() -> String {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    (0..32)
+        .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
+        .collect()
+}
+
+pub struct MockEmailVerificationRepository {
+    pub tokens: std::sync::Mutex<Vec<EmailVerificationToken>>,
+}
+
+impl MockEmailVerificationRepository {
+    pub fn new() -> Self {
+        Self {
+            tokens: std::sync::Mutex::new(vec![]),
+        }
+    }
+}
+
+#[async_trait]
+impl EmailVerificationRepository for MockEmailVerificationRepository {
+    async fn create_verification_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<EmailVerificationToken, AuthError> {
+        let token = EmailVerificationToken {
+            token: generate_token(),
+            user_id,
+            expires_at,
+            created_at: Utc::now(),
+        };
+
+        let mut tokens = self.tokens.lock().unwrap();
+        tokens.push(token.clone());
+        drop(tokens);
+
+        Ok(token)
+    }
+
+    async fn find_verification_token(
+        &self,
+        token: &str,
+    ) -> Result<Option<EmailVerificationToken>, AuthError> {
+        let tokens = self.tokens.lock().unwrap();
+        Ok(tokens.iter().find(|t| t.token == token).cloned())
+    }
+
+    async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError> {
+        let mut tokens = self.tokens.lock().unwrap();
+        tokens.retain(|t| t.token != token);
+        drop(tokens);
+        Ok(())
+    }
+}
