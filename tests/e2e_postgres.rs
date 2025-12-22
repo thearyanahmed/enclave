@@ -13,6 +13,7 @@
 //! ```
 
 #![cfg(feature = "sqlx_postgres")]
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
 use serial_test::serial;
@@ -32,7 +33,7 @@ use sqlx::PgPool;
 async fn setup_db() -> PgPool {
     let database_url =
         std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-            "postgres://enclave:enclave@localhost:5432/enclave_test".to_string()
+            "postgres://enclave:enclave@localhost:5432/enclave_test".to_owned()
         });
 
     let pool = PgPoolOptions::new()

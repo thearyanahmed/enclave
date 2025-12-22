@@ -10,7 +10,7 @@ pub struct ChangePasswordAction<U: UserRepository> {
 
 impl<U: UserRepository> ChangePasswordAction<U> {
     pub fn new(user_repository: U) -> Self {
-        ChangePasswordAction { user_repository }
+        Self { user_repository }
     }
 
     pub async fn execute(&self, user_id: i32, current_password: &str, new_password: &str) -> Result<(), AuthError> {

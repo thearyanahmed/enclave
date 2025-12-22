@@ -10,7 +10,7 @@ pub struct SignupAction<R> {
 
 impl<R: UserRepository> SignupAction<R> {
     pub fn new(repository: R) -> Self {
-        SignupAction { repository }
+        Self { repository }
     }
 
     pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {

@@ -3,7 +3,10 @@ use std::sync::LazyLock;
 use super::ValidationError;
 
 static EMAIL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap()
+    match Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$") {
+        Ok(re) => re,
+        Err(e) => panic!("failed to compile email regex: {e}"),
+    }
 });
 
 pub fn validate_email(email: &str) -> Result<(), ValidationError> {

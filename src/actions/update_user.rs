@@ -7,7 +7,7 @@ pub struct UpdateUserAction<U: UserRepository> {
 
 impl<U: UserRepository> UpdateUserAction<U> {
     pub fn new(user_repository: U) -> Self {
-        UpdateUserAction { user_repository }
+        Self { user_repository }
     }
 
     pub async fn execute(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {

@@ -6,7 +6,7 @@ pub struct GetUserAction<U: UserRepository> {
 
 impl<U: UserRepository> GetUserAction<U> {
     pub fn new(user_repository: U) -> Self {
-        GetUserAction { user_repository }
+        Self { user_repository }
     }
 
     pub async fn execute(&self, user_id: i32) -> Result<User, AuthError> {

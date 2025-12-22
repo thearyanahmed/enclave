@@ -76,8 +76,8 @@ where
         Some(t) => t,
         None => {
             return HttpResponse::Unauthorized().json(ErrorResponse {
-                error: "Missing authorization token".to_string(),
-                code: "TOKEN_INVALID".to_string(),
+                error: "Missing authorization token".to_owned(),
+                code: "TOKEN_INVALID".to_owned(),
             })
         }
     };
@@ -87,7 +87,7 @@ where
 
     match action.execute(&hashed).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Successfully logged out".to_string(),
+            message: "Successfully logged out".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -114,13 +114,13 @@ where
         Ok(_token) => {
             // Don't reveal whether user exists - always return success
             HttpResponse::Ok().json(MessageResponse {
-                message: "If the email exists, a password reset link has been sent".to_string(),
+                message: "If the email exists, a password reset link has been sent".to_owned(),
             })
         }
         Err(_) => {
             // Don't reveal whether user exists
             HttpResponse::Ok().json(MessageResponse {
-                message: "If the email exists, a password reset link has been sent".to_string(),
+                message: "If the email exists, a password reset link has been sent".to_owned(),
             })
         }
     }
@@ -142,7 +142,7 @@ where
 
     match action.execute(&body.token, &body.password).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Password has been reset successfully".to_string(),
+            message: "Password has been reset successfully".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -189,7 +189,7 @@ where
 
     match action.execute(&body.token).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Email verified successfully".to_string(),
+            message: "Email verified successfully".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -244,7 +244,7 @@ where
         .await
     {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
-            message: "Password changed successfully".to_string(),
+            message: "Password changed successfully".to_owned(),
         }),
         Err(err) => {
             let error_response = ErrorResponse::from(err);

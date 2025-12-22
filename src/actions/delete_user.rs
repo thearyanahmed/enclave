@@ -6,7 +6,7 @@ pub struct DeleteUserAction<U: UserRepository> {
 
 impl<U: UserRepository> DeleteUserAction<U> {
     pub fn new(user_repository: U) -> Self {
-        DeleteUserAction { user_repository }
+        Self { user_repository }
     }
 
     pub async fn execute(&self, user_id: i32) -> Result<(), AuthError> {

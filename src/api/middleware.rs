@@ -79,7 +79,7 @@ pub fn extract_bearer_token(req: &HttpRequest) -> Option<String> {
         .to_str()
         .ok()
         .and_then(|auth| auth.strip_prefix("Bearer "))
-        .map(|token| token.to_string())
+        .map(ToOwned::to_owned)
 }
 
 impl<U, T> FromRequest for AuthenticatedUser<U, T>
@@ -138,7 +138,7 @@ where
                     error: AuthError::UserNotFound,
                 })?;
 
-            Ok(AuthenticatedUser {
+            Ok(Self {
                 user,
                 _marker: std::marker::PhantomData,
             })

@@ -78,11 +78,11 @@ pub struct AuditLog {
 impl User {
     pub fn mock() -> Self {
         let now = Utc::now();
-        User {
+        Self {
             id: 1,
-            email: "test@example.com".to_string(),
-            name: "Test User".to_string(),
-            hashed_password: "fakehashedpassword".to_string(),
+            email: "test@example.com".to_owned(),
+            name: "Test User".to_owned(),
+            hashed_password: "fakehashedpassword".to_owned(),
             email_verified_at: None,
             created_at: now,
             updated_at: now,
@@ -91,11 +91,11 @@ impl User {
 
     pub fn mock_from_credentials(email: &str, hashed_password: &str) -> Self {
         let now = Utc::now();
-        User {
+        Self {
             id: 1,
-            email: email.to_string(),
-            name: "Test User".to_string(),
-            hashed_password: hashed_password.to_string(),
+            email: email.to_owned(),
+            name: "Test User".to_owned(),
+            hashed_password: hashed_password.to_owned(),
             email_verified_at: None,
             created_at: now,
             updated_at: now,
@@ -104,11 +104,11 @@ impl User {
 
     pub fn mock_from_email(email: &str) -> Self {
         let now = Utc::now();
-        User {
+        Self {
             id: 1,
-            email: email.to_string(),
-            name: "Test User".to_string(),
-            hashed_password: "fakehashedpassword".to_string(),
+            email: email.to_owned(),
+            name: "Test User".to_owned(),
+            hashed_password: "fakehashedpassword".to_owned(),
             email_verified_at: None,
             created_at: now,
             updated_at: now,
@@ -223,7 +223,7 @@ impl UserRepository for MockUserRepository {
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
-            user.hashed_password = hashed_password.to_string();
+            user.hashed_password = hashed_password.to_owned();
             user.updated_at = Utc::now();
             Ok(())
         } else {
@@ -245,8 +245,8 @@ impl UserRepository for MockUserRepository {
     async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
-            user.name = name.to_string();
-            user.email = email.to_string();
+            user.name = name.to_owned();
+            user.email = email.to_owned();
             user.updated_at = Utc::now();
             Ok(user.clone())
         } else {
@@ -448,9 +448,9 @@ impl RateLimiterRepository for MockRateLimiterRepository {
     async fn record_attempt(&self, email: &str, success: bool, ip_address: Option<&str>) -> Result<(), AuthError> {
         let mut attempts = self.attempts.lock().unwrap();
         attempts.push(LoginAttempt {
-            email: email.to_string(),
+            email: email.to_owned(),
             success,
-            ip_address: ip_address.map(|s| s.to_string()),
+            ip_address: ip_address.map(ToOwned::to_owned),
             attempted_at: Utc::now(),
         });
         Ok(())
@@ -506,9 +506,9 @@ impl AuditLogRepository for MockAuditLogRepository {
             id: *next_id,
             user_id,
             event_type,
-            ip_address: ip_address.map(|s| s.to_string()),
-            user_agent: user_agent.map(|s| s.to_string()),
-            metadata: metadata.map(|s| s.to_string()),
+            ip_address: ip_address.map(ToOwned::to_owned),
+            user_agent: user_agent.map(ToOwned::to_owned),
+            metadata: metadata.map(ToOwned::to_owned),
             created_at: Utc::now(),
         };
 

@@ -8,7 +8,7 @@ pub struct ForgotPasswordAction<U: UserRepository, P: PasswordResetRepository> {
 
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
     pub fn new(user_repository: U, reset_repository: P) -> Self {
-        ForgotPasswordAction { user_repository, reset_repository }
+        Self { user_repository, reset_repository }
     }
 
     pub async fn execute(&self, email: &str) -> Result<PasswordResetToken, AuthError> {

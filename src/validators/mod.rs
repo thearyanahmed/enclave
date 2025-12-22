@@ -23,14 +23,14 @@ pub enum ValidationError {
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ValidationError::EmailEmpty => write!(f, "Email cannot be empty"),
-            ValidationError::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
-            ValidationError::EmailInvalidFormat => write!(f, "Invalid email format"),
-            ValidationError::PasswordEmpty => write!(f, "Password cannot be empty"),
-            ValidationError::PasswordTooShort => write!(f, "Password must be at least 8 characters"),
-            ValidationError::PasswordTooLong => write!(f, "Password is too long (max 128 characters)"),
-            ValidationError::NameEmpty => write!(f, "Name cannot be empty"),
-            ValidationError::NameTooLong => write!(f, "Name is too long (max 100 characters)"),
+            Self::EmailEmpty => write!(f, "Email cannot be empty"),
+            Self::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
+            Self::EmailInvalidFormat => write!(f, "Invalid email format"),
+            Self::PasswordEmpty => write!(f, "Password cannot be empty"),
+            Self::PasswordTooShort => write!(f, "Password must be at least 8 characters"),
+            Self::PasswordTooLong => write!(f, "Password is too long (max 128 characters)"),
+            Self::NameEmpty => write!(f, "Name cannot be empty"),
+            Self::NameTooLong => write!(f, "Name is too long (max 100 characters)"),
         }
     }
 }

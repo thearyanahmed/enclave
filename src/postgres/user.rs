@@ -28,7 +28,7 @@ struct UserRecord {
 
 impl From<UserRecord> for User {
     fn from(row: UserRecord) -> Self {
-        User {
+        Self {
             id: row.id,
             email: row.email,
             name: row.name,

@@ -7,7 +7,7 @@ pub struct RefreshTokenAction<T: TokenRepository> {
 
 impl<T: TokenRepository> RefreshTokenAction<T> {
     pub fn new(token_repository: T) -> Self {
-        RefreshTokenAction { token_repository }
+        Self { token_repository }
     }
 
     pub async fn execute(&self, current_token: &str) -> Result<AccessToken, AuthError> {
