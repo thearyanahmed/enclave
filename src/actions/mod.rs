@@ -12,6 +12,7 @@ pub mod change_password;
 pub mod delete_user;
 
 pub use signup::SignupAction;
+pub use login::LoginAction;
 pub use logout::LogoutAction;
 pub use forgot_password::ForgotPasswordAction;
 pub use reset_password::ResetPasswordAction;
