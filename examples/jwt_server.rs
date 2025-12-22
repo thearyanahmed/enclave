@@ -12,6 +12,11 @@
 //! A complete example showing how to set up an auth server with JWT tokens.
 //! JWT tokens are stateless - no database needed for token storage.
 //!
+//! Features:
+//! - Short-lived access tokens (15 min default)
+//! - Long-lived refresh tokens (7 days default)
+//! - Token rotation for security
+//!
 //! Run with: `cargo run --example jwt_server --features "actix jwt mocks"`
 //!
 //! Test endpoints:
@@ -24,7 +29,7 @@
 //!     -d '{"email": "user@example.com", "password": "securepassword"}'
 //!
 //!   curl http://localhost:8080/auth/me \
-//!     -H "Authorization: Bearer <token>"
+//!     -H "Authorization: Bearer <access_token>"
 
 use actix_web::{App, HttpServer, web};
 use enclave::api::actix::auth_routes;
@@ -40,13 +45,20 @@ async fn main() -> std::io::Result<()> {
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "your-super-secret-key-at-least-32-bytes!".to_string());
 
-    // Configure JWT with 1 hour expiry
+    // Configure JWT with short-lived access tokens and long-lived refresh tokens
     let jwt_config = JwtConfig::new(jwt_secret)
-        .with_expiry(chrono::Duration::hours(1))
+        .with_access_expiry(chrono::Duration::minutes(15))
+        .with_refresh_expiry(chrono::Duration::days(7))
         .with_issuer("enclave-example");
 
     let jwt_service = JwtService::new(jwt_config);
-    let jwt_provider = JwtTokenProvider::new(jwt_service);
+
+    // JwtTokenProvider implements TokenRepository, so it works with existing handlers
+    let jwt_provider = JwtTokenProvider::new(jwt_service.clone());
+
+    // For direct JWT operations (token pairs, refresh), use JwtService directly:
+    // let pair = jwt_service.create_token_pair(user_id)?;
+    // let new_access = jwt_service.refresh_access_token(&pair.refresh_token)?;
 
     // Using mock repositories for this example
     // In production, replace with PostgresUserRepository, etc.
