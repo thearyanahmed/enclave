@@ -4,4 +4,4 @@ mod middleware;
 mod routes;
 
 pub use middleware::{AuthenticatedUser, AuthenticationError, extract_bearer_token};
-pub use routes::configure;
+pub use routes::{configure, private_routes, public_routes};
