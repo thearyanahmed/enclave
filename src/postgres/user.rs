@@ -1,5 +1,6 @@
 use async_trait::async_trait;
-use sqlx::PgPool;
+use chrono::{DateTime, Utc};
+use sqlx::{FromRow, PgPool};
 
 use crate::{AuthError, User, UserRepository};
 
@@ -14,36 +15,50 @@ impl PostgresUserRepository {
     }
 }
 
+#[derive(FromRow)]
+struct UserRecord {
+    id: i32,
+    email: String,
+    name: String,
+    hashed_password: String,
+    email_verified_at: Option<DateTime<Utc>>,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
+}
+
+impl From<UserRecord> for User {
+    fn from(row: UserRecord) -> Self {
+        User {
+            id: row.id,
+            email: row.email,
+            name: row.name,
+            hashed_password: row.hashed_password,
+            email_verified_at: row.email_verified_at,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+        }
+    }
+}
+
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
-    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
-        let row = sqlx::query_as!(
-            UserRow,
-            r#"
-            INSERT INTO users (email, hashed_password)
-            VALUES ($1, $2)
-            RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at
-            "#,
-            email,
-            hashed_password
+    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError> {
+        let row: Option<UserRecord> = sqlx::query_as(
+            "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE id = $1"
         )
-        .fetch_one(&self.pool)
+        .bind(id)
+        .fetch_optional(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
-        Ok(row.into())
+        Ok(row.map(Into::into))
     }
 
     async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
-        let row = sqlx::query_as!(
-            UserRow,
-            r#"
-            SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at
-            FROM users
-            WHERE email = $1
-            "#,
-            email
+        let row: Option<UserRecord> = sqlx::query_as(
+            "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE email = $1"
         )
+        .bind(email)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
@@ -51,36 +66,12 @@ impl UserRepository for PostgresUserRepository {
         Ok(row.map(Into::into))
     }
 
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError> {
-        let row = sqlx::query_as!(
-            UserRow,
-            r#"
-            SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at
-            FROM users
-            WHERE id = $1
-            "#,
-            id
+    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
+        let row: UserRecord = sqlx::query_as(
+            "INSERT INTO users (email, hashed_password) VALUES ($1, $2) RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at"
         )
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
-
-        Ok(row.map(Into::into))
-    }
-
-    async fn update_user(&self, user: &User) -> Result<User, AuthError> {
-        let row = sqlx::query_as!(
-            UserRow,
-            r#"
-            UPDATE users
-            SET email = $1, name = $2, updated_at = NOW()
-            WHERE id = $3
-            RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at
-            "#,
-            user.email,
-            user.name,
-            user.id
-        )
+        .bind(email)
+        .bind(hashed_password)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
@@ -89,46 +80,11 @@ impl UserRepository for PostgresUserRepository {
     }
 
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
-        sqlx::query!(
-            r#"
-            UPDATE users
-            SET hashed_password = $1, updated_at = NOW()
-            WHERE id = $2
-            "#,
-            hashed_password,
-            user_id
+        let result = sqlx::query(
+            "UPDATE users SET hashed_password = $1, updated_at = NOW() WHERE id = $2"
         )
-        .execute(&self.pool)
-        .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
-
-        Ok(())
-    }
-
-    async fn mark_email_verified(&self, user_id: i32) -> Result<(), AuthError> {
-        sqlx::query!(
-            r#"
-            UPDATE users
-            SET email_verified_at = NOW(), updated_at = NOW()
-            WHERE id = $1
-            "#,
-            user_id
-        )
-        .execute(&self.pool)
-        .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
-
-        Ok(())
-    }
-
-    async fn delete_user(&self, user_id: i32) -> Result<(), AuthError> {
-        let result = sqlx::query!(
-            r#"
-            DELETE FROM users
-            WHERE id = $1
-            "#,
-            user_id
-        )
+        .bind(hashed_password)
+        .bind(user_id)
         .execute(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
@@ -139,28 +95,54 @@ impl UserRepository for PostgresUserRepository {
 
         Ok(())
     }
-}
 
-struct UserRow {
-    id: i32,
-    email: String,
-    name: String,
-    hashed_password: String,
-    email_verified_at: Option<chrono::DateTime<chrono::Utc>>,
-    created_at: chrono::DateTime<chrono::Utc>,
-    updated_at: chrono::DateTime<chrono::Utc>,
-}
+    async fn verify_email(&self, user_id: i32) -> Result<(), AuthError> {
+        let result = sqlx::query(
+            "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1"
+        )
+        .bind(user_id)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
-impl From<UserRow> for User {
-    fn from(row: UserRow) -> Self {
-        User {
-            id: row.id,
-            email: row.email,
-            name: row.name,
-            hashed_password: row.hashed_password,
-            email_verified_at: row.email_verified_at,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
+        if result.rows_affected() == 0 {
+            return Err(AuthError::UserNotFound);
         }
+
+        Ok(())
+    }
+
+    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
+        let row: UserRecord = sqlx::query_as(
+            "UPDATE users SET name = $1, email = $2, updated_at = NOW() WHERE id = $3 RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at"
+        )
+        .bind(name)
+        .bind(email)
+        .bind(user_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| {
+            if e.to_string().contains("no rows") {
+                AuthError::UserNotFound
+            } else {
+                AuthError::DatabaseError(e.to_string())
+            }
+        })?;
+
+        Ok(row.into())
+    }
+
+    async fn delete_user(&self, user_id: i32) -> Result<(), AuthError> {
+        let result = sqlx::query("DELETE FROM users WHERE id = $1")
+            .bind(user_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+
+        if result.rows_affected() == 0 {
+            return Err(AuthError::UserNotFound);
+        }
+
+        Ok(())
     }
 }
