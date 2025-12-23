@@ -1,0 +1,203 @@
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
+
+use crate::AuthError;
+
+/// Information about the current rate limit state for a key.
+#[derive(Debug, Clone)]
+pub struct RateLimitInfo {
+    /// Number of attempts made in the current window.
+    pub attempts: u32,
+    /// When the current window resets.
+    pub reset_at: DateTime<Utc>,
+}
+
+impl RateLimitInfo {
+    /// Returns the number of seconds until the rate limit resets.
+    pub fn available_in(&self) -> i64 {
+        (self.reset_at - Utc::now()).num_seconds().max(0)
+    }
+}
+
+/// Storage backend for rate limit data.
+///
+/// Implement this trait to provide custom storage (Redis, PostgreSQL, etc.).
+#[async_trait]
+pub trait RateLimitStore: Send + Sync {
+    /// Increment the attempt count for a key and return the updated info.
+    ///
+    /// If the key doesn't exist, it should be created with 1 attempt.
+    /// The `window_secs` parameter defines how long until the window resets.
+    async fn increment(
+        &self,
+        key: &str,
+        window_secs: u64,
+    ) -> Result<RateLimitInfo, AuthError>;
+
+    /// Get the current rate limit info for a key, if it exists.
+    async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError>;
+
+    /// Reset (clear) the rate limit for a key.
+    async fn reset(&self, key: &str) -> Result<(), AuthError>;
+
+    /// Check remaining attempts without incrementing.
+    async fn remaining(&self, key: &str, max_attempts: u32) -> Result<u32, AuthError> {
+        match self.get(key).await? {
+            Some(info) => {
+                if info.reset_at < Utc::now() {
+                    Ok(max_attempts)
+                } else {
+                    Ok(max_attempts.saturating_sub(info.attempts))
+                }
+            }
+            None => Ok(max_attempts),
+        }
+    }
+}
+
+/// In-memory rate limit store.
+///
+/// Suitable for single-instance deployments or development.
+/// For distributed systems, use a shared store like Redis or PostgreSQL.
+#[derive(Debug, Default)]
+pub struct InMemoryStore {
+    entries: Arc<RwLock<HashMap<String, RateLimitInfo>>>,
+}
+
+impl InMemoryStore {
+    /// Creates a new in-memory store.
+    pub fn new() -> Self {
+        Self {
+            entries: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+
+    /// Cleans up expired entries to prevent memory growth.
+    ///
+    /// Call this periodically in long-running applications.
+    pub fn cleanup_expired(&self) {
+        let now = Utc::now();
+        if let Ok(mut entries) = self.entries.write() {
+            entries.retain(|_, info| info.reset_at > now);
+        }
+    }
+}
+
+#[async_trait]
+impl RateLimitStore for InMemoryStore {
+    async fn increment(
+        &self,
+        key: &str,
+        window_secs: u64,
+    ) -> Result<RateLimitInfo, AuthError> {
+        let now = Utc::now();
+        let window = chrono::Duration::seconds(i64::try_from(window_secs).unwrap_or(i64::MAX));
+
+        let mut entries = self.entries.write().map_err(|_| {
+            AuthError::DatabaseError("Failed to acquire lock".to_owned())
+        })?;
+
+        let info = entries
+            .entry(key.to_owned())
+            .and_modify(|info| {
+                if info.reset_at <= now {
+                    // Window expired, start new one
+                    info.attempts = 1;
+                    info.reset_at = now + window;
+                } else {
+                    info.attempts += 1;
+                }
+            })
+            .or_insert_with(|| RateLimitInfo {
+                attempts: 1,
+                reset_at: now + window,
+            });
+
+        Ok(info.clone())
+    }
+
+    async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError> {
+        let entries = self.entries.read().map_err(|_| {
+            AuthError::DatabaseError("Failed to acquire lock".to_owned())
+        })?;
+
+        Ok(entries.get(key).cloned())
+    }
+
+    async fn reset(&self, key: &str) -> Result<(), AuthError> {
+        let mut entries = self.entries.write().map_err(|_| {
+            AuthError::DatabaseError("Failed to acquire lock".to_owned())
+        })?;
+
+        entries.remove(key);
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_in_memory_store_increment() {
+        let store = InMemoryStore::new();
+
+        let info = store.increment("test-key", 60).await.unwrap();
+        assert_eq!(info.attempts, 1);
+
+        let info = store.increment("test-key", 60).await.unwrap();
+        assert_eq!(info.attempts, 2);
+
+        let info = store.increment("test-key", 60).await.unwrap();
+        assert_eq!(info.attempts, 3);
+    }
+
+    #[tokio::test]
+    async fn test_in_memory_store_get() {
+        let store = InMemoryStore::new();
+
+        // Key doesn't exist
+        let info = store.get("nonexistent").await.unwrap();
+        assert!(info.is_none());
+
+        // After increment
+        store.increment("test-key", 60).await.unwrap();
+        let info = store.get("test-key").await.unwrap();
+        assert!(info.is_some());
+        assert_eq!(info.unwrap().attempts, 1);
+    }
+
+    #[tokio::test]
+    async fn test_in_memory_store_reset() {
+        let store = InMemoryStore::new();
+
+        store.increment("test-key", 60).await.unwrap();
+        store.increment("test-key", 60).await.unwrap();
+
+        let info = store.get("test-key").await.unwrap();
+        assert_eq!(info.unwrap().attempts, 2);
+
+        store.reset("test-key").await.unwrap();
+
+        let info = store.get("test-key").await.unwrap();
+        assert!(info.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_in_memory_store_remaining() {
+        let store = InMemoryStore::new();
+
+        // Full capacity
+        let remaining = store.remaining("test-key", 5).await.unwrap();
+        assert_eq!(remaining, 5);
+
+        // After some attempts
+        store.increment("test-key", 60).await.unwrap();
+        store.increment("test-key", 60).await.unwrap();
+
+        let remaining = store.remaining("test-key", 5).await.unwrap();
+        assert_eq!(remaining, 3);
+    }
+}
