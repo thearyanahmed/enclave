@@ -1,4 +1,4 @@
-use crate::validators::{validate_email, PasswordPolicy};
+use crate::validators::{PasswordPolicy, validate_email};
 use crate::{AuthError, User, UserRepository};
 use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;

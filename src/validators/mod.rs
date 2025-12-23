@@ -4,7 +4,7 @@ pub mod password;
 
 pub use email::validate_email;
 pub use name::validate_name;
-pub use password::{validate_password, PasswordPolicy};
+pub use password::{PasswordPolicy, validate_password};
 
 use serde::{Deserialize, Serialize};
 
