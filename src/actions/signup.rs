@@ -1,4 +1,4 @@
-use crate::validators::{validate_email, validate_password};
+use crate::validators::{validate_email, PasswordPolicy};
 use crate::{AuthError, User, UserRepository};
 use argon2::{Argon2, PasswordHasher};
 use password_hash::SaltString;
@@ -6,11 +6,24 @@ use rand::rngs::OsRng;
 
 pub struct SignupAction<R> {
     repository: R,
+    password_policy: PasswordPolicy,
 }
 
 impl<R: UserRepository> SignupAction<R> {
+    /// Creates a new `SignupAction` with the default password policy.
     pub fn new(repository: R) -> Self {
-        SignupAction { repository }
+        Self {
+            repository,
+            password_policy: PasswordPolicy::default(),
+        }
+    }
+
+    /// Creates a new `SignupAction` with a custom password policy.
+    pub fn with_policy(repository: R, password_policy: PasswordPolicy) -> Self {
+        Self {
+            repository,
+            password_policy,
+        }
     }
 
     #[cfg_attr(
@@ -19,7 +32,7 @@ impl<R: UserRepository> SignupAction<R> {
     )]
     pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
         validate_email(email)?;
-        validate_password(password)?;
+        self.password_policy.validate(password)?;
 
         if self.repository.find_user_by_email(email).await?.is_some() {
             return Err(AuthError::UserAlreadyExists);
@@ -44,7 +57,7 @@ fn hash_password(password: &str) -> Result<String, AuthError> {
 mod tests {
     use super::*;
     use crate::MockUserRepository;
-    use crate::validators::ValidationError;
+    use crate::validators::{PasswordPolicy, ValidationError};
 
     #[tokio::test]
     async fn test_signup_success() {
@@ -100,5 +113,20 @@ mod tests {
             result.unwrap_err(),
             AuthError::Validation(ValidationError::PasswordTooShort)
         );
+    }
+
+    #[tokio::test]
+    async fn test_signup_with_strict_policy() {
+        let repo = MockUserRepository::new();
+        let policy = PasswordPolicy::strict();
+        let signup = SignupAction::with_policy(repo, policy);
+
+        // Weak password fails strict policy
+        let result = signup.execute("user@example.com", "weakpassword").await;
+        assert!(result.is_err());
+
+        // Strong password passes
+        let result = signup.execute("user@example.com", "MyStr0ng!Pass").await;
+        assert!(result.is_ok());
     }
 }
