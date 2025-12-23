@@ -17,6 +17,7 @@ impl PostgresRateLimiterRepository {
 
 #[async_trait]
 impl RateLimiterRepository for PostgresRateLimiterRepository {
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email, ip_address), err))]
     async fn record_attempt(
         &self,
         email: &str,
@@ -34,6 +35,7 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
         Ok(())
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email), err))]
     async fn get_recent_failed_attempts(
         &self,
         email: &str,
@@ -51,6 +53,7 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
         Ok(u32::try_from(row.0).unwrap_or(u32::MAX))
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email), err))]
     async fn clear_attempts(&self, email: &str) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM login_attempts WHERE email = $1")
             .bind(email)

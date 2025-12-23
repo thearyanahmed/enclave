@@ -34,6 +34,7 @@ struct VerificationTokenRecord {
 
 #[async_trait]
 impl EmailVerificationRepository for PostgresEmailVerificationRepository {
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_verification_token(
         &self,
         user_id: i32,
@@ -60,6 +61,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         })
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn find_verification_token(
         &self,
         token: &str,
@@ -82,6 +84,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         }))
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError> {
         let token_hash = hash_token(token);
 

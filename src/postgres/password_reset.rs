@@ -34,6 +34,7 @@ struct ResetTokenRecord {
 
 #[async_trait]
 impl PasswordResetRepository for PostgresPasswordResetRepository {
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_reset_token(
         &self,
         user_id: i32,
@@ -60,6 +61,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         })
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError> {
         let token_hash = hash_token(token);
 
@@ -79,6 +81,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         }))
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError> {
         let token_hash = hash_token(token);
 

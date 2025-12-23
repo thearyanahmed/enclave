@@ -54,6 +54,7 @@ impl TokenRecord {
 
 #[async_trait]
 impl TokenRepository for PostgresTokenRepository {
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_token(
         &self,
         user_id: i32,
@@ -63,6 +64,7 @@ impl TokenRepository for PostgresTokenRepository {
             .await
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, options), err))]
     async fn create_token_with_options(
         &self,
         user_id: i32,
@@ -97,6 +99,7 @@ impl TokenRepository for PostgresTokenRepository {
         Ok(row.into_access_token(plain_token))
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn find_token(&self, token: &str) -> Result<Option<AccessToken>, AuthError> {
         let token_hash = hash_token(token);
 
@@ -112,6 +115,7 @@ impl TokenRepository for PostgresTokenRepository {
         Ok(row.map(|r| r.into_access_token(token.to_owned())))
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError> {
         let token_hash = hash_token(token);
 
@@ -124,6 +128,7 @@ impl TokenRepository for PostgresTokenRepository {
         Ok(())
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM access_tokens WHERE user_id = $1")
             .bind(user_id)
@@ -134,6 +139,7 @@ impl TokenRepository for PostgresTokenRepository {
         Ok(())
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn touch_token(&self, token: &str) -> Result<(), AuthError> {
         let token_hash = hash_token(token);
 
@@ -146,6 +152,7 @@ impl TokenRepository for PostgresTokenRepository {
         Ok(())
     }
 
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn prune_expired(&self) -> Result<u64, AuthError> {
         let result = sqlx::query("DELETE FROM access_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)
