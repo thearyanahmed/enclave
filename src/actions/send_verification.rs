@@ -19,7 +19,7 @@ impl Default for SendVerificationConfig {
 }
 
 impl SendVerificationConfig {
-    /// Creates config from a TokenConfig.
+    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             email_verification_expiry: tokens.email_verification_expiry,

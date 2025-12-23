@@ -57,9 +57,9 @@ impl Default for LoginConfig {
 }
 
 impl LoginConfig {
-    /// Creates a LoginConfig from RateLimitConfig and TokenConfig.
+    /// Creates a `LoginConfig` from `RateLimitConfig` and `TokenConfig`.
     ///
-    /// This is useful when you have an `EnclaveConfig` and want to create
+    /// This is useful when you have an `AuthConfig` and want to create
     /// a `LoginConfig` from its components.
     pub fn from_configs(rate_limit: &RateLimitConfig, tokens: &TokenConfig) -> Self {
         Self {

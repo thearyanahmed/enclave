@@ -19,7 +19,7 @@ impl Default for ForgotPasswordConfig {
 }
 
 impl ForgotPasswordConfig {
-    /// Creates config from a TokenConfig.
+    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             password_reset_expiry: tokens.password_reset_expiry,
@@ -35,7 +35,11 @@ pub struct ForgotPasswordAction<U: UserRepository, P: PasswordResetRepository> {
 
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
     pub fn new(user_repository: U, reset_repository: P) -> Self {
-        Self::with_config(user_repository, reset_repository, ForgotPasswordConfig::default())
+        Self::with_config(
+            user_repository,
+            reset_repository,
+            ForgotPasswordConfig::default(),
+        )
     }
 
     pub fn with_config(

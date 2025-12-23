@@ -19,7 +19,7 @@ impl Default for RefreshTokenConfig {
 }
 
 impl RefreshTokenConfig {
-    /// Creates config from a TokenConfig.
+    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             access_token_expiry: tokens.access_token_expiry,
