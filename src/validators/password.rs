@@ -371,16 +371,16 @@ mod tests {
         assert!(policy.validate("Password123").is_ok());
         assert_eq!(
             policy.validate("Password@123").unwrap_err(),
-            ValidationError::PasswordCustom("Password must be alphanumeric only".to_string())
+            ValidationError::PasswordCustom("Password must be alphanumeric only".to_owned())
         );
     }
 
     #[test]
     fn test_disallowed_passwords() {
         let policy = PasswordPolicy::new().disallowed_passwords(vec![
-            "password".to_string(),
-            "12345678".to_string(),
-            "qwerty123".to_string(),
+            "password".to_owned(),
+            "12345678".to_owned(),
+            "qwerty123".to_owned(),
         ]);
 
         assert!(policy.validate("mypassword1").is_ok());
