@@ -23,7 +23,7 @@ impl RateLimitInfo {
 
 /// Storage backend for rate limit data.
 ///
-/// Implement this trait to provide custom storage (Redis, PostgreSQL, etc.).
+/// Implement this trait to provide custom storage (Redis, `PostgreSQL`, etc.).
 #[async_trait]
 pub trait RateLimitStore: Send + Sync {
     /// Increment the attempt count for a key and return the updated info.
@@ -40,23 +40,20 @@ pub trait RateLimitStore: Send + Sync {
 
     /// Check remaining attempts without incrementing.
     async fn remaining(&self, key: &str, max_attempts: u32) -> Result<u32, AuthError> {
-        match self.get(key).await? {
-            Some(info) => {
-                if info.reset_at < Utc::now() {
-                    Ok(max_attempts)
-                } else {
-                    Ok(max_attempts.saturating_sub(info.attempts))
-                }
+        Ok(self.get(key).await?.map_or(max_attempts, |info| {
+            if info.reset_at < Utc::now() {
+                max_attempts
+            } else {
+                max_attempts.saturating_sub(info.attempts)
             }
-            None => Ok(max_attempts),
-        }
+        }))
     }
 }
 
 /// In-memory rate limit store.
 ///
 /// Suitable for single-instance deployments or development.
-/// For distributed systems, use a shared store like Redis or PostgreSQL.
+/// For distributed systems, use a shared store like Redis or `PostgreSQL`.
 #[derive(Debug, Default)]
 pub struct InMemoryStore {
     entries: Arc<RwLock<HashMap<String, RateLimitInfo>>>,
@@ -64,6 +61,7 @@ pub struct InMemoryStore {
 
 impl InMemoryStore {
     /// Creates a new in-memory store.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             entries: Arc::new(RwLock::new(HashMap::new())),
@@ -82,6 +80,7 @@ impl InMemoryStore {
 }
 
 #[async_trait]
+#[allow(clippy::significant_drop_tightening)]
 impl RateLimitStore for InMemoryStore {
     async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
         let now = Utc::now();

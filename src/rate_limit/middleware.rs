@@ -38,6 +38,7 @@ pub struct Throttle {
 
 impl Throttle {
     /// Creates a new throttle middleware.
+    #[must_use]
     pub fn new(store: Arc<dyn RateLimitStore>, limit: Option<Limit>, limit_name: String) -> Self {
         Self {
             store,
@@ -62,7 +63,7 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ok(ThrottleMiddleware {
             service,
-            store: self.store.clone(),
+            store: Arc::clone(&self.store),
             limit: self.limit.clone(),
             limit_name: self.limit_name.clone(),
         })
@@ -101,14 +102,14 @@ where
             });
         };
 
-        let store = self.store.clone();
+        let store = Arc::clone(&self.store);
         let limit_name = self.limit_name.clone();
         let key = extract_key(&req, &limit.key_strategy);
 
         let fut = self.service.call(req);
 
         Box::pin(async move {
-            let full_key = format!("{}:{}", limit_name, key);
+            let full_key = format!("{limit_name}:{key}");
             let info = store.increment(&full_key, limit.window_secs()).await;
 
             match info {
@@ -188,8 +189,7 @@ fn extract_key(req: &ServiceRequest, strategy: &KeyStrategy) -> String {
             req.request()
                 .extensions()
                 .get::<UserId>()
-                .map(|id| id.0.to_string())
-                .unwrap_or_else(|| extract_client_ip(req.request()))
+                .map_or_else(|| extract_client_ip(req.request()), |id| id.0.to_string())
         }
         KeyStrategy::Global => "global".to_owned(),
         KeyStrategy::Custom(f) => {
@@ -231,6 +231,5 @@ pub fn extract_client_ip(req: &HttpRequest) -> String {
 
     // Fall back to peer address
     req.peer_addr()
-        .map(|addr| addr.ip().to_string())
-        .unwrap_or_else(|| "unknown".to_owned())
+        .map_or_else(|| "unknown".to_owned(), |addr| addr.ip().to_string())
 }

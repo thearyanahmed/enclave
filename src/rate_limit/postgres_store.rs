@@ -6,7 +6,7 @@ use crate::AuthError;
 
 use super::store::{RateLimitInfo, RateLimitStore};
 
-/// PostgreSQL-backed rate limit store.
+/// `PostgreSQL`-backed rate limit store.
 ///
 /// Suitable for distributed deployments where multiple instances
 /// need to share rate limit state.
@@ -32,7 +32,7 @@ pub struct PostgresRateLimitStore {
 }
 
 impl PostgresRateLimitStore {
-    /// Creates a new PostgreSQL rate limit store.
+    /// Creates a new `PostgreSQL` rate limit store.
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
@@ -60,11 +60,11 @@ struct RateLimitRow {
 impl RateLimitStore for PostgresRateLimitStore {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
-        let window_interval = format!("{} seconds", window_secs);
+        let window_interval = format!("{window_secs} seconds");
 
         // Use UPSERT to atomically increment or create
         let row: RateLimitRow = sqlx::query_as(
-            r#"
+            r"
             INSERT INTO rate_limits (key, attempts, reset_at, updated_at)
             VALUES ($1, 1, NOW() + $2::interval, NOW())
             ON CONFLICT (key) DO UPDATE SET
@@ -78,7 +78,7 @@ impl RateLimitStore for PostgresRateLimitStore {
                 END,
                 updated_at = NOW()
             RETURNING attempts, reset_at
-            "#,
+            ",
         )
         .bind(key)
         .bind(&window_interval)

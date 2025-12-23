@@ -7,7 +7,7 @@
 //!
 //! - **Configurable limits**: Define max attempts and time windows
 //! - **Multiple key strategies**: Rate limit by IP, user ID, or custom keys
-//! - **Pluggable storage**: In-memory (default), PostgreSQL, or custom backends
+//! - **Pluggable storage**: In-memory (default), `PostgreSQL`, or custom backends
 //! - **Laravel-style API**: Familiar `RateLimiter::for_()` builder pattern
 //!
 //! # Example

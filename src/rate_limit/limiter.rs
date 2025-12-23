@@ -61,6 +61,7 @@ pub struct RateLimiter {
 
 impl RateLimiter {
     /// Creates a new rate limiter with the specified store.
+    #[must_use]
     pub fn new(store: Arc<dyn RateLimitStore>) -> Self {
         Self {
             store,
@@ -81,6 +82,7 @@ impl RateLimiter {
     ///     .for_("api", Limit::per_minute(60))
     ///     .for_("login", Limit::per_minute(5).by_ip());
     /// ```
+    #[must_use]
     pub fn for_(mut self, name: impl Into<String>, limit: Limit) -> Self {
         self.limits.insert(name.into(), limit);
         self
@@ -115,7 +117,7 @@ impl RateLimiter {
 
         match result {
             RateLimitResult::Allowed { .. } => Ok(Ok(action().await)),
-            limited => Ok(Err(limited)),
+            limited @ RateLimitResult::Limited { .. } => Ok(Err(limited)),
         }
     }
 
@@ -124,10 +126,10 @@ impl RateLimiter {
     /// This increments the counter and returns whether the request should be allowed.
     pub async fn hit(&self, limit_name: &str, key: &str) -> Result<RateLimitResult, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
-            AuthError::DatabaseError(format!("Rate limit '{}' not configured", limit_name))
+            AuthError::DatabaseError(format!("Rate limit '{limit_name}' not configured"))
         })?;
 
-        let full_key = format!("{}:{}", limit_name, key);
+        let full_key = format!("{limit_name}:{key}");
         let info = self.store.increment(&full_key, limit.window_secs()).await?;
 
         if info.attempts > limit.max_attempts {
@@ -151,10 +153,10 @@ impl RateLimiter {
     /// Checks if a key has exceeded the rate limit without incrementing.
     pub async fn too_many_attempts(&self, limit_name: &str, key: &str) -> Result<bool, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
-            AuthError::DatabaseError(format!("Rate limit '{}' not configured", limit_name))
+            AuthError::DatabaseError(format!("Rate limit '{limit_name}' not configured"))
         })?;
 
-        let full_key = format!("{}:{}", limit_name, key);
+        let full_key = format!("{limit_name}:{key}");
         let remaining = self.store.remaining(&full_key, limit.max_attempts).await?;
 
         Ok(remaining == 0)
@@ -163,26 +165,27 @@ impl RateLimiter {
     /// Returns the remaining attempts for a key.
     pub async fn remaining(&self, limit_name: &str, key: &str) -> Result<u32, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
-            AuthError::DatabaseError(format!("Rate limit '{}' not configured", limit_name))
+            AuthError::DatabaseError(format!("Rate limit '{limit_name}' not configured"))
         })?;
 
-        let full_key = format!("{}:{}", limit_name, key);
+        let full_key = format!("{limit_name}:{key}");
         self.store.remaining(&full_key, limit.max_attempts).await
     }
 
     /// Returns seconds until the rate limit resets for a key.
     pub async fn available_in(&self, limit_name: &str, key: &str) -> Result<i64, AuthError> {
-        let full_key = format!("{}:{}", limit_name, key);
+        let full_key = format!("{limit_name}:{key}");
 
-        match self.store.get(&full_key).await? {
-            Some(info) => Ok(info.available_in()),
-            None => Ok(0),
-        }
+        Ok(self
+            .store
+            .get(&full_key)
+            .await?
+            .map_or(0, |info| info.available_in()))
     }
 
     /// Clears the rate limit for a key.
     pub async fn clear(&self, limit_name: &str, key: &str) -> Result<(), AuthError> {
-        let full_key = format!("{}:{}", limit_name, key);
+        let full_key = format!("{limit_name}:{key}");
         self.store.reset(&full_key).await
     }
 
@@ -190,7 +193,7 @@ impl RateLimiter {
     #[cfg(feature = "actix")]
     pub fn throttle(&self, limit_name: &str) -> super::middleware::Throttle {
         super::middleware::Throttle::new(
-            self.store.clone(),
+            Arc::clone(&self.store),
             self.limits.get(limit_name).cloned(),
             limit_name.to_owned(),
         )
@@ -201,7 +204,7 @@ impl std::fmt::Debug for RateLimiter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RateLimiter")
             .field("limits", &self.limits.keys().collect::<Vec<_>>())
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

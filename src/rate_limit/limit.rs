@@ -5,6 +5,10 @@ use actix_web::HttpRequest;
 #[cfg(feature = "actix")]
 use std::sync::Arc;
 
+/// Type alias for custom key extraction functions.
+#[cfg(feature = "actix")]
+pub type KeyExtractor = Arc<dyn Fn(&HttpRequest) -> Option<String> + Send + Sync>;
+
 /// Key extraction strategy for rate limiting.
 #[derive(Clone)]
 pub enum KeyStrategy {
@@ -16,7 +20,7 @@ pub enum KeyStrategy {
     Global,
     /// Custom key extraction function.
     #[cfg(feature = "actix")]
-    Custom(Arc<dyn Fn(&HttpRequest) -> Option<String> + Send + Sync>),
+    Custom(KeyExtractor),
 }
 
 impl std::fmt::Debug for KeyStrategy {
@@ -66,6 +70,7 @@ pub struct Limit {
 
 impl Limit {
     /// Creates a new rate limit with the specified max attempts and window.
+    #[must_use]
     pub fn new(max_attempts: u32, window: Duration) -> Self {
         Self {
             max_attempts,
@@ -76,26 +81,31 @@ impl Limit {
     }
 
     /// Creates a rate limit of N requests per second.
+    #[must_use]
     pub fn per_second(max_attempts: u32) -> Self {
         Self::new(max_attempts, Duration::seconds(1))
     }
 
     /// Creates a rate limit of N requests per minute.
+    #[must_use]
     pub fn per_minute(max_attempts: u32) -> Self {
         Self::new(max_attempts, Duration::minutes(1))
     }
 
     /// Creates a rate limit of N requests per hour.
+    #[must_use]
     pub fn per_hour(max_attempts: u32) -> Self {
         Self::new(max_attempts, Duration::hours(1))
     }
 
     /// Creates a rate limit of N requests per day.
+    #[must_use]
     pub fn per_day(max_attempts: u32) -> Self {
         Self::new(max_attempts, Duration::days(1))
     }
 
     /// Sets the key strategy to IP-based (default).
+    #[must_use]
     pub fn by_ip(mut self) -> Self {
         self.key_strategy = KeyStrategy::Ip;
         self
@@ -105,12 +115,14 @@ impl Limit {
     ///
     /// Requires the user to be authenticated. Unauthenticated requests
     /// will fall back to IP-based limiting.
+    #[must_use]
     pub fn by_user(mut self) -> Self {
         self.key_strategy = KeyStrategy::User;
         self
     }
 
     /// Sets the key strategy to global (single bucket for all requests).
+    #[must_use]
     pub fn globally(mut self) -> Self {
         self.key_strategy = KeyStrategy::Global;
         self
@@ -118,6 +130,7 @@ impl Limit {
 
     /// Sets a custom key extraction function.
     #[cfg(feature = "actix")]
+    #[must_use]
     pub fn by<F>(mut self, key_fn: F) -> Self
     where
         F: Fn(&HttpRequest) -> Option<String> + Send + Sync + 'static,
@@ -127,6 +140,7 @@ impl Limit {
     }
 
     /// Sets a custom message to return when rate limited.
+    #[must_use]
     pub fn message(mut self, msg: impl Into<String>) -> Self {
         self.message = Some(msg.into());
         self
