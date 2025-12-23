@@ -4,6 +4,7 @@
 pub mod actions;
 #[cfg(feature = "actix")]
 pub mod api;
+pub mod config;
 pub mod crypto;
 #[cfg(feature = "jwt")]
 pub mod jwt;
@@ -12,6 +13,12 @@ pub mod postgres;
 pub mod repository;
 pub mod validators;
 
+pub use config::AuthConfig;
+pub use config::RateLimitConfig;
+pub use config::TokenConfig;
+pub use crypto::DEFAULT_TOKEN_LENGTH;
+pub use crypto::generate_token;
+pub use crypto::generate_token_default;
 pub use crypto::hash_token;
 
 pub use repository::AccessToken;

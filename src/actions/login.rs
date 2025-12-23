@@ -1,7 +1,8 @@
+use crate::config::{RateLimitConfig, TokenConfig};
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
-/// Configuration for login rate limiting behavior.
+/// Configuration for login behavior including rate limiting and token expiry.
 ///
 /// Controls how the login system handles repeated failed attempts to prevent
 /// brute-force attacks while avoiding excessive lockouts for legitimate users.
@@ -9,17 +10,20 @@ use chrono::{Duration, Utc};
 /// # Default Values
 ///
 /// - `max_failed_attempts`: 5
-/// - `lockout_duration_minutes`: 15
+/// - `lockout_duration`: 15 minutes
+/// - `access_token_expiry`: 7 days
 ///
 /// # Example
 ///
 /// ```rust
 /// use enclave::actions::LoginConfig;
+/// use chrono::Duration;
 ///
 /// // Use stricter settings for sensitive applications
 /// let config = LoginConfig {
 ///     max_failed_attempts: 3,
-///     lockout_duration_minutes: 30,
+///     lockout_duration: Duration::minutes(30),
+///     access_token_expiry: Duration::hours(1),
 /// };
 /// ```
 #[derive(Debug, Clone)]
@@ -30,20 +34,47 @@ pub struct LoginConfig {
     /// with `AuthError::TooManyAttempts` until the lockout period expires.
     pub max_failed_attempts: u32,
 
-    /// Duration in minutes that an account remains locked after exceeding
-    /// the maximum failed attempts.
+    /// Duration that an account remains locked after exceeding the maximum failed attempts.
     ///
     /// After this period, the failed attempt counter resets and the user
     /// can attempt to log in again.
-    pub lockout_duration_minutes: i64,
+    pub lockout_duration: Duration,
+
+    /// How long access tokens remain valid after creation.
+    ///
+    /// Default: 7 days
+    pub access_token_expiry: Duration,
 }
 
 impl Default for LoginConfig {
     fn default() -> Self {
         Self {
             max_failed_attempts: 5,
-            lockout_duration_minutes: 15,
+            lockout_duration: Duration::minutes(15),
+            access_token_expiry: Duration::days(7),
         }
+    }
+}
+
+impl LoginConfig {
+    /// Creates a `LoginConfig` from `RateLimitConfig` and `TokenConfig`.
+    ///
+    /// This is useful when you have an `AuthConfig` and want to create
+    /// a `LoginConfig` from its components.
+    pub fn from_configs(rate_limit: &RateLimitConfig, tokens: &TokenConfig) -> Self {
+        Self {
+            max_failed_attempts: rate_limit.max_failed_attempts,
+            lockout_duration: rate_limit.lockout_duration,
+            access_token_expiry: tokens.access_token_expiry,
+        }
+    }
+
+    /// Returns the lockout duration in minutes.
+    ///
+    /// Convenience method for backwards compatibility.
+    #[deprecated(note = "Use lockout_duration directly")]
+    pub fn lockout_duration_minutes(&self) -> i64 {
+        self.lockout_duration.num_minutes()
     }
 }
 
@@ -87,8 +118,8 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
         email: &str,
         password: &str,
     ) -> Result<(User, AccessToken), AuthError> {
-        // we check if account is locked out
-        let since = Utc::now() - Duration::minutes(self.config.lockout_duration_minutes);
+        // Check if account is locked out
+        let since = Utc::now() - self.config.lockout_duration;
         let failed_attempts = self
             .rate_limiter
             .get_recent_failed_attempts(email, since)
@@ -114,7 +145,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
         self.rate_limiter.clear_attempts(email).await?;
         self.rate_limiter.record_attempt(email, true, None).await?;
 
-        let expires_at = Utc::now() + Duration::days(7);
+        let expires_at = Utc::now() + self.config.access_token_expiry;
         let token = self
             .token_repository
             .create_token(user.id, expires_at)

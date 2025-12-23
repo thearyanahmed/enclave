@@ -1,13 +1,47 @@
 use crate::{AccessToken, AuthError, TokenRepository};
 use chrono::{Duration, Utc};
 
+/// Configuration for token refresh behavior.
+#[derive(Debug, Clone)]
+pub struct RefreshTokenConfig {
+    /// How long the new access token remains valid after refresh.
+    ///
+    /// Default: 7 days
+    pub access_token_expiry: Duration,
+}
+
+impl Default for RefreshTokenConfig {
+    fn default() -> Self {
+        Self {
+            access_token_expiry: Duration::days(7),
+        }
+    }
+}
+
+impl RefreshTokenConfig {
+    /// Creates config from a `TokenConfig`.
+    pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
+        Self {
+            access_token_expiry: tokens.access_token_expiry,
+        }
+    }
+}
+
 pub struct RefreshTokenAction<T: TokenRepository> {
     token_repository: T,
+    config: RefreshTokenConfig,
 }
 
 impl<T: TokenRepository> RefreshTokenAction<T> {
     pub fn new(token_repository: T) -> Self {
-        RefreshTokenAction { token_repository }
+        Self::with_config(token_repository, RefreshTokenConfig::default())
+    }
+
+    pub fn with_config(token_repository: T, config: RefreshTokenConfig) -> Self {
+        RefreshTokenAction {
+            token_repository,
+            config,
+        }
     }
 
     #[cfg_attr(
@@ -26,7 +60,7 @@ impl<T: TokenRepository> RefreshTokenAction<T> {
 
                 // Revoke old token and create new one
                 self.token_repository.revoke_token(current_token).await?;
-                let new_expires_at = Utc::now() + Duration::days(7);
+                let new_expires_at = Utc::now() + self.config.access_token_expiry;
                 self.token_repository
                     .create_token(token.user_id, new_expires_at)
                     .await

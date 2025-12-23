@@ -5,17 +5,9 @@ use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
-use crate::crypto::hash_token;
+use crate::crypto::{generate_token_default, hash_token};
 
 use super::token::{AccessToken, CreateTokenOptions, TokenRepository};
-
-fn generate_token() -> String {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    (0..32)
-        .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
-        .collect()
-}
 
 #[derive(Clone)]
 pub struct MockTokenRepository {
@@ -47,7 +39,7 @@ impl TokenRepository for MockTokenRepository {
         expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError> {
-        let plain_token = generate_token();
+        let plain_token = generate_token_default();
         let hashed_token = hash_token(&plain_token);
         let now = Utc::now();
 

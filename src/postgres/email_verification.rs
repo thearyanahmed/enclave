@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::crypto::hash_token;
+use crate::crypto::{generate_token_default, hash_token};
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken};
 
 #[derive(Clone)]
@@ -13,14 +13,6 @@ pub struct PostgresEmailVerificationRepository {
 impl PostgresEmailVerificationRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
-    }
-
-    fn generate_token() -> String {
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        (0..32)
-            .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
-            .collect()
     }
 }
 
@@ -40,7 +32,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         user_id: i32,
         expires_at: DateTime<Utc>,
     ) -> Result<EmailVerificationToken, AuthError> {
-        let plain_token = Self::generate_token();
+        let plain_token = generate_token_default();
         let token_hash = hash_token(&plain_token);
 
         let row: VerificationTokenRecord = sqlx::query_as(
