@@ -1,6 +1,6 @@
-//! End-to-end tests for rate limiting with PostgreSQL store.
+//! End-to-end tests for rate limiting with `PostgreSQL` store.
 //!
-//! These tests require a running PostgreSQL database and both features enabled.
+//! These tests require a running `PostgreSQL` database and both features enabled.
 //! Run with: `cargo test --features "sqlx_postgres rate_limit" --test e2e_postgres_rate_limit`
 //!
 //! Before running, start the database:
@@ -176,7 +176,7 @@ async fn test_postgres_rate_limit_store_different_keys() {
     assert_eq!(info2.attempts, 1);
 }
 
-// RateLimiter E2E Tests (with PostgreSQL store)
+// RateLimiter E2E Tests (with `PostgreSQL` store)
 
 #[tokio::test]
 #[serial]
