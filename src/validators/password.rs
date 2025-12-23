@@ -32,7 +32,9 @@ pub struct PasswordPolicy {
     pub require_lowercase: bool,
     /// Require at least one digit
     pub require_digit: bool,
-    /// Require at least one special character: `!@#$%^&*()_+-=[]{}|;:,.<>?/~'"\`
+    /// Require at least one special character.
+    ///
+    /// Accepted: ! @ # $ % ^ & * ( ) _ + - = \[ \] { } | ; : , . < > ? / \` ~ ' " \\
     pub require_special: bool,
     /// Regex pattern the password must match
     #[serde(skip)]
