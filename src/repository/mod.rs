@@ -1,3 +1,4 @@
+#[cfg(feature = "_audit_log")]
 mod audit_log;
 mod email_verification;
 mod password_reset;
@@ -5,7 +6,7 @@ mod rate_limiter;
 mod token;
 mod user;
 
-#[cfg(any(test, feature = "mocks"))]
+#[cfg(all(feature = "_audit_log", any(test, feature = "mocks")))]
 mod audit_log_mock;
 #[cfg(any(test, feature = "mocks"))]
 mod email_verification_mock;
@@ -18,8 +19,11 @@ mod token_mock;
 #[cfg(any(test, feature = "mocks"))]
 mod user_mock;
 
+#[cfg(feature = "_audit_log")]
 pub use audit_log::AuditEventType;
+#[cfg(feature = "_audit_log")]
 pub use audit_log::AuditLog;
+#[cfg(feature = "_audit_log")]
 pub use audit_log::AuditLogRepository;
 pub use email_verification::EmailVerificationRepository;
 pub use email_verification::EmailVerificationToken;
@@ -33,7 +37,7 @@ pub use token::TokenRepository;
 pub use user::User;
 pub use user::UserRepository;
 
-#[cfg(any(test, feature = "mocks"))]
+#[cfg(all(feature = "_audit_log", any(test, feature = "mocks")))]
 pub use audit_log_mock::MockAuditLogRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use email_verification_mock::MockEmailVerificationRepository;

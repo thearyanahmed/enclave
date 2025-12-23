@@ -33,6 +33,8 @@ sqlx_postgres = ["sqlx"]
 tracing = ["dep:tracing"]
 jwt = ["jsonwebtoken"]
 mocks = []
+# Internal/unstable features - do not use
+_audit_log = []
 
 [dev-dependencies]
 actix-rt = "2"

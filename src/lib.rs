@@ -22,8 +22,11 @@ pub use crypto::generate_token_default;
 pub use crypto::hash_token;
 
 pub use repository::AccessToken;
+#[cfg(feature = "_audit_log")]
 pub use repository::AuditEventType;
+#[cfg(feature = "_audit_log")]
 pub use repository::AuditLog;
+#[cfg(feature = "_audit_log")]
 pub use repository::AuditLogRepository;
 pub use repository::EmailVerificationRepository;
 pub use repository::EmailVerificationToken;
@@ -35,7 +38,7 @@ pub use repository::TokenRepository;
 pub use repository::User;
 pub use repository::UserRepository;
 
-#[cfg(any(test, feature = "mocks"))]
+#[cfg(all(feature = "_audit_log", any(test, feature = "mocks")))]
 pub use repository::MockAuditLogRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use repository::MockEmailVerificationRepository;
