@@ -139,7 +139,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            AuthError::Validation(ValidationError::PasswordTooShort)
+            AuthError::Validation(ValidationError::PasswordTooShort(8))
         );
     }
 }

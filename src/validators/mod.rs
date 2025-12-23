@@ -14,8 +14,8 @@ pub enum ValidationError {
     EmailTooLong,
     EmailInvalidFormat,
     PasswordEmpty,
-    PasswordTooShort,
-    PasswordTooLong,
+    PasswordTooShort(usize),
+    PasswordTooLong(usize),
     PasswordMissingUppercase,
     PasswordMissingLowercase,
     PasswordMissingDigit,
@@ -33,11 +33,11 @@ impl std::fmt::Display for ValidationError {
             Self::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
             Self::EmailInvalidFormat => write!(f, "Invalid email format"),
             Self::PasswordEmpty => write!(f, "Password cannot be empty"),
-            Self::PasswordTooShort => {
-                write!(f, "Password must be at least 8 characters")
+            Self::PasswordTooShort(min) => {
+                write!(f, "Password must be at least {min} characters")
             }
-            Self::PasswordTooLong => {
-                write!(f, "Password is too long (max 128 characters)")
+            Self::PasswordTooLong(max) => {
+                write!(f, "Password is too long (max {max} characters)")
             }
             Self::PasswordMissingUppercase => {
                 write!(f, "Password must contain at least one uppercase letter")

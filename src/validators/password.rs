@@ -160,11 +160,11 @@ impl PasswordPolicy {
 
         // Length checks
         if password.len() < self.min_length {
-            return Err(ValidationError::PasswordTooShort);
+            return Err(ValidationError::PasswordTooShort(self.min_length));
         }
 
         if password.len() > self.max_length {
-            return Err(ValidationError::PasswordTooLong);
+            return Err(ValidationError::PasswordTooLong(self.max_length));
         }
 
         // Character requirements
@@ -279,11 +279,11 @@ mod tests {
         let policy = PasswordPolicy::default();
         assert_eq!(
             policy.validate("1234567").unwrap_err(),
-            ValidationError::PasswordTooShort
+            ValidationError::PasswordTooShort(8)
         );
         assert_eq!(
             policy.validate("abc").unwrap_err(),
-            ValidationError::PasswordTooShort
+            ValidationError::PasswordTooShort(8)
         );
     }
 
@@ -293,7 +293,7 @@ mod tests {
         let long_password = "a".repeat(129);
         assert_eq!(
             policy.validate(&long_password).unwrap_err(),
-            ValidationError::PasswordTooLong
+            ValidationError::PasswordTooLong(128)
         );
     }
 
@@ -331,7 +331,7 @@ mod tests {
         // Too short
         assert_eq!(
             policy.validate("MyP@ss0").unwrap_err(),
-            ValidationError::PasswordTooShort
+            ValidationError::PasswordTooShort(12)
         );
     }
 
@@ -341,7 +341,7 @@ mod tests {
         assert!(policy.validate("1234567890").is_ok());
         assert_eq!(
             policy.validate("123456789").unwrap_err(),
-            ValidationError::PasswordTooShort
+            ValidationError::PasswordTooShort(10)
         );
     }
 
