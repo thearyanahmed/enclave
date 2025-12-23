@@ -51,7 +51,7 @@ async fn setup_db() -> PgPool {
         .expect("Failed to run migrations");
 
     // Clean up tables before each test
-    sqlx::query("TRUNCATE users, access_tokens, password_reset_tokens, email_verification_tokens, login_attempts, audit_logs CASCADE")
+    sqlx::query("TRUNCATE users, access_tokens, password_reset_tokens, email_verification_tokens, login_attempts, audit_logs, rate_limits CASCADE")
         .execute(&pool)
         .await
         .expect("Failed to truncate tables");
