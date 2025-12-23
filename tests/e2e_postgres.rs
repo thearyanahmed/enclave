@@ -18,14 +18,17 @@
 
 use chrono::{Duration, Utc};
 use enclave::actions::{LoginAction, SignupAction};
+#[cfg(feature = "_audit_log")]
+use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{
-    PostgresAuditLogRepository, PostgresEmailVerificationRepository,
-    PostgresPasswordResetRepository, PostgresRateLimiterRepository, PostgresTokenRepository,
-    PostgresUserRepository,
+    PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
+    PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,
 };
+#[cfg(feature = "_audit_log")]
+use enclave::{AuditEventType, AuditLogRepository};
 use enclave::{
-    AuditEventType, AuditLogRepository, EmailVerificationRepository, PasswordResetRepository,
-    RateLimiterRepository, TokenRepository, UserRepository,
+    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository, TokenRepository,
+    UserRepository,
 };
 use serial_test::serial;
 use sqlx::PgPool;
@@ -307,6 +310,7 @@ async fn test_rate_limiter_repository() {
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "_audit_log")]
 async fn test_audit_log_repository() {
     let pool = setup_db().await;
     let user_repo = PostgresUserRepository::new(pool.clone());
