@@ -30,11 +30,7 @@ pub trait RateLimitStore: Send + Sync {
     ///
     /// If the key doesn't exist, it should be created with 1 attempt.
     /// The `window_secs` parameter defines how long until the window resets.
-    async fn increment(
-        &self,
-        key: &str,
-        window_secs: u64,
-    ) -> Result<RateLimitInfo, AuthError>;
+    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError>;
 
     /// Get the current rate limit info for a key, if it exists.
     async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError>;
@@ -87,17 +83,14 @@ impl InMemoryStore {
 
 #[async_trait]
 impl RateLimitStore for InMemoryStore {
-    async fn increment(
-        &self,
-        key: &str,
-        window_secs: u64,
-    ) -> Result<RateLimitInfo, AuthError> {
+    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
         let now = Utc::now();
         let window = chrono::Duration::seconds(i64::try_from(window_secs).unwrap_or(i64::MAX));
 
-        let mut entries = self.entries.write().map_err(|_| {
-            AuthError::DatabaseError("Failed to acquire lock".to_owned())
-        })?;
+        let mut entries = self
+            .entries
+            .write()
+            .map_err(|_| AuthError::DatabaseError("Failed to acquire lock".to_owned()))?;
 
         let info = entries
             .entry(key.to_owned())
@@ -119,17 +112,19 @@ impl RateLimitStore for InMemoryStore {
     }
 
     async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError> {
-        let entries = self.entries.read().map_err(|_| {
-            AuthError::DatabaseError("Failed to acquire lock".to_owned())
-        })?;
+        let entries = self
+            .entries
+            .read()
+            .map_err(|_| AuthError::DatabaseError("Failed to acquire lock".to_owned()))?;
 
         Ok(entries.get(key).cloned())
     }
 
     async fn reset(&self, key: &str) -> Result<(), AuthError> {
-        let mut entries = self.entries.write().map_err(|_| {
-            AuthError::DatabaseError("Failed to acquire lock".to_owned())
-        })?;
+        let mut entries = self
+            .entries
+            .write()
+            .map_err(|_| AuthError::DatabaseError("Failed to acquire lock".to_owned()))?;
 
         entries.remove(key);
         Ok(())

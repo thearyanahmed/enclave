@@ -1,9 +1,10 @@
 use actix_web::{
-    HttpMessage, HttpRequest, HttpResponse, body::EitherBody,
+    HttpMessage, HttpRequest, HttpResponse,
+    body::EitherBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     http::header,
 };
-use futures::future::{ok, LocalBoxFuture, Ready};
+use futures::future::{LocalBoxFuture, Ready, ok};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -37,11 +38,7 @@ pub struct Throttle {
 
 impl Throttle {
     /// Creates a new throttle middleware.
-    pub fn new(
-        store: Arc<dyn RateLimitStore>,
-        limit: Option<Limit>,
-        limit_name: String,
-    ) -> Self {
+    pub fn new(store: Arc<dyn RateLimitStore>, limit: Option<Limit>, limit_name: String) -> Self {
         Self {
             store,
             limit,
@@ -127,7 +124,10 @@ where
                             .insert_header((header::RETRY_AFTER, retry_after.to_string()))
                             .insert_header(("X-RateLimit-Limit", limit.max_attempts.to_string()))
                             .insert_header(("X-RateLimit-Remaining", "0"))
-                            .insert_header(("X-RateLimit-Reset", info.reset_at.timestamp().to_string()))
+                            .insert_header((
+                                "X-RateLimit-Reset",
+                                info.reset_at.timestamp().to_string(),
+                            ))
                             .json(serde_json::json!({
                                 "error": message,
                                 "code": "RATE_LIMITED",
@@ -192,7 +192,9 @@ fn extract_key(req: &ServiceRequest, strategy: &KeyStrategy) -> String {
                 .unwrap_or_else(|| extract_client_ip(req.request()))
         }
         KeyStrategy::Global => "global".to_owned(),
-        KeyStrategy::Custom(f) => f(req.request()).unwrap_or_else(|| extract_client_ip(req.request())),
+        KeyStrategy::Custom(f) => {
+            f(req.request()).unwrap_or_else(|| extract_client_ip(req.request()))
+        }
     }
 }
 

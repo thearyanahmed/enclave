@@ -58,15 +58,8 @@ struct RateLimitRow {
 
 #[async_trait]
 impl RateLimitStore for PostgresRateLimitStore {
-    #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(skip(self), err)
-    )]
-    async fn increment(
-        &self,
-        key: &str,
-        window_secs: u64,
-    ) -> Result<RateLimitInfo, AuthError> {
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
+    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
         let window_interval = format!("{} seconds", window_secs);
 
         // Use UPSERT to atomically increment or create
@@ -99,18 +92,14 @@ impl RateLimitStore for PostgresRateLimitStore {
         })
     }
 
-    #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(skip(self), err)
-    )]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError> {
-        let row: Option<RateLimitRow> = sqlx::query_as(
-            "SELECT attempts, reset_at FROM rate_limits WHERE key = $1",
-        )
-        .bind(key)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        let row: Option<RateLimitRow> =
+            sqlx::query_as("SELECT attempts, reset_at FROM rate_limits WHERE key = $1")
+                .bind(key)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         Ok(row.map(|r| RateLimitInfo {
             attempts: u32::try_from(r.attempts).unwrap_or(u32::MAX),
@@ -118,10 +107,7 @@ impl RateLimitStore for PostgresRateLimitStore {
         }))
     }
 
-    #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(skip(self), err)
-    )]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn reset(&self, key: &str) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM rate_limits WHERE key = $1")
             .bind(key)

@@ -15,10 +15,7 @@ pub enum RateLimitResult {
         reset_at: chrono::DateTime<chrono::Utc>,
     },
     /// Request is rate limited.
-    Limited {
-        retry_after: i64,
-        message: String,
-    },
+    Limited { retry_after: i64, message: String },
 }
 
 impl RateLimitResult {
@@ -152,11 +149,7 @@ impl RateLimiter {
     }
 
     /// Checks if a key has exceeded the rate limit without incrementing.
-    pub async fn too_many_attempts(
-        &self,
-        limit_name: &str,
-        key: &str,
-    ) -> Result<bool, AuthError> {
+    pub async fn too_many_attempts(&self, limit_name: &str, key: &str) -> Result<bool, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
             AuthError::DatabaseError(format!("Rate limit '{}' not configured", limit_name))
         })?;

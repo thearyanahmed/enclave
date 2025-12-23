@@ -44,7 +44,7 @@ pub use limiter::{RateLimitResult, RateLimiter};
 pub use store::{InMemoryStore, RateLimitInfo, RateLimitStore};
 
 #[cfg(feature = "actix")]
-pub use middleware::{extract_client_ip, Throttle, UserId};
+pub use middleware::{Throttle, UserId, extract_client_ip};
 
 #[cfg(feature = "sqlx_postgres")]
 pub use postgres_store::PostgresRateLimitStore;
