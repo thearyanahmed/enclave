@@ -1,4 +1,4 @@
-use crate::validators::validate_password;
+use crate::validators::PasswordPolicy;
 use crate::{AuthError, PasswordResetRepository, UserRepository};
 use argon2::{Argon2, PasswordHasher};
 use chrono::Utc;
@@ -8,13 +8,29 @@ use rand::rngs::OsRng;
 pub struct ResetPasswordAction<U: UserRepository, P: PasswordResetRepository> {
     user_repository: U,
     reset_repository: P,
+    password_policy: PasswordPolicy,
 }
 
 impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
+    /// Creates a new `ResetPasswordAction` with the default password policy.
     pub fn new(user_repository: U, reset_repository: P) -> Self {
-        ResetPasswordAction {
+        Self {
             user_repository,
             reset_repository,
+            password_policy: PasswordPolicy::default(),
+        }
+    }
+
+    /// Creates a new `ResetPasswordAction` with a custom password policy.
+    pub fn with_policy(
+        user_repository: U,
+        reset_repository: P,
+        password_policy: PasswordPolicy,
+    ) -> Self {
+        Self {
+            user_repository,
+            reset_repository,
+            password_policy,
         }
     }
 
@@ -23,7 +39,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
         tracing::instrument(name = "reset_password", skip_all, err)
     )]
     pub async fn execute(&self, token: &str, new_password: &str) -> Result<(), AuthError> {
-        validate_password(new_password)?;
+        self.password_policy.validate(new_password)?;
 
         let reset_token = self.reset_repository.find_reset_token(token).await?;
 
@@ -138,7 +154,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            AuthError::Validation(ValidationError::PasswordTooShort)
+            AuthError::Validation(ValidationError::PasswordTooShort(8))
         );
     }
 }

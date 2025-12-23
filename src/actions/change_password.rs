@@ -1,4 +1,4 @@
-use crate::validators::validate_password;
+use crate::validators::PasswordPolicy;
 use crate::{AuthError, UserRepository};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use password_hash::{PasswordHash, SaltString};
@@ -6,11 +6,24 @@ use rand::rngs::OsRng;
 
 pub struct ChangePasswordAction<U: UserRepository> {
     user_repository: U,
+    password_policy: PasswordPolicy,
 }
 
 impl<U: UserRepository> ChangePasswordAction<U> {
+    /// Creates a new `ChangePasswordAction` with the default password policy.
     pub fn new(user_repository: U) -> Self {
-        ChangePasswordAction { user_repository }
+        Self {
+            user_repository,
+            password_policy: PasswordPolicy::default(),
+        }
+    }
+
+    /// Creates a new `ChangePasswordAction` with a custom password policy.
+    pub fn with_policy(user_repository: U, password_policy: PasswordPolicy) -> Self {
+        Self {
+            user_repository,
+            password_policy,
+        }
     }
 
     #[cfg_attr(
@@ -31,7 +44,7 @@ impl<U: UserRepository> ChangePasswordAction<U> {
                     return Err(AuthError::InvalidCredentials);
                 }
 
-                validate_password(new_password)?;
+                self.password_policy.validate(new_password)?;
 
                 let hashed = hash_password(new_password)?;
                 self.user_repository.update_password(user_id, &hashed).await
@@ -126,7 +139,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            AuthError::Validation(ValidationError::PasswordTooShort)
+            AuthError::Validation(ValidationError::PasswordTooShort(8))
         );
     }
 }

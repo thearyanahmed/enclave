@@ -4,7 +4,7 @@ pub mod password;
 
 pub use email::validate_email;
 pub use name::validate_name;
-pub use password::validate_password;
+pub use password::{PasswordPolicy, validate_password};
 
 use serde::{Deserialize, Serialize};
 
@@ -14,8 +14,14 @@ pub enum ValidationError {
     EmailTooLong,
     EmailInvalidFormat,
     PasswordEmpty,
-    PasswordTooShort,
-    PasswordTooLong,
+    PasswordTooShort(usize),
+    PasswordTooLong(usize),
+    PasswordMissingUppercase,
+    PasswordMissingLowercase,
+    PasswordMissingDigit,
+    PasswordMissingSpecial,
+    PasswordCommon,
+    PasswordCustom(String),
     NameEmpty,
     NameTooLong,
 }
@@ -23,18 +29,32 @@ pub enum ValidationError {
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ValidationError::EmailEmpty => write!(f, "Email cannot be empty"),
-            ValidationError::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
-            ValidationError::EmailInvalidFormat => write!(f, "Invalid email format"),
-            ValidationError::PasswordEmpty => write!(f, "Password cannot be empty"),
-            ValidationError::PasswordTooShort => {
-                write!(f, "Password must be at least 8 characters")
+            Self::EmailEmpty => write!(f, "Email cannot be empty"),
+            Self::EmailTooLong => write!(f, "Email is too long (max 254 characters)"),
+            Self::EmailInvalidFormat => write!(f, "Invalid email format"),
+            Self::PasswordEmpty => write!(f, "Password cannot be empty"),
+            Self::PasswordTooShort(min) => {
+                write!(f, "Password must be at least {min} characters")
             }
-            ValidationError::PasswordTooLong => {
-                write!(f, "Password is too long (max 128 characters)")
+            Self::PasswordTooLong(max) => {
+                write!(f, "Password is too long (max {max} characters)")
             }
-            ValidationError::NameEmpty => write!(f, "Name cannot be empty"),
-            ValidationError::NameTooLong => write!(f, "Name is too long (max 100 characters)"),
+            Self::PasswordMissingUppercase => {
+                write!(f, "Password must contain at least one uppercase letter")
+            }
+            Self::PasswordMissingLowercase => {
+                write!(f, "Password must contain at least one lowercase letter")
+            }
+            Self::PasswordMissingDigit => {
+                write!(f, "Password must contain at least one digit")
+            }
+            Self::PasswordMissingSpecial => {
+                write!(f, "Password must contain at least one special character")
+            }
+            Self::PasswordCommon => write!(f, "This password is too common"),
+            Self::PasswordCustom(msg) => write!(f, "{msg}"),
+            Self::NameEmpty => write!(f, "Name cannot be empty"),
+            Self::NameTooLong => write!(f, "Name is too long (max 100 characters)"),
         }
     }
 }

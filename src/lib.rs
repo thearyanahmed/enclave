@@ -22,6 +22,7 @@ pub use crypto::DEFAULT_TOKEN_LENGTH;
 pub use crypto::generate_token;
 pub use crypto::generate_token_default;
 pub use crypto::hash_token;
+pub use validators::PasswordPolicy;
 
 pub use repository::AccessToken;
 #[cfg(feature = "_audit_log")]
