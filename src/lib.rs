@@ -10,6 +10,8 @@ pub mod crypto;
 pub mod jwt;
 #[cfg(feature = "sqlx_postgres")]
 pub mod postgres;
+#[cfg(feature = "rate_limit")]
+pub mod rate_limit;
 pub mod repository;
 pub mod validators;
 
