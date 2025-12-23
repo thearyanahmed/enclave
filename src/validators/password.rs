@@ -91,14 +91,14 @@ impl PasswordPolicy {
 
     /// Sets the minimum password length.
     #[must_use]
-    pub fn min_length(mut self, len: usize) -> Self {
+    pub fn min(mut self, len: usize) -> Self {
         self.min_length = len;
         self
     }
 
     /// Sets the maximum password length.
     #[must_use]
-    pub fn max_length(mut self, len: usize) -> Self {
+    pub fn max(mut self, len: usize) -> Self {
         self.max_length = len;
         self
     }
@@ -141,7 +141,7 @@ impl PasswordPolicy {
 
     /// Sets a list of disallowed common passwords.
     #[must_use]
-    pub fn disallow_passwords(mut self, passwords: Vec<String>) -> Self {
+    pub fn disallowed_passwords(mut self, passwords: Vec<String>) -> Self {
         self.disallowed_passwords = passwords;
         self
     }
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_custom_min_length() {
-        let policy = PasswordPolicy::new().min_length(10);
+        let policy = PasswordPolicy::new().min(10);
         assert!(policy.validate("1234567890").is_ok());
         assert_eq!(
             policy.validate("123456789").unwrap_err(),
@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let policy = PasswordPolicy::new()
-            .min_length(10)
+            .min(10)
             .require_uppercase()
             .require_digit();
 
@@ -376,7 +376,7 @@ mod tests {
 
     #[test]
     fn test_disallowed_passwords() {
-        let policy = PasswordPolicy::new().disallow_passwords(vec![
+        let policy = PasswordPolicy::new().disallowed_passwords(vec![
             "password".to_string(),
             "12345678".to_string(),
             "qwerty123".to_string(),
