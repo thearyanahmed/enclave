@@ -1,16 +1,56 @@
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
 use chrono::{Duration, Utc};
 
+/// Configuration for email verification behavior.
+#[derive(Debug, Clone)]
+pub struct SendVerificationConfig {
+    /// How long email verification tokens remain valid.
+    ///
+    /// Default: 24 hours
+    pub email_verification_expiry: Duration,
+}
+
+impl Default for SendVerificationConfig {
+    fn default() -> Self {
+        Self {
+            email_verification_expiry: Duration::hours(24),
+        }
+    }
+}
+
+impl SendVerificationConfig {
+    /// Creates config from a TokenConfig.
+    pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
+        Self {
+            email_verification_expiry: tokens.email_verification_expiry,
+        }
+    }
+}
+
 pub struct SendVerificationAction<U: UserRepository, E: EmailVerificationRepository> {
     user_repository: U,
     verification_repository: E,
+    config: SendVerificationConfig,
 }
 
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
     pub fn new(user_repository: U, verification_repository: E) -> Self {
+        Self::with_config(
+            user_repository,
+            verification_repository,
+            SendVerificationConfig::default(),
+        )
+    }
+
+    pub fn with_config(
+        user_repository: U,
+        verification_repository: E,
+        config: SendVerificationConfig,
+    ) -> Self {
         SendVerificationAction {
             user_repository,
             verification_repository,
+            config,
         }
     }
 
@@ -27,7 +67,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
                     return Err(AuthError::EmailAlreadyVerified);
                 }
 
-                let expires_at = Utc::now() + Duration::hours(24);
+                let expires_at = Utc::now() + self.config.email_verification_expiry;
                 self.verification_repository
                     .create_verification_token(user.id, expires_at)
                     .await

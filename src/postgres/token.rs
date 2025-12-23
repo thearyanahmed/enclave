@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::crypto::hash_token;
+use crate::crypto::{generate_token_default, hash_token};
 use crate::repository::CreateTokenOptions;
 use crate::{AccessToken, AuthError, TokenRepository};
 
@@ -14,14 +14,6 @@ pub struct PostgresTokenRepository {
 impl PostgresTokenRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
-    }
-
-    fn generate_token() -> String {
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        (0..32)
-            .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
-            .collect()
     }
 }
 
@@ -71,7 +63,7 @@ impl TokenRepository for PostgresTokenRepository {
         expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError> {
-        let plain_token = Self::generate_token();
+        let plain_token = generate_token_default();
         let token_hash = hash_token(&plain_token);
 
         let abilities = if options.abilities.is_empty() {
