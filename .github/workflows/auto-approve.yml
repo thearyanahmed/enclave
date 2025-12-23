@@ -1,7 +1,7 @@
 # .github/workflows/auto-approve.yml
 name: Auto Approve
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
