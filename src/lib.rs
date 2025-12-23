@@ -13,7 +13,7 @@ pub mod postgres;
 pub mod repository;
 pub mod validators;
 
-pub use config::EnclaveConfig;
+pub use config::AuthConfig;
 pub use config::RateLimitConfig;
 pub use config::TokenConfig;
 pub use crypto::generate_token;

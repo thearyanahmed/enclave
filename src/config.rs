@@ -6,14 +6,14 @@
 //! # Example
 //!
 //! ```rust
-//! use enclave::config::{EnclaveConfig, TokenConfig, RateLimitConfig};
+//! use enclave::config::{AuthConfig, TokenConfig, RateLimitConfig};
 //! use chrono::Duration;
 //!
 //! // Use defaults
-//! let config = EnclaveConfig::default();
+//! let config = AuthConfig::default();
 //!
 //! // Or customize
-//! let config = EnclaveConfig {
+//! let config = AuthConfig {
 //!     tokens: TokenConfig {
 //!         access_token_expiry: Duration::hours(1),
 //!         refresh_token_expiry: Duration::days(14),
@@ -32,9 +32,9 @@ use chrono::Duration;
 /// Main configuration struct for the enclave authentication library.
 ///
 /// Contains all configurable settings that were previously hardcoded.
-/// Use `EnclaveConfig::default()` for sensible production defaults.
+/// Use `AuthConfig::default()` for sensible production defaults.
 #[derive(Debug, Clone)]
-pub struct EnclaveConfig {
+pub struct AuthConfig {
     /// Token expiration settings.
     pub tokens: TokenConfig,
 
@@ -48,7 +48,7 @@ pub struct EnclaveConfig {
     pub token_length: usize,
 }
 
-impl Default for EnclaveConfig {
+impl Default for AuthConfig {
     fn default() -> Self {
         Self {
             tokens: TokenConfig::default(),
@@ -58,7 +58,7 @@ impl Default for EnclaveConfig {
     }
 }
 
-impl EnclaveConfig {
+impl AuthConfig {
     /// Creates a new configuration with default values.
     pub fn new() -> Self {
         Self::default()
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_default_config() {
-        let config = EnclaveConfig::default();
+        let config = AuthConfig::default();
 
         assert_eq!(config.tokens.access_token_expiry, Duration::days(7));
         assert_eq!(config.tokens.refresh_token_expiry, Duration::days(30));
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn test_strict_config() {
-        let config = EnclaveConfig::strict();
+        let config = AuthConfig::strict();
 
         assert_eq!(config.tokens.access_token_expiry, Duration::hours(1));
         assert_eq!(config.rate_limit.max_failed_attempts, 3);
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn test_development_config() {
-        let config = EnclaveConfig::development();
+        let config = AuthConfig::development();
 
         assert_eq!(config.tokens.access_token_expiry, Duration::hours(24));
         assert_eq!(config.rate_limit.max_failed_attempts, 10);
