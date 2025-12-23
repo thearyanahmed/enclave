@@ -19,6 +19,7 @@ use super::ValidationError;
 /// assert!(strict.validate("MyP@ssw0rd123").is_ok());
 /// assert!(strict.validate("weak").is_err());
 /// ```
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordPolicy {
     /// Minimum password length (default: 8)
@@ -167,11 +168,11 @@ impl PasswordPolicy {
         }
 
         // Character requirements
-        if self.require_uppercase && !password.chars().any(|c| c.is_uppercase()) {
+        if self.require_uppercase && !password.chars().any(char::is_uppercase) {
             return Err(ValidationError::PasswordMissingUppercase);
         }
 
-        if self.require_lowercase && !password.chars().any(|c| c.is_lowercase()) {
+        if self.require_lowercase && !password.chars().any(char::is_lowercase) {
             return Err(ValidationError::PasswordMissingLowercase);
         }
 
@@ -189,7 +190,7 @@ impl PasswordPolicy {
                 let msg = self
                     .regex_message
                     .clone()
-                    .unwrap_or_else(|| "Password does not meet requirements".to_string());
+                    .unwrap_or_else(|| "Password does not meet requirements".to_owned());
                 return Err(ValidationError::PasswordCustom(msg));
             }
         }
