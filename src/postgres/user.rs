@@ -68,7 +68,10 @@ impl UserRepository for PostgresUserRepository {
         Ok(row.map(Into::into))
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email, hashed_password), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, email, hashed_password), err)
+    )]
     async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
         let row: UserRecord = sqlx::query_as(
             "INSERT INTO users (email, hashed_password) VALUES ($1, $2) RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at"
@@ -82,7 +85,10 @@ impl UserRepository for PostgresUserRepository {
         Ok(row.into())
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, hashed_password), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, hashed_password), err)
+    )]
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
         let result =
             sqlx::query("UPDATE users SET hashed_password = $1, updated_at = NOW() WHERE id = $2")

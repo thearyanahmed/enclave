@@ -61,7 +61,10 @@ struct AuditLogRecord {
 
 #[async_trait]
 impl AuditLogRepository for PostgresAuditLogRepository {
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, ip_address, user_agent, metadata), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, ip_address, user_agent, metadata), err)
+    )]
     async fn log_event(
         &self,
         user_id: Option<i32>,

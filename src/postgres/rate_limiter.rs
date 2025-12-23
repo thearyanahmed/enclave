@@ -17,7 +17,10 @@ impl PostgresRateLimiterRepository {
 
 #[async_trait]
 impl RateLimiterRepository for PostgresRateLimiterRepository {
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email, ip_address), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, email, ip_address), err)
+    )]
     async fn record_attempt(
         &self,
         email: &str,
