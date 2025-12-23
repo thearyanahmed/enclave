@@ -54,21 +54,34 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         }
     }
 
+    /// Initiates a password reset for the given email.
+    ///
+    /// Returns `Ok(Some(token))` if a user with that email exists and a reset token was created.
+    /// Returns `Ok(None)` if no user exists with that email (prevents user enumeration).
+    /// Returns `Err` only for actual errors (database failures, etc.).
+    ///
+    /// # Security
+    ///
+    /// This method intentionally does not reveal whether a user exists.
+    /// Always show a generic message like "If an account exists, a reset email has been sent"
+    /// regardless of the return value.
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "forgot_password", skip_all, err)
     )]
-    pub async fn execute(&self, email: &str) -> Result<PasswordResetToken, AuthError> {
+    pub async fn execute(&self, email: &str) -> Result<Option<PasswordResetToken>, AuthError> {
         let user = self.user_repository.find_user_by_email(email).await?;
 
         match user {
             Some(user) => {
                 let expires_at = Utc::now() + self.config.password_reset_expiry;
-                self.reset_repository
+                let token = self
+                    .reset_repository
                     .create_reset_token(user.id, expires_at)
-                    .await
+                    .await?;
+                Ok(Some(token))
             }
-            None => Err(AuthError::UserNotFound),
+            None => Ok(None),
         }
     }
 }
@@ -91,19 +104,22 @@ mod tests {
 
         assert!(result.is_ok());
         let token = result.unwrap();
+        assert!(token.is_some());
+        let token = token.unwrap();
         assert_eq!(token.user_id, user.id);
         assert!(!token.token.is_empty());
     }
 
     #[tokio::test]
-    async fn test_forgot_password_user_not_found() {
+    async fn test_forgot_password_user_not_found_returns_none() {
         let user_repo = MockUserRepository::new();
         let reset_repo = MockPasswordResetRepository::new();
 
         let action = ForgotPasswordAction::new(user_repo, reset_repo);
         let result = action.execute("nonexistent@example.com").await;
 
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), AuthError::UserNotFound);
+        // Should succeed with None, not error (prevents user enumeration)
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
     }
 }
