@@ -35,6 +35,9 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
+      - name: Check markdown formatting
+        run: npx prettier --check --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
