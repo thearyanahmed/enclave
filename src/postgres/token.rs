@@ -5,7 +5,7 @@ use sqlx::{FromRow, PgPool};
 use crate::SecretString;
 use crate::crypto::{generate_token_default, hash_token};
 use crate::repository::CreateTokenOptions;
-use crate::{AccessToken, AuthError, TokenRepository};
+use crate::{AccessToken, AuthError, StatefulTokenRepository, TokenRepository};
 
 #[derive(Clone)]
 pub struct PostgresTokenRepository {
@@ -107,7 +107,10 @@ impl TokenRepository for PostgresTokenRepository {
 
         Ok(row.map(|r| r.into_access_token(token.to_owned())))
     }
+}
 
+#[async_trait]
+impl StatefulTokenRepository for PostgresTokenRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError> {
         let token_hash = hash_token(token);

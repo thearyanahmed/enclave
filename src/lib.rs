@@ -41,6 +41,7 @@ pub use repository::LoginAttempt;
 pub use repository::PasswordResetRepository;
 pub use repository::PasswordResetToken;
 pub use repository::RateLimiterRepository;
+pub use repository::StatefulTokenRepository;
 pub use repository::TokenRepository;
 pub use repository::User;
 pub use repository::UserRepository;

@@ -8,7 +8,7 @@ use crate::AuthError;
 use crate::SecretString;
 use crate::crypto::{generate_token_default, hash_token};
 
-use super::token::{AccessToken, CreateTokenOptions, TokenRepository};
+use super::token::{AccessToken, CreateTokenOptions, StatefulTokenRepository, TokenRepository};
 
 #[derive(Clone)]
 pub struct MockTokenRepository {
@@ -83,7 +83,10 @@ impl TokenRepository for MockTokenRepository {
             .find(|t| t.token.expose_secret() == hashed)
             .cloned())
     }
+}
 
+#[async_trait]
+impl StatefulTokenRepository for MockTokenRepository {
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError> {
         let hashed = hash_token(token);
         let mut tokens = self.tokens.lock().unwrap();

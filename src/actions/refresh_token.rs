@@ -1,4 +1,4 @@
-use crate::{AccessToken, AuthError, TokenRepository};
+use crate::{AccessToken, AuthError, StatefulTokenRepository};
 use chrono::{Duration, Utc};
 
 /// Configuration for token refresh behavior.
@@ -27,12 +27,21 @@ impl RefreshTokenConfig {
     }
 }
 
-pub struct RefreshTokenAction<T: TokenRepository> {
+/// Refreshes an access token by revoking the old one and issuing a new one.
+///
+/// This action requires a [`StatefulTokenRepository`] because it needs to:
+/// 1. Validate the current token exists
+/// 2. Revoke the old token
+/// 3. Create a new token
+///
+/// For stateless tokens like JWT, token refresh is typically handled differently
+/// (e.g., by issuing a new JWT before the old one expires).
+pub struct RefreshTokenAction<T: StatefulTokenRepository> {
     token_repository: T,
     config: RefreshTokenConfig,
 }
 
-impl<T: TokenRepository> RefreshTokenAction<T> {
+impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
     pub fn new(token_repository: T) -> Self {
         Self::with_config(token_repository, RefreshTokenConfig::default())
     }
@@ -73,7 +82,7 @@ impl<T: TokenRepository> RefreshTokenAction<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MockTokenRepository;
+    use crate::{MockTokenRepository, TokenRepository};
     use chrono::Duration;
 
     #[tokio::test]

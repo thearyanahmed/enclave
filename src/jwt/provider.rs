@@ -90,32 +90,12 @@ impl TokenRepository for JwtTokenProvider {
             Err(_) => Ok(None),
         }
     }
-
-    async fn revoke_token(&self, _token: &str) -> Result<(), AuthError> {
-        // JWT tokens are stateless - revocation requires a blocklist
-        // which is outside the scope of basic JWT support.
-        // For now, this is a no-op. Users who need revocation should
-        // use short expiry times or implement their own blocklist.
-        Ok(())
-    }
-
-    async fn revoke_all_user_tokens(&self, _user_id: i32) -> Result<(), AuthError> {
-        // JWT tokens are stateless - cannot revoke all tokens without
-        // tracking issued tokens or using a blocklist.
-        // This is a no-op for basic JWT support.
-        Ok(())
-    }
-
-    async fn touch_token(&self, _token: &str) -> Result<(), AuthError> {
-        // JWT tokens are stateless - no last_used_at tracking
-        Ok(())
-    }
-
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
-        // JWT tokens are stateless - no storage to prune
-        Ok(0)
-    }
 }
+
+// Note: JwtTokenProvider does NOT implement StatefulTokenRepository.
+// JWT tokens are stateless - revocation, tracking, and cleanup are not applicable.
+// For logout with JWT, the client should discard the token.
+// For immediate invalidation, implement a token blocklist separately.
 
 #[cfg(test)]
 mod tests {
@@ -149,16 +129,5 @@ mod tests {
 
         let result = provider.find_token("invalid-token").await.unwrap();
         assert!(result.is_none());
-    }
-
-    #[tokio::test]
-    async fn test_jwt_provider_revoke_is_noop() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
-        let service = JwtService::new(config);
-        let provider = JwtTokenProvider::new(service);
-
-        // Revoke should succeed (it's a no-op)
-        let result = provider.revoke_token("any-token").await;
-        assert!(result.is_ok());
     }
 }

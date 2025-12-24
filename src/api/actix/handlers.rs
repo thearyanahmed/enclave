@@ -13,7 +13,7 @@ use crate::api::{
 };
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
-    TokenRepository, UserRepository,
+    StatefulTokenRepository, TokenRepository, UserRepository,
 };
 
 pub async fn register<U>(body: web::Json<RegisterRequest>, user_repo: web::Data<U>) -> HttpResponse
@@ -75,7 +75,7 @@ where
 
 pub async fn logout<T>(req: HttpRequest, token_repo: web::Data<T>) -> HttpResponse
 where
-    T: TokenRepository + Clone + Send + Sync + 'static,
+    T: StatefulTokenRepository + Clone + Send + Sync + 'static,
 {
     let token = match extract_bearer_token(&req) {
         Some(t) => t,
@@ -150,7 +150,7 @@ pub async fn refresh_token<T>(
     token_repo: web::Data<T>,
 ) -> HttpResponse
 where
-    T: TokenRepository + Clone + Send + Sync + 'static,
+    T: StatefulTokenRepository + Clone + Send + Sync + 'static,
 {
     let action = RefreshTokenAction::new(token_repo.get_ref().clone());
 
