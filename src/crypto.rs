@@ -1,7 +1,131 @@
+use crate::AuthError;
+use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
+use password_hash::{PasswordHash, PasswordHasher as ArgonPasswordHasher, SaltString};
+use rand::rngs::OsRng;
 use sha2::{Digest, Sha256};
 
 /// Default token length in characters.
 pub const DEFAULT_TOKEN_LENGTH: usize = 32;
+
+/// Trait for password hashing and verification.
+///
+/// This trait allows pluggable password hashing implementations.
+/// The default implementation is [`Argon2Hasher`].
+///
+/// # Example
+///
+/// ```rust
+/// use enclave::crypto::{PasswordHasher, Argon2Hasher};
+///
+/// let hasher = Argon2Hasher::default();
+/// let hash = hasher.hash("mypassword").unwrap();
+/// assert!(hasher.verify("mypassword", &hash).unwrap());
+/// assert!(!hasher.verify("wrongpassword", &hash).unwrap());
+/// ```
+pub trait PasswordHasher: Send + Sync {
+    /// Hash a password.
+    ///
+    /// # Errors
+    ///
+    /// Returns `AuthError::PasswordHashError` if hashing fails.
+    fn hash(&self, password: &str) -> Result<String, AuthError>;
+
+    /// Verify a password against a hash.
+    ///
+    /// # Errors
+    ///
+    /// Returns `AuthError::PasswordHashError` if the hash is malformed.
+    fn verify(&self, password: &str, hash: &str) -> Result<bool, AuthError>;
+}
+
+/// Argon2id password hasher with configurable parameters.
+///
+/// # Example
+///
+/// ```rust
+/// use enclave::crypto::Argon2Hasher;
+///
+/// // Default settings (64 MiB memory, 3 iterations, 4 threads)
+/// let hasher = Argon2Hasher::default();
+///
+/// // Production settings (OWASP 2024 recommendations)
+/// let hasher = Argon2Hasher::production();
+///
+/// // Custom settings
+/// let hasher = Argon2Hasher::new(32768, 4, 2);
+/// ```
+#[derive(Debug, Clone)]
+pub struct Argon2Hasher {
+    /// Memory cost in KiB
+    memory_cost: u32,
+    /// Number of iterations
+    time_cost: u32,
+    /// Degree of parallelism
+    parallelism: u32,
+}
+
+impl Default for Argon2Hasher {
+    fn default() -> Self {
+        Self {
+            memory_cost: 19456, // 19 MiB - argon2 default
+            time_cost: 2,
+            parallelism: 1,
+        }
+    }
+}
+
+impl Argon2Hasher {
+    /// Creates a new hasher with custom parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `memory_cost` - Memory usage in KiB
+    /// * `time_cost` - Number of iterations
+    /// * `parallelism` - Number of threads
+    #[must_use]
+    pub fn new(memory_cost: u32, time_cost: u32, parallelism: u32) -> Self {
+        Self {
+            memory_cost,
+            time_cost,
+            parallelism,
+        }
+    }
+
+    /// Production-recommended settings based on OWASP 2024 guidelines.
+    ///
+    /// Parameters: 64 MiB memory, 3 iterations, 4 threads.
+    #[must_use]
+    pub fn production() -> Self {
+        Self {
+            memory_cost: 65536, // 64 MiB
+            time_cost: 3,
+            parallelism: 4,
+        }
+    }
+}
+
+impl PasswordHasher for Argon2Hasher {
+    fn hash(&self, password: &str) -> Result<String, AuthError> {
+        let salt = SaltString::generate(&mut OsRng);
+        let params = Params::new(self.memory_cost, self.time_cost, self.parallelism, None)
+            .map_err(|_| AuthError::PasswordHashError)?;
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+
+        argon2
+            .hash_password(password.as_bytes(), &salt)
+            .map(|h| h.to_string())
+            .map_err(|_| AuthError::PasswordHashError)
+    }
+
+    fn verify(&self, password: &str, hash: &str) -> Result<bool, AuthError> {
+        let parsed = PasswordHash::new(hash).map_err(|_| AuthError::PasswordHashError)?;
+
+        // Verification uses params from the hash, not from config
+        Ok(Argon2::default()
+            .verify_password(password.as_bytes(), &parsed)
+            .is_ok())
+    }
+}
 
 /// Generates a cryptographically secure random token.
 ///

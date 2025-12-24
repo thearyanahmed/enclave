@@ -1,20 +1,23 @@
+use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, UserRepository};
-use argon2::{Argon2, PasswordHasher, PasswordVerifier};
-use password_hash::{PasswordHash, SaltString};
-use rand::rngs::OsRng;
 
-pub struct ChangePasswordAction<U: UserRepository> {
+pub struct ChangePasswordAction<U, H = Argon2Hasher>
+where
+    U: UserRepository,
+{
     user_repository: U,
     password_policy: PasswordPolicy,
+    hasher: H,
 }
 
-impl<U: UserRepository> ChangePasswordAction<U> {
-    /// Creates a new `ChangePasswordAction` with the default password policy.
+impl<U: UserRepository> ChangePasswordAction<U, Argon2Hasher> {
+    /// Creates a new `ChangePasswordAction` with the default password policy and hasher.
     pub fn new(user_repository: U) -> Self {
         Self {
             user_repository,
             password_policy: PasswordPolicy::default(),
+            hasher: Argon2Hasher::default(),
         }
     }
 
@@ -23,6 +26,18 @@ impl<U: UserRepository> ChangePasswordAction<U> {
         Self {
             user_repository,
             password_policy,
+            hasher: Argon2Hasher::default(),
+        }
+    }
+}
+
+impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
+    /// Creates a new `ChangePasswordAction` with a custom password policy and hasher.
+    pub fn with_hasher(user_repository: U, password_policy: PasswordPolicy, hasher: H) -> Self {
+        Self {
+            user_repository,
+            password_policy,
+            hasher,
         }
     }
 
@@ -40,13 +55,16 @@ impl<U: UserRepository> ChangePasswordAction<U> {
 
         match user {
             Some(user) => {
-                if !verify_password(current_password, &user.hashed_password)? {
+                if !self
+                    .hasher
+                    .verify(current_password, &user.hashed_password)?
+                {
                     return Err(AuthError::InvalidCredentials);
                 }
 
                 self.password_policy.validate(new_password)?;
 
-                let hashed = hash_password(new_password)?;
+                let hashed = self.hasher.hash(new_password)?;
                 self.user_repository.update_password(user_id, &hashed).await
             }
             None => Err(AuthError::UserNotFound),
@@ -54,32 +72,15 @@ impl<U: UserRepository> ChangePasswordAction<U> {
     }
 }
 
-fn verify_password(password: &str, hashed: &str) -> Result<bool, AuthError> {
-    let parsed_hash = PasswordHash::new(hashed).map_err(|_| AuthError::PasswordHashError)?;
-    match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
-        Ok(()) => Ok(true),
-        Err(_) => Ok(false),
-    }
-}
-
-fn hash_password(password: &str) -> Result<String, AuthError> {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-
-    argon2
-        .hash_password(password.as_bytes(), &salt)
-        .map_err(|_| AuthError::PasswordHashError)
-        .map(|hash| hash.to_string())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto::Argon2Hasher;
     use crate::validators::ValidationError;
     use crate::{MockUserRepository, User};
 
     fn create_user_with_password(email: &str, password: &str) -> User {
-        let hashed = hash_password(password).unwrap();
+        let hashed = Argon2Hasher::default().hash(password).unwrap();
         User::mock_from_credentials(email, &hashed)
     }
 

@@ -1,23 +1,27 @@
+use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, PasswordResetRepository, UserRepository};
-use argon2::{Argon2, PasswordHasher};
 use chrono::Utc;
-use password_hash::SaltString;
-use rand::rngs::OsRng;
 
-pub struct ResetPasswordAction<U: UserRepository, P: PasswordResetRepository> {
+pub struct ResetPasswordAction<U, P, H = Argon2Hasher>
+where
+    U: UserRepository,
+    P: PasswordResetRepository,
+{
     user_repository: U,
     reset_repository: P,
     password_policy: PasswordPolicy,
+    hasher: H,
 }
 
-impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
-    /// Creates a new `ResetPasswordAction` with the default password policy.
+impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P, Argon2Hasher> {
+    /// Creates a new `ResetPasswordAction` with the default password policy and hasher.
     pub fn new(user_repository: U, reset_repository: P) -> Self {
         Self {
             user_repository,
             reset_repository,
             password_policy: PasswordPolicy::default(),
+            hasher: Argon2Hasher::default(),
         }
     }
 
@@ -31,6 +35,26 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
             user_repository,
             reset_repository,
             password_policy,
+            hasher: Argon2Hasher::default(),
+        }
+    }
+}
+
+impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
+    ResetPasswordAction<U, P, H>
+{
+    /// Creates a new `ResetPasswordAction` with a custom password policy and hasher.
+    pub fn with_hasher(
+        user_repository: U,
+        reset_repository: P,
+        password_policy: PasswordPolicy,
+        hasher: H,
+    ) -> Self {
+        Self {
+            user_repository,
+            reset_repository,
+            password_policy,
+            hasher,
         }
     }
 
@@ -50,7 +74,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
                     return Err(AuthError::TokenExpired);
                 }
 
-                let hashed = hash_password(new_password)?;
+                let hashed = self.hasher.hash(new_password)?;
                 self.user_repository
                     .update_password(reset_token.user_id, &hashed)
                     .await?;
@@ -61,16 +85,6 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P> {
             None => Err(AuthError::TokenInvalid),
         }
     }
-}
-
-fn hash_password(password: &str) -> Result<String, AuthError> {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-
-    argon2
-        .hash_password(password.as_bytes(), &salt)
-        .map_err(|_| AuthError::PasswordHashError)
-        .map(|hash| hash.to_string())
 }
 
 #[cfg(test)]
