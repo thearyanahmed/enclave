@@ -28,8 +28,8 @@ use enclave::postgres::{
 #[cfg(feature = "_audit_log")]
 use enclave::{AuditEventType, AuditLogRepository};
 use enclave::{
-    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository, TokenRepository,
-    UserRepository,
+    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
+    StatefulTokenRepository, TokenRepository, UserRepository,
 };
 use serial_test::serial;
 use sqlx::PgPool;

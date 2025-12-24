@@ -32,7 +32,7 @@
 //!     -H "Authorization: Bearer <access_token>"
 
 use actix_web::{App, HttpServer, web};
-use enclave::api::actix::auth_routes;
+use enclave::api::actix::stateless_auth_routes;
 use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,
@@ -72,7 +72,9 @@ async fn main() -> std::io::Result<()> {
     println!("  POST /auth/register - Create account");
     println!("  POST /auth/login    - Login (returns JWT)");
     println!("  GET  /auth/me       - Get current user (requires JWT)");
-    println!("  POST /auth/logout   - Logout (no-op for JWT)");
+    println!();
+    println!("Note: JWT is stateless - no logout or refresh-token endpoints.");
+    println!("      Use short token expiry and client-side token deletion.");
 
     HttpServer::new(move || {
         App::new()
@@ -82,7 +84,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(password_reset.clone()))
             .app_data(web::Data::new(email_verification.clone()))
             .configure(
-                auth_routes::<
+                stateless_auth_routes::<
                     MockUserRepository,
                     JwtTokenProvider,
                     MockRateLimiterRepository,

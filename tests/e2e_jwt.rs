@@ -8,7 +8,7 @@
 
 use actix_web::{App, http::StatusCode, test, web};
 
-use enclave::api::actix::auth_routes;
+use enclave::api::actix::stateless_auth_routes;
 use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,
@@ -45,7 +45,7 @@ macro_rules! test_app {
                 .app_data(web::Data::new($reset))
                 .app_data(web::Data::new($verify))
                 .configure(
-                    auth_routes::<
+                    stateless_auth_routes::<
                         MockUserRepository,
                         JwtTokenProvider,
                         MockRateLimiterRepository,
@@ -171,52 +171,3 @@ async fn test_jwt_invalid_token_rejected() {
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
 
-#[actix_rt::test]
-async fn test_jwt_logout_succeeds() {
-    let (user_repo, token_repo, rate_repo, reset_repo, verification_repo) = create_repos();
-    let app = test_app!(
-        user_repo.clone(),
-        token_repo.clone(),
-        rate_repo.clone(),
-        reset_repo.clone(),
-        verification_repo.clone()
-    );
-
-    // Register and login
-    let req = test::TestRequest::post()
-        .uri("/auth/register")
-        .set_json(serde_json::json!({
-            "email": "logout@example.com",
-            "password": "securepassword123"
-        }))
-        .to_request();
-    test::call_service(&app, req).await;
-
-    let req = test::TestRequest::post()
-        .uri("/auth/login")
-        .set_json(serde_json::json!({
-            "email": "logout@example.com",
-            "password": "securepassword123"
-        }))
-        .to_request();
-    let resp = test::call_service(&app, req).await;
-    let body: serde_json::Value = test::read_body_json(resp).await;
-    let token = body["token"].as_str().unwrap().to_owned();
-
-    // Logout (succeeds but is a no-op for JWT)
-    let req = test::TestRequest::post()
-        .uri("/auth/logout")
-        .insert_header(("Authorization", format!("Bearer {token}")))
-        .to_request();
-    let resp = test::call_service(&app, req).await;
-    assert_eq!(resp.status(), StatusCode::OK);
-
-    // Note: For JWT, the token is still valid after "logout" since JWT is stateless
-    // This is expected behavior - use short expiry or implement a blocklist for true revocation
-    let req = test::TestRequest::get()
-        .uri("/auth/me")
-        .insert_header(("Authorization", format!("Bearer {token}")))
-        .to_request();
-    let resp = test::call_service(&app, req).await;
-    assert_eq!(resp.status(), StatusCode::OK); // Token still works (expected for JWT)
-}
