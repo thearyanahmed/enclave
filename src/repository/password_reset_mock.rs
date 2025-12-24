@@ -4,16 +4,18 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
+use crate::crypto::SecretString;
 use crate::AuthError;
 
 use super::password_reset::{PasswordResetRepository, PasswordResetToken};
 
-fn generate_token() -> String {
+fn generate_token() -> SecretString {
     use rand::Rng;
     let mut rng = rand::thread_rng();
-    (0..32)
+    let token: String = (0..32)
         .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
-        .collect()
+        .collect();
+    SecretString::new(token)
 }
 
 #[derive(Clone)]
