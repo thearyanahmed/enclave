@@ -249,7 +249,7 @@ async fn test_email_verification_repository() {
 
     // Find verification token
     let found = verification_repo
-        .find_verification_token(&token.token)
+        .find_verification_token(token.token.expose_secret())
         .await
         .expect("Failed to find token")
         .expect("Token not found");
@@ -257,11 +257,11 @@ async fn test_email_verification_repository() {
 
     // Delete verification token
     verification_repo
-        .delete_verification_token(&token.token)
+        .delete_verification_token(token.token.expose_secret())
         .await
         .expect("Failed to delete token");
     let deleted = verification_repo
-        .find_verification_token(&token.token)
+        .find_verification_token(token.token.expose_secret())
         .await
         .expect("Failed to query");
     assert!(deleted.is_none());

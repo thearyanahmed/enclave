@@ -69,7 +69,7 @@ mod tests {
             .unwrap();
 
         let action = VerifyEmailAction::new(user_repo, verification_repo);
-        let result = action.execute(&token.token).await;
+        let result = action.execute(token.token.expose_secret()).await;
 
         assert!(result.is_ok());
 
@@ -85,7 +85,7 @@ mod tests {
         // Token should be deleted
         let found = action
             .verification_repository
-            .find_verification_token(&token.token)
+            .find_verification_token(token.token.expose_secret())
             .await
             .unwrap();
         assert!(found.is_none());
@@ -119,7 +119,7 @@ mod tests {
             .unwrap();
 
         let action = VerifyEmailAction::new(user_repo, verification_repo);
-        let result = action.execute(&token.token).await;
+        let result = action.execute(token.token.expose_secret()).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenExpired);

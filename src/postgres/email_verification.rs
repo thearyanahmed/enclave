@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::crypto::{generate_token_default, hash_token};
+use crate::crypto::{generate_token_default, hash_token, SecretString};
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken};
 
 #[derive(Clone)]
@@ -46,7 +46,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         Ok(EmailVerificationToken {
-            token: plain_token,
+            token: SecretString::new(plain_token),
             user_id: row.user_id,
             expires_at: row.expires_at,
             created_at: row.created_at,
@@ -68,8 +68,9 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
+        // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| EmailVerificationToken {
-            token: r.token_hash,
+            token: SecretString::new(token),
             user_id: r.user_id,
             expires_at: r.expires_at,
             created_at: r.created_at,
