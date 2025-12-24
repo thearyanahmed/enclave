@@ -2,6 +2,7 @@ use crate::AuthError;
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
 use password_hash::{PasswordHash, PasswordHasher as ArgonPasswordHasher, SaltString};
 use rand::rngs::OsRng;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::{Digest, Sha256};
 use std::fmt;
 
@@ -78,6 +79,26 @@ impl PartialEq for SecretString {
 }
 
 impl Eq for SecretString {}
+
+impl Serialize for SecretString {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Expose the actual value for serialization (e.g., returning tokens in API responses)
+        serializer.serialize_str(&self.0)
+    }
+}
+
+impl<'de> Deserialize<'de> for SecretString {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(SecretString(s))
+    }
+}
 
 /// Trait for password hashing and verification.
 ///
