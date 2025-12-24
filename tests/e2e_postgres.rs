@@ -209,7 +209,7 @@ async fn test_password_reset_repository() {
 
     // Find reset token
     let found = reset_repo
-        .find_reset_token(&token.token)
+        .find_reset_token(token.token.expose_secret())
         .await
         .expect("Failed to find token")
         .expect("Token not found");
@@ -217,11 +217,11 @@ async fn test_password_reset_repository() {
 
     // Delete reset token
     reset_repo
-        .delete_reset_token(&token.token)
+        .delete_reset_token(token.token.expose_secret())
         .await
         .expect("Failed to delete token");
     let deleted = reset_repo
-        .find_reset_token(&token.token)
+        .find_reset_token(token.token.expose_secret())
         .await
         .expect("Failed to query");
     assert!(deleted.is_none());

@@ -54,12 +54,15 @@ impl PasswordResetRepository for MockPasswordResetRepository {
 
     async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError> {
         let tokens = self.tokens.lock().unwrap();
-        Ok(tokens.iter().find(|t| t.token == token).cloned())
+        Ok(tokens
+            .iter()
+            .find(|t| t.token.expose_secret() == token)
+            .cloned())
     }
 
     async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
-        tokens.retain(|t| t.token != token);
+        tokens.retain(|t| t.token.expose_secret() != token);
         drop(tokens);
         Ok(())
     }

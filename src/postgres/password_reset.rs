@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::crypto::{generate_token_default, hash_token};
+use crate::crypto::{generate_token_default, hash_token, SecretString};
 use crate::{AuthError, PasswordResetRepository, PasswordResetToken};
 
 #[derive(Clone)]
@@ -46,7 +46,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         Ok(PasswordResetToken {
-            token: plain_token,
+            token: SecretString::new(plain_token),
             user_id: row.user_id,
             expires_at: row.expires_at,
             created_at: row.created_at,
@@ -65,8 +65,9 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
+        // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| PasswordResetToken {
-            token: r.token_hash,
+            token: SecretString::new(token),
             user_id: r.user_id,
             expires_at: r.expires_at,
             created_at: r.created_at,
