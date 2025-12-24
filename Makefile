@@ -1,4 +1,4 @@
-.PHONY: build build-release test test-e2e clippy fmt clean docker-up docker-down check md-fmt md-fmt-check
+.PHONY: build build-release build-all test unit-test e2e-test e2e-test-local test-all test-all-local clippy fmt fmt-check md-fmt md-fmt-check check lint docker-up docker-down docker-logs clean help
 
 # build
 build:
@@ -8,17 +8,24 @@ build-release:
 	cargo build --release
 
 build-all:
-	cargo build --features "actix sqlx_postgres"
+	cargo build --all-features
 
 # test
 test:
 	cargo test --no-fail-fast
 
-test-e2e: docker-up
-	cargo test --features sqlx_postgres --test e2e_postgres
+unit-test:
+	cargo test --no-fail-fast --all-features --lib
 
-test-all: docker-up
-	cargo test --no-fail-fast --features "actix sqlx_postgres"
+e2e-test:
+	cargo test --no-fail-fast --all-features --test e2e_actix --test e2e_jwt --test e2e_postgres --test e2e_postgres_rate_limit
+
+e2e-test-local: docker-up e2e-test
+
+test-all:
+	cargo test --no-fail-fast --all-features
+
+test-all-local: docker-up test-all
 
 # lint
 clippy:
@@ -31,13 +38,15 @@ fmt-check:
 	cargo fmt -- --check
 
 md-fmt:
-	docker run --rm -v $(PWD):/work -w /work node:23-alpine npx prettier --write --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+	npx prettier --write --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
 
 md-fmt-check:
-	docker run --rm -v $(PWD):/work -w /work node:23-alpine npx prettier --check --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+	npx prettier --check --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
 
 # check (clippy + fmt + test)
 check: fmt-check clippy test
+
+lint: fmt-check md-fmt-check clippy
 
 # docker
 docker-up:
@@ -55,20 +64,34 @@ clean:
 
 # help
 help:
-	@echo "available targets:"
-	@echo "  build         - build debug"
-	@echo "  build-release - build release"
-	@echo "  build-all     - build with all features"
-	@echo "  test          - run unit tests"
-	@echo "  test-e2e      - run e2e tests (starts docker)"
-	@echo "  test-all      - run all tests with all features"
-	@echo "  clippy        - run clippy lints"
-	@echo "  fmt           - format rust code"
-	@echo "  fmt-check     - check rust formatting"
-	@echo "  md-fmt        - format markdown files (docker)"
-	@echo "  md-fmt-check  - check markdown formatting (docker)"
-	@echo "  check         - fmt-check + clippy + test"
-	@echo "  docker-up     - start postgres container"
-	@echo "  docker-down   - stop postgres container"
-	@echo "  docker-logs   - tail postgres logs"
-	@echo "  clean         - cargo clean"
+	@echo "Available targets:"
+	@echo ""
+	@echo "Build:"
+	@echo "  build           - build debug"
+	@echo "  build-release   - build release"
+	@echo "  build-all       - build with all features"
+	@echo ""
+	@echo "Test:"
+	@echo "  test            - run unit tests (quick, no features)"
+	@echo "  unit-test       - run unit tests with all features"
+	@echo "  e2e-test        - run e2e tests (requires postgres running)"
+	@echo "  e2e-test-local  - run e2e tests (starts docker first)"
+	@echo "  test-all        - run all tests with all features"
+	@echo "  test-all-local  - run all tests (starts docker first)"
+	@echo ""
+	@echo "Lint:"
+	@echo "  clippy          - run clippy lints"
+	@echo "  fmt             - format rust code"
+	@echo "  fmt-check       - check rust formatting"
+	@echo "  md-fmt          - format markdown files"
+	@echo "  md-fmt-check    - check markdown formatting"
+	@echo "  lint            - fmt-check + md-fmt-check + clippy"
+	@echo "  check           - fmt-check + clippy + test"
+	@echo ""
+	@echo "Docker:"
+	@echo "  docker-up       - start postgres container"
+	@echo "  docker-down     - stop postgres container"
+	@echo "  docker-logs     - tail postgres logs"
+	@echo ""
+	@echo "Other:"
+	@echo "  clean           - cargo clean"
