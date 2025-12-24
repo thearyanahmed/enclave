@@ -55,7 +55,10 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
 
         match user {
             Some(user) => {
-                if !self.hasher.verify(current_password, &user.hashed_password)? {
+                if !self
+                    .hasher
+                    .verify(current_password, &user.hashed_password)?
+                {
                     return Err(AuthError::InvalidCredentials);
                 }
 

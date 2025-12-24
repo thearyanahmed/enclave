@@ -58,8 +58,8 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::validators::{PasswordPolicy, ValidationError};
     use crate::MockUserRepository;
+    use crate::validators::{PasswordPolicy, ValidationError};
 
     #[tokio::test]
     async fn test_signup_success() {

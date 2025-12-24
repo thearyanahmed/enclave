@@ -40,7 +40,9 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P, Ar
     }
 }
 
-impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher> ResetPasswordAction<U, P, H> {
+impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
+    ResetPasswordAction<U, P, H>
+{
     /// Creates a new `ResetPasswordAction` with a custom password policy and hasher.
     pub fn with_hasher(
         user_repository: U,
