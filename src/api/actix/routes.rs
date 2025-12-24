@@ -1,8 +1,8 @@
 use actix_web::web;
 
 use crate::{
-    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository, TokenRepository,
-    UserRepository,
+    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
+    StatefulTokenRepository, UserRepository,
 };
 
 use super::handlers;
@@ -13,10 +13,14 @@ use super::handlers;
 /// use [`public_routes`] and [`private_routes`] separately.
 ///
 /// Requires `web::Data` for all repository types to be registered in the app.
+///
+/// Note: `T` must implement [`StatefulTokenRepository`] because logout and refresh-token
+/// endpoints require token revocation. For stateless tokens (JWT), use custom route
+/// configuration without these endpoints.
 pub fn auth_routes<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
-    T: TokenRepository + Clone + Send + Sync + 'static,
+    T: StatefulTokenRepository + Clone + Send + Sync + 'static,
     R: RateLimiterRepository + Clone + Send + Sync + 'static,
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
     E: EmailVerificationRepository + Clone + Send + Sync + 'static,
@@ -40,7 +44,7 @@ where
 pub fn public_routes<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
-    T: TokenRepository + Clone + Send + Sync + 'static,
+    T: StatefulTokenRepository + Clone + Send + Sync + 'static,
     R: RateLimiterRepository + Clone + Send + Sync + 'static,
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
     E: EmailVerificationRepository + Clone + Send + Sync + 'static,
@@ -77,7 +81,7 @@ where
 pub fn private_routes<U, T>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
-    T: TokenRepository + Clone + Send + Sync + 'static,
+    T: StatefulTokenRepository + Clone + Send + Sync + 'static,
 {
     cfg.route("/logout", web::post().to(handlers::logout::<T>))
         .route("/me", web::get().to(handlers::get_current_user::<U, T>))
