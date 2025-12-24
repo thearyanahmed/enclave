@@ -32,14 +32,8 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-      - name: Check markdown formatting
-        run: npx prettier --check --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
-
-      - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Lint
+        run: make lint
 
   unit-tests:
     name: Unit Tests
@@ -62,7 +56,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run unit tests
-        run: cargo test --no-fail-fast --all-features --lib
+        run: make unit-test
 
   e2e-tests:
     name: E2E Tests
@@ -102,4 +96,4 @@ jobs:
       - name: Run e2e tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/enclave_test
-        run: cargo test --no-fail-fast --all-features --test e2e_actix --test e2e_jwt --test e2e_postgres
+        run: make e2e-test
