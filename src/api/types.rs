@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use crate::crypto::SecretString;
+
 // Request DTOs
 
 #[derive(Debug, Deserialize)]
@@ -59,17 +61,36 @@ pub struct UserResponse {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct AuthResponse {
     pub user: UserResponse,
-    pub token: String,
+    pub token: SecretString,
     pub expires_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize)]
+impl std::fmt::Debug for AuthResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AuthResponse")
+            .field("user", &self.user)
+            .field("token", &"[REDACTED]")
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
+}
+
+#[derive(Serialize)]
 pub struct TokenResponse {
-    pub token: String,
+    pub token: SecretString,
     pub expires_at: DateTime<Utc>,
+}
+
+impl std::fmt::Debug for TokenResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TokenResponse")
+            .field("token", &"[REDACTED]")
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
 }
 
 #[derive(Debug, Serialize)]
