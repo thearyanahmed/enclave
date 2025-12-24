@@ -3,12 +3,15 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::AuthError;
+use crate::SecretString;
 
 /// An access token for API authentication.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
+/// The `token` field uses `SecretString` to prevent accidental logging.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct AccessToken {
     /// The token string (plain-text on creation, hashed in storage).
-    pub token: String,
+    pub token: SecretString,
     /// The user who owns this token.
     pub user_id: i32,
     /// Optional name for the token (e.g., "mobile-app", "cli").
@@ -21,6 +24,20 @@ pub struct AccessToken {
     pub created_at: DateTime<Utc>,
     /// When the token was last used (updated on each request).
     pub last_used_at: Option<DateTime<Utc>>,
+}
+
+impl std::fmt::Debug for AccessToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AccessToken")
+            .field("token", &"[REDACTED]")
+            .field("user_id", &self.user_id)
+            .field("name", &self.name)
+            .field("abilities", &self.abilities)
+            .field("expires_at", &self.expires_at)
+            .field("created_at", &self.created_at)
+            .field("last_used_at", &self.last_used_at)
+            .finish()
+    }
 }
 
 impl AccessToken {

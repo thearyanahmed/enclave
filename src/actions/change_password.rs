@@ -1,4 +1,5 @@
-use crate::crypto::{Argon2Hasher, PasswordHasher, SecretString};
+use crate::SecretString;
+use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, UserRepository};
 
@@ -76,7 +77,8 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto::{Argon2Hasher, SecretString};
+    use crate::SecretString;
+    use crate::crypto::Argon2Hasher;
     use crate::validators::ValidationError;
     use crate::{MockUserRepository, User};
 

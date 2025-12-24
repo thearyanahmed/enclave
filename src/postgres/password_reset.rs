@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
+use crate::SecretString;
 use crate::crypto::{generate_token_default, hash_token};
 use crate::{AuthError, PasswordResetRepository, PasswordResetToken};
 
@@ -18,7 +19,6 @@ impl PostgresPasswordResetRepository {
 
 #[derive(FromRow)]
 struct ResetTokenRecord {
-    token_hash: String,
     user_id: i32,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
@@ -46,7 +46,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         Ok(PasswordResetToken {
-            token: plain_token,
+            token: SecretString::new(plain_token),
             user_id: row.user_id,
             expires_at: row.expires_at,
             created_at: row.created_at,
@@ -58,15 +58,16 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         let token_hash = hash_token(token);
 
         let row: Option<ResetTokenRecord> = sqlx::query_as(
-            "SELECT token_hash, user_id, expires_at, created_at FROM password_reset_tokens WHERE token_hash = $1"
+            "SELECT user_id, expires_at, created_at FROM password_reset_tokens WHERE token_hash = $1"
         )
         .bind(&token_hash)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
+        // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| PasswordResetToken {
-            token: r.token_hash,
+            token: SecretString::new(token),
             user_id: r.user_id,
             expires_at: r.expires_at,
             created_at: r.created_at,

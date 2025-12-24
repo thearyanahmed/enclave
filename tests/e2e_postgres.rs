@@ -17,8 +17,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
+use enclave::SecretString;
 use enclave::actions::{LoginAction, SignupAction};
-use enclave::crypto::SecretString;
 #[cfg(feature = "_audit_log")]
 use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{
@@ -155,7 +155,7 @@ async fn test_token_repository() {
 
     // Find token (using plain token)
     let found = token_repo
-        .find_token(&token.token)
+        .find_token(token.token.expose_secret())
         .await
         .expect("Failed to find token")
         .expect("Token not found");
@@ -163,11 +163,11 @@ async fn test_token_repository() {
 
     // Revoke token
     token_repo
-        .revoke_token(&token.token)
+        .revoke_token(token.token.expose_secret())
         .await
         .expect("Failed to revoke token");
     let revoked = token_repo
-        .find_token(&token.token)
+        .find_token(token.token.expose_secret())
         .await
         .expect("Failed to query");
     assert!(revoked.is_none());
@@ -209,7 +209,7 @@ async fn test_password_reset_repository() {
 
     // Find reset token
     let found = reset_repo
-        .find_reset_token(&token.token)
+        .find_reset_token(token.token.expose_secret())
         .await
         .expect("Failed to find token")
         .expect("Token not found");
@@ -217,11 +217,11 @@ async fn test_password_reset_repository() {
 
     // Delete reset token
     reset_repo
-        .delete_reset_token(&token.token)
+        .delete_reset_token(token.token.expose_secret())
         .await
         .expect("Failed to delete token");
     let deleted = reset_repo
-        .find_reset_token(&token.token)
+        .find_reset_token(token.token.expose_secret())
         .await
         .expect("Failed to query");
     assert!(deleted.is_none());
@@ -249,7 +249,7 @@ async fn test_email_verification_repository() {
 
     // Find verification token
     let found = verification_repo
-        .find_verification_token(&token.token)
+        .find_verification_token(token.token.expose_secret())
         .await
         .expect("Failed to find token")
         .expect("Token not found");
@@ -257,11 +257,11 @@ async fn test_email_verification_repository() {
 
     // Delete verification token
     verification_repo
-        .delete_verification_token(&token.token)
+        .delete_verification_token(token.token.expose_secret())
         .await
         .expect("Failed to delete token");
     let deleted = verification_repo
-        .find_verification_token(&token.token)
+        .find_verification_token(token.token.expose_secret())
         .await
         .expect("Failed to query");
     assert!(deleted.is_none());

@@ -1,6 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 
 use super::middleware::{AuthenticatedUser, extract_bearer_token};
+use crate::SecretString;
 use crate::actions::{
     ChangePasswordAction, ForgotPasswordAction, LoginAction, LogoutAction, RefreshTokenAction,
     ResetPasswordAction, SignupAction, UpdateUserAction, VerifyEmailAction,
@@ -10,7 +11,6 @@ use crate::api::{
     MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
     UpdateUserRequest, UserResponse, VerifyEmailRequest,
 };
-use crate::crypto::SecretString;
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     TokenRepository, UserRepository,
