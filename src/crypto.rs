@@ -297,4 +297,34 @@ mod tests {
         // SHA-256 produces 64 hex characters
         assert_eq!(hash.len(), 64);
     }
+
+    #[test]
+    fn test_secret_string_debug_redacted() {
+        let secret = SecretString::new("my_password");
+        assert_eq!(format!("{:?}", secret), "SecretString([REDACTED])");
+    }
+
+    #[test]
+    fn test_secret_string_display_redacted() {
+        let secret = SecretString::new("my_password");
+        assert_eq!(format!("{secret}"), "[REDACTED]");
+    }
+
+    #[test]
+    fn test_secret_string_expose_secret() {
+        let secret = SecretString::new("my_password");
+        assert_eq!(secret.expose_secret(), "my_password");
+    }
+
+    #[test]
+    fn test_secret_string_from_string() {
+        let secret: SecretString = String::from("password").into();
+        assert_eq!(secret.expose_secret(), "password");
+    }
+
+    #[test]
+    fn test_secret_string_from_str() {
+        let secret: SecretString = "password".into();
+        assert_eq!(secret.expose_secret(), "password");
+    }
 }
