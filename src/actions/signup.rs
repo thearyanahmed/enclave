@@ -1,4 +1,4 @@
-use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::crypto::{Argon2Hasher, PasswordHasher, SecretString};
 use crate::validators::{PasswordPolicy, validate_email};
 use crate::{AuthError, User, UserRepository};
 
@@ -42,15 +42,19 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         feature = "tracing",
         tracing::instrument(name = "signup", skip_all, err)
     )]
-    pub async fn execute(&self, email: &str, password: &str) -> Result<User, AuthError> {
+    pub async fn execute(
+        &self,
+        email: &str,
+        password: &SecretString,
+    ) -> Result<User, AuthError> {
         validate_email(email)?;
-        self.password_policy.validate(password)?;
+        self.password_policy.validate(password.expose_secret())?;
 
         if self.repository.find_user_by_email(email).await?.is_some() {
             return Err(AuthError::UserAlreadyExists);
         }
 
-        let hashed = self.hasher.hash(password)?;
+        let hashed = self.hasher.hash(password.expose_secret())?;
         self.repository.create_user(email, &hashed).await
     }
 }
@@ -58,15 +62,16 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MockUserRepository;
     use crate::validators::{PasswordPolicy, ValidationError};
+    use crate::MockUserRepository;
 
     #[tokio::test]
     async fn test_signup_success() {
         let repo = MockUserRepository::new();
         let signup = SignupAction::new(repo);
 
-        let result = signup.execute("user@example.com", "securepassword").await;
+        let password = SecretString::new("securepassword");
+        let result = signup.execute("user@example.com", &password).await;
 
         assert!(result.is_ok());
         let user = result.unwrap();
@@ -81,9 +86,10 @@ mod tests {
         repo.users.lock().unwrap().push(existing_user);
 
         let signup = SignupAction::new(repo);
-        _ = signup.execute("user@example.com", "newpassword123").await;
+        let password = SecretString::new("newpassword123");
+        _ = signup.execute("user@example.com", &password).await;
 
-        let result = signup.execute("user@example.com", "newpassword123").await;
+        let result = signup.execute("user@example.com", &password).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::UserAlreadyExists);
@@ -94,7 +100,8 @@ mod tests {
         let repo = MockUserRepository::new();
         let signup = SignupAction::new(repo);
 
-        let result = signup.execute("notanemail", "securepassword").await;
+        let password = SecretString::new("securepassword");
+        let result = signup.execute("notanemail", &password).await;
 
         assert!(result.is_err());
         assert_eq!(
@@ -108,7 +115,8 @@ mod tests {
         let repo = MockUserRepository::new();
         let signup = SignupAction::new(repo);
 
-        let result = signup.execute("user@example.com", "short").await;
+        let password = SecretString::new("short");
+        let result = signup.execute("user@example.com", &password).await;
 
         assert!(result.is_err());
         assert_eq!(
@@ -124,11 +132,13 @@ mod tests {
         let signup = SignupAction::with_policy(repo, policy);
 
         // Weak password fails strict policy
-        let result = signup.execute("user@example.com", "weakpassword").await;
+        let weak = SecretString::new("weakpassword");
+        let result = signup.execute("user@example.com", &weak).await;
         assert!(result.is_err());
 
         // Strong password passes
-        let result = signup.execute("user@example.com", "MyStr0ng!Pass").await;
+        let strong = SecretString::new("MyStr0ng!Pass");
+        let result = signup.execute("user@example.com", &strong).await;
         assert!(result.is_ok());
     }
 }
