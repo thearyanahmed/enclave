@@ -113,14 +113,16 @@ mod tests {
 
         let action = ResetPasswordAction::new(user_repo, reset_repo);
         let new_password = SecretString::new("newpassword123");
-        let result = action.execute(&token.token, &new_password).await;
+        let result = action
+            .execute(token.token.expose_secret(), &new_password)
+            .await;
 
         assert!(result.is_ok());
 
         // Token should be deleted
         let found = action
             .reset_repository
-            .find_reset_token(&token.token)
+            .find_reset_token(token.token.expose_secret())
             .await
             .unwrap();
         assert!(found.is_none());
@@ -156,7 +158,9 @@ mod tests {
 
         let action = ResetPasswordAction::new(user_repo, reset_repo);
         let new_password = SecretString::new("newpassword123");
-        let result = action.execute(&token.token, &new_password).await;
+        let result = action
+            .execute(token.token.expose_secret(), &new_password)
+            .await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenExpired);
