@@ -46,6 +46,18 @@ impl SecretString {
     pub fn expose_secret(&self) -> &str {
         &self.0
     }
+
+    /// Returns true if the secret is empty.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Returns the length of the secret in bytes.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 impl fmt::Debug for SecretString {
