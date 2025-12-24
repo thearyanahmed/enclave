@@ -18,7 +18,7 @@
 
 use chrono::{Duration, Utc};
 use enclave::actions::{LoginAction, SignupAction};
-use enclave::crypto::SecretString;
+use enclave::SecretString;
 #[cfg(feature = "_audit_log")]
 use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{

@@ -10,7 +10,7 @@ use crate::api::{
     MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
     UpdateUserRequest, UserResponse, VerifyEmailRequest,
 };
-use crate::crypto::SecretString;
+use crate::SecretString;
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     TokenRepository, UserRepository,

@@ -1,4 +1,5 @@
-use crate::crypto::{Argon2Hasher, PasswordHasher, SecretString};
+use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::SecretString;
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, PasswordResetRepository, UserRepository};
 use chrono::Utc;
@@ -91,7 +92,7 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto::SecretString;
+    use crate::SecretString;
     use crate::validators::ValidationError;
     use crate::{MockPasswordResetRepository, MockUserRepository, User};
     use chrono::Duration;

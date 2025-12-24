@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::crypto::{generate_token_default, hash_token, SecretString};
+use crate::crypto::{generate_token_default, hash_token};
+use crate::SecretString;
 use crate::repository::CreateTokenOptions;
 use crate::{AccessToken, AuthError, TokenRepository};
 

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::crypto::SecretString;
+use crate::SecretString;
 use crate::AuthError;
 
 use super::password_reset::{PasswordResetRepository, PasswordResetToken};
