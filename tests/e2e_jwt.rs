@@ -170,4 +170,3 @@ async fn test_jwt_invalid_token_rejected() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
-
