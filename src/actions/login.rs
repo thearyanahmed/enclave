@@ -1,4 +1,5 @@
 use crate::config::{RateLimitConfig, TokenConfig};
+use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
@@ -78,14 +79,22 @@ impl LoginConfig {
     }
 }
 
-pub struct LoginAction<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> {
+pub struct LoginAction<U, T, R, H = Argon2Hasher>
+where
+    U: UserRepository,
+    T: TokenRepository,
+    R: RateLimiterRepository,
+{
     user_repository: U,
     token_repository: T,
     rate_limiter: R,
     config: LoginConfig,
+    hasher: H,
 }
 
-impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginAction<U, T, R> {
+impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository>
+    LoginAction<U, T, R, Argon2Hasher>
+{
     pub fn new(user_repository: U, token_repository: T, rate_limiter: R) -> Self {
         Self::with_config(
             user_repository,
@@ -106,6 +115,27 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
             token_repository,
             rate_limiter,
             config,
+            hasher: Argon2Hasher::default(),
+        }
+    }
+}
+
+impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: PasswordHasher>
+    LoginAction<U, T, R, H>
+{
+    pub fn with_hasher(
+        user_repository: U,
+        token_repository: T,
+        rate_limiter: R,
+        config: LoginConfig,
+        hasher: H,
+    ) -> Self {
+        LoginAction {
+            user_repository,
+            token_repository,
+            rate_limiter,
+            config,
+            hasher,
         }
     }
 
@@ -136,7 +166,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
             }
         };
 
-        if !verify_password(password, &user.hashed_password)? {
+        if !self.hasher.verify(password, &user.hashed_password)? {
             self.rate_limiter.record_attempt(email, false, None).await?;
             return Err(AuthError::InvalidCredentials);
         }
@@ -154,31 +184,14 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository> LoginActio
     }
 }
 
-fn verify_password(password: &str, hashed: &str) -> Result<bool, AuthError> {
-    use argon2::{Argon2, PasswordVerifier};
-    use password_hash::PasswordHash;
-
-    let parsed_hash = PasswordHash::new(hashed).map_err(|_| AuthError::PasswordHashError)?;
-    Ok(Argon2::default()
-        .verify_password(password.as_bytes(), &parsed_hash)
-        .is_ok())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto::Argon2Hasher;
     use crate::{MockRateLimiterRepository, MockTokenRepository, MockUserRepository, User};
-    use argon2::{Argon2, PasswordHasher};
-    use password_hash::SaltString;
-    use rand::rngs::OsRng;
 
     fn hash_password(password: &str) -> String {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        argon2
-            .hash_password(password.as_bytes(), &salt)
-            .unwrap()
-            .to_string()
+        Argon2Hasher::default().hash(password).unwrap()
     }
 
     #[tokio::test]

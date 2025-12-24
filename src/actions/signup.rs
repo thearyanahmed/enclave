@@ -1,20 +1,20 @@
+use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::{PasswordPolicy, validate_email};
 use crate::{AuthError, User, UserRepository};
-use argon2::{Argon2, PasswordHasher};
-use password_hash::SaltString;
-use rand::rngs::OsRng;
 
-pub struct SignupAction<R> {
+pub struct SignupAction<R, H = Argon2Hasher> {
     repository: R,
     password_policy: PasswordPolicy,
+    hasher: H,
 }
 
-impl<R: UserRepository> SignupAction<R> {
-    /// Creates a new `SignupAction` with the default password policy.
+impl<R: UserRepository> SignupAction<R, Argon2Hasher> {
+    /// Creates a new `SignupAction` with the default password policy and hasher.
     pub fn new(repository: R) -> Self {
         Self {
             repository,
             password_policy: PasswordPolicy::default(),
+            hasher: Argon2Hasher::default(),
         }
     }
 
@@ -23,6 +23,18 @@ impl<R: UserRepository> SignupAction<R> {
         Self {
             repository,
             password_policy,
+            hasher: Argon2Hasher::default(),
+        }
+    }
+}
+
+impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
+    /// Creates a new `SignupAction` with a custom password policy and hasher.
+    pub fn with_hasher(repository: R, password_policy: PasswordPolicy, hasher: H) -> Self {
+        Self {
+            repository,
+            password_policy,
+            hasher,
         }
     }
 
@@ -38,26 +50,16 @@ impl<R: UserRepository> SignupAction<R> {
             return Err(AuthError::UserAlreadyExists);
         }
 
-        let hashed = hash_password(password)?;
+        let hashed = self.hasher.hash(password)?;
         self.repository.create_user(email, &hashed).await
     }
-}
-
-fn hash_password(password: &str) -> Result<String, AuthError> {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-
-    argon2
-        .hash_password(password.as_bytes(), &salt)
-        .map_err(|_| AuthError::PasswordHashError)
-        .map(|hash| hash.to_string())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MockUserRepository;
     use crate::validators::{PasswordPolicy, ValidationError};
+    use crate::MockUserRepository;
 
     #[tokio::test]
     async fn test_signup_success() {
