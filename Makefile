@@ -1,4 +1,4 @@
-.PHONY: build build-release test test-e2e clippy fmt clean docker-up docker-down check
+.PHONY: build build-release test test-e2e clippy fmt clean docker-up docker-down check md-fmt md-fmt-check
 
 # build
 build:
@@ -30,6 +30,12 @@ fmt:
 fmt-check:
 	cargo fmt -- --check
 
+md-fmt:
+	docker run --rm -v $(PWD):/work -w /work node:23-alpine npx prettier --write --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+
+md-fmt-check:
+	docker run --rm -v $(PWD):/work -w /work node:23-alpine npx prettier --check --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+
 # check (clippy + fmt + test)
 check: fmt-check clippy test
 
@@ -57,8 +63,10 @@ help:
 	@echo "  test-e2e      - run e2e tests (starts docker)"
 	@echo "  test-all      - run all tests with all features"
 	@echo "  clippy        - run clippy lints"
-	@echo "  fmt           - format code"
-	@echo "  fmt-check     - check formatting"
+	@echo "  fmt           - format rust code"
+	@echo "  fmt-check     - check rust formatting"
+	@echo "  md-fmt        - format markdown files (docker)"
+	@echo "  md-fmt-check  - check markdown formatting (docker)"
 	@echo "  check         - fmt-check + clippy + test"
 	@echo "  docker-up     - start postgres container"
 	@echo "  docker-down   - stop postgres container"
