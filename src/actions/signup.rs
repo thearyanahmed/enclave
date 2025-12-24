@@ -42,11 +42,7 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         feature = "tracing",
         tracing::instrument(name = "signup", skip_all, err)
     )]
-    pub async fn execute(
-        &self,
-        email: &str,
-        password: &SecretString,
-    ) -> Result<User, AuthError> {
+    pub async fn execute(&self, email: &str, password: &SecretString) -> Result<User, AuthError> {
         validate_email(email)?;
         self.password_policy.validate(password.expose_secret())?;
 
@@ -62,8 +58,8 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::validators::{PasswordPolicy, ValidationError};
     use crate::MockUserRepository;
+    use crate::validators::{PasswordPolicy, ValidationError};
 
     #[tokio::test]
     async fn test_signup_success() {

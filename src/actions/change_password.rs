@@ -62,7 +62,8 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
                     return Err(AuthError::InvalidCredentials);
                 }
 
-                self.password_policy.validate(new_password.expose_secret())?;
+                self.password_policy
+                    .validate(new_password.expose_secret())?;
 
                 let hashed = self.hasher.hash(new_password.expose_secret())?;
                 self.user_repository.update_password(user_id, &hashed).await

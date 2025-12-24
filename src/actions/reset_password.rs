@@ -63,7 +63,8 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
         tracing::instrument(name = "reset_password", skip_all, err)
     )]
     pub async fn execute(&self, token: &str, new_password: &SecretString) -> Result<(), AuthError> {
-        self.password_policy.validate(new_password.expose_secret())?;
+        self.password_policy
+            .validate(new_password.expose_secret())?;
 
         let reset_token = self.reset_repository.find_reset_token(token).await?;
 

@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn test_secret_string_debug_redacted() {
         let secret = SecretString::new("my_password");
-        assert_eq!(format!("{:?}", secret), "SecretString([REDACTED])");
+        assert_eq!(format!("{secret:?}"), "SecretString([REDACTED])");
     }
 
     #[test]

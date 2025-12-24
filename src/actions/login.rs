@@ -166,7 +166,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             }
         };
 
-        if !self.hasher.verify(password.expose_secret(), &user.hashed_password)? {
+        if !self
+            .hasher
+            .verify(password.expose_secret(), &user.hashed_password)?
+        {
             self.rate_limiter.record_attempt(email, false, None).await?;
             return Err(AuthError::InvalidCredentials);
         }

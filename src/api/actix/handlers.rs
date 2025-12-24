@@ -10,6 +10,7 @@ use crate::api::{
     MessageResponse, RefreshTokenRequest, RegisterRequest, ResetPasswordRequest, TokenResponse,
     UpdateUserRequest, UserResponse, VerifyEmailRequest,
 };
+use crate::crypto::SecretString;
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     TokenRepository, UserRepository,
@@ -20,8 +21,9 @@ where
     U: UserRepository + Clone + Send + Sync + 'static,
 {
     let action = SignupAction::new(user_repo.get_ref().clone());
+    let password = SecretString::new(&body.password);
 
-    match action.execute(&body.email, &body.password).await {
+    match action.execute(&body.email, &password).await {
         Ok(user) => HttpResponse::Created().json(UserResponse::from(user)),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -46,8 +48,9 @@ where
         token_repo.get_ref().clone(),
         rate_limiter.get_ref().clone(),
     );
+    let password = SecretString::new(&body.password);
 
-    match action.execute(&body.email, &body.password).await {
+    match action.execute(&body.email, &password).await {
         Ok((user, token)) => HttpResponse::Ok().json(AuthResponse {
             user: UserResponse::from(user),
             token: token.token,
@@ -129,8 +132,9 @@ where
 {
     let action =
         ResetPasswordAction::new(user_repo.get_ref().clone(), reset_repo.get_ref().clone());
+    let password = SecretString::new(&body.password);
 
-    match action.execute(&body.token, &body.password).await {
+    match action.execute(&body.token, &password).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
             message: "Password has been reset successfully".to_owned(),
         }),
@@ -229,9 +233,11 @@ where
     T: TokenRepository + Clone + Send + Sync + 'static,
 {
     let action = ChangePasswordAction::new(user_repo.get_ref().clone());
+    let current_password = SecretString::new(&body.current_password);
+    let new_password = SecretString::new(&body.new_password);
 
     match action
-        .execute(user.user().id, &body.current_password, &body.new_password)
+        .execute(user.user().id, &current_password, &new_password)
         .await
     {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
