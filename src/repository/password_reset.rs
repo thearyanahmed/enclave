@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::SecretString;
 use crate::AuthError;
+use crate::SecretString;
 
 /// A one-time token for password reset requests.
 ///

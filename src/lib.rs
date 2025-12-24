@@ -22,10 +22,10 @@ pub use config::TokenConfig;
 pub use crypto::Argon2Hasher;
 pub use crypto::DEFAULT_TOKEN_LENGTH;
 pub use crypto::PasswordHasher;
-pub use secret::SecretString;
 pub use crypto::generate_token;
 pub use crypto::generate_token_default;
 pub use crypto::hash_token;
+pub use secret::SecretString;
 pub use validators::PasswordPolicy;
 
 pub use repository::AccessToken;

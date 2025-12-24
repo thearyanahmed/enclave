@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::crypto::{generate_token_default, hash_token};
-use crate::SecretString;
 use crate::AuthError;
+use crate::SecretString;
+use crate::crypto::{generate_token_default, hash_token};
 
 use super::token::{AccessToken, CreateTokenOptions, TokenRepository};
 
@@ -102,7 +102,10 @@ impl TokenRepository for MockTokenRepository {
     async fn touch_token(&self, token: &str) -> Result<(), AuthError> {
         let hashed = hash_token(token);
         let mut tokens = self.tokens.lock().unwrap();
-        if let Some(t) = tokens.iter_mut().find(|t| t.token.expose_secret() == hashed) {
+        if let Some(t) = tokens
+            .iter_mut()
+            .find(|t| t.token.expose_secret() == hashed)
+        {
             t.last_used_at = Some(Utc::now());
         }
         drop(tokens);

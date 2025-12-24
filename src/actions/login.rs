@@ -1,6 +1,6 @@
+use crate::SecretString;
 use crate::config::{RateLimitConfig, TokenConfig};
 use crate::crypto::{Argon2Hasher, PasswordHasher};
-use crate::SecretString;
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
@@ -191,8 +191,8 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto::Argon2Hasher;
     use crate::SecretString;
+    use crate::crypto::Argon2Hasher;
     use crate::{MockRateLimiterRepository, MockTokenRepository, MockUserRepository, User};
 
     fn hash_password(password: &str) -> String {

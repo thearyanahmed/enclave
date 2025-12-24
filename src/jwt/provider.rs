@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
 use crate::repository::CreateTokenOptions;
-use crate::{AccessToken, AuthError, TokenRepository};
+use crate::{AccessToken, AuthError, SecretString, TokenRepository};
 
 use super::JwtService;
 
@@ -57,7 +57,7 @@ impl TokenRepository for JwtTokenProvider {
         };
 
         Ok(AccessToken {
-            token,
+            token: SecretString::new(token),
             user_id,
             name: options.name,
             abilities,
@@ -77,7 +77,7 @@ impl TokenRepository for JwtTokenProvider {
                     DateTime::from_timestamp(claims.iat, 0).ok_or(AuthError::TokenInvalid)?;
 
                 Ok(Some(AccessToken {
-                    token: token.to_owned(),
+                    token: SecretString::new(token),
                     user_id,
                     name: None,
                     abilities: vec!["*".to_owned()],
@@ -133,7 +133,10 @@ mod tests {
         assert_eq!(token.user_id, 42);
         assert!(!token.token.is_empty());
 
-        let found = provider.find_token(&token.token).await.unwrap();
+        let found = provider
+            .find_token(token.token.expose_secret())
+            .await
+            .unwrap();
         assert!(found.is_some());
         assert_eq!(found.unwrap().user_id, 42);
     }

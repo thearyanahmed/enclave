@@ -17,8 +17,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
-use enclave::actions::{LoginAction, SignupAction};
 use enclave::SecretString;
+use enclave::actions::{LoginAction, SignupAction};
 #[cfg(feature = "_audit_log")]
 use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{

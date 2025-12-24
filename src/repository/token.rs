@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::SecretString;
 use crate::AuthError;
+use crate::SecretString;
 
 /// An access token for API authentication.
 ///

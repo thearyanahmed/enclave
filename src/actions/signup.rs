@@ -1,5 +1,5 @@
-use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::SecretString;
+use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::{PasswordPolicy, validate_email};
 use crate::{AuthError, User, UserRepository};
 

@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::SecretString;
 use crate::AuthError;
+use crate::SecretString;
 
 use super::email_verification::{EmailVerificationRepository, EmailVerificationToken};
 
