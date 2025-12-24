@@ -82,7 +82,7 @@ impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MockTokenRepository;
+    use crate::{MockTokenRepository, TokenRepository};
     use chrono::Duration;
 
     #[tokio::test]

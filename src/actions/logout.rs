@@ -36,7 +36,7 @@ impl<T: StatefulTokenRepository> LogoutAction<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MockTokenRepository;
+    use crate::{MockTokenRepository, TokenRepository};
     use chrono::{Duration, Utc};
 
     #[tokio::test]
