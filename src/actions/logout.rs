@@ -31,16 +31,19 @@ mod tests {
         let expires_at = Utc::now() + Duration::days(7);
         let token = token_repo.create_token(1, expires_at).await.unwrap();
 
-        let found = token_repo.find_token(&token.token).await.unwrap();
+        let found = token_repo
+            .find_token(token.token.expose_secret())
+            .await
+            .unwrap();
         assert!(found.is_some());
 
         let logout = LogoutAction::new(token_repo);
-        let result = logout.execute(&token.token).await;
+        let result = logout.execute(token.token.expose_secret()).await;
         assert!(result.is_ok());
 
         let found = logout
             .token_repository
-            .find_token(&token.token)
+            .find_token(token.token.expose_secret())
             .await
             .unwrap();
         assert!(found.is_none());

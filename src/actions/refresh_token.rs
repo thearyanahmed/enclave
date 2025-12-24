@@ -84,17 +84,20 @@ mod tests {
         let original_token = token_repo.create_token(1, expires_at).await.unwrap();
 
         let action = RefreshTokenAction::new(token_repo);
-        let result = action.execute(&original_token.token).await;
+        let result = action.execute(original_token.token.expose_secret()).await;
 
         assert!(result.is_ok());
         let new_token = result.unwrap();
         assert_eq!(new_token.user_id, 1);
-        assert_ne!(new_token.token, original_token.token);
+        assert_ne!(
+            new_token.token.expose_secret(),
+            original_token.token.expose_secret()
+        );
 
         // Old token should be revoked
         let old_found = action
             .token_repository
-            .find_token(&original_token.token)
+            .find_token(original_token.token.expose_secret())
             .await
             .unwrap();
         assert!(old_found.is_none());
@@ -119,7 +122,7 @@ mod tests {
         let original_token = token_repo.create_token(1, expires_at).await.unwrap();
 
         let action = RefreshTokenAction::new(token_repo);
-        let result = action.execute(&original_token.token).await;
+        let result = action.execute(original_token.token.expose_secret()).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenExpired);

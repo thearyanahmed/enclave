@@ -155,7 +155,7 @@ async fn test_token_repository() {
 
     // Find token (using plain token)
     let found = token_repo
-        .find_token(&token.token)
+        .find_token(token.token.expose_secret())
         .await
         .expect("Failed to find token")
         .expect("Token not found");
@@ -163,11 +163,11 @@ async fn test_token_repository() {
 
     // Revoke token
     token_repo
-        .revoke_token(&token.token)
+        .revoke_token(token.token.expose_secret())
         .await
         .expect("Failed to revoke token");
     let revoked = token_repo
-        .find_token(&token.token)
+        .find_token(token.token.expose_secret())
         .await
         .expect("Failed to query");
     assert!(revoked.is_none());

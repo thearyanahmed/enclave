@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
+use crate::crypto::{generate_token_default, hash_token, SecretString};
 use crate::AuthError;
-use crate::crypto::{generate_token_default, hash_token};
 
 use super::token::{AccessToken, CreateTokenOptions, TokenRepository};
 
@@ -50,7 +50,7 @@ impl TokenRepository for MockTokenRepository {
         };
 
         let stored_token = AccessToken {
-            token: hashed_token,
+            token: SecretString::new(hashed_token),
             user_id,
             name: options.name.clone(),
             abilities: abilities.clone(),
@@ -64,7 +64,7 @@ impl TokenRepository for MockTokenRepository {
         drop(tokens);
 
         Ok(AccessToken {
-            token: plain_token,
+            token: SecretString::new(plain_token),
             user_id,
             name: options.name,
             abilities,
@@ -77,13 +77,16 @@ impl TokenRepository for MockTokenRepository {
     async fn find_token(&self, token: &str) -> Result<Option<AccessToken>, AuthError> {
         let hashed = hash_token(token);
         let tokens = self.tokens.lock().unwrap();
-        Ok(tokens.iter().find(|t| t.token == hashed).cloned())
+        Ok(tokens
+            .iter()
+            .find(|t| t.token.expose_secret() == hashed)
+            .cloned())
     }
 
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError> {
         let hashed = hash_token(token);
         let mut tokens = self.tokens.lock().unwrap();
-        tokens.retain(|t| t.token != hashed);
+        tokens.retain(|t| t.token.expose_secret() != hashed);
         drop(tokens);
         Ok(())
     }
@@ -98,7 +101,7 @@ impl TokenRepository for MockTokenRepository {
     async fn touch_token(&self, token: &str) -> Result<(), AuthError> {
         let hashed = hash_token(token);
         let mut tokens = self.tokens.lock().unwrap();
-        if let Some(t) = tokens.iter_mut().find(|t| t.token == hashed) {
+        if let Some(t) = tokens.iter_mut().find(|t| t.token.expose_secret() == hashed) {
             t.last_used_at = Some(Utc::now());
         }
         drop(tokens);

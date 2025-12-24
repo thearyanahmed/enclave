@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::crypto::{generate_token_default, hash_token};
+use crate::crypto::{generate_token_default, hash_token, SecretString};
 use crate::repository::CreateTokenOptions;
 use crate::{AccessToken, AuthError, TokenRepository};
 
@@ -33,7 +33,7 @@ impl TokenRecord {
             serde_json::from_value(self.abilities).unwrap_or_else(|_| vec!["*".to_owned()]);
 
         AccessToken {
-            token: plain_token,
+            token: SecretString::new(plain_token),
             user_id: self.user_id,
             name: self.name,
             abilities,
