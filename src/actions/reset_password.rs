@@ -1,4 +1,4 @@
-use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::crypto::{Argon2Hasher, PasswordHasher, SecretString};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, PasswordResetRepository, UserRepository};
 use chrono::Utc;
@@ -62,8 +62,8 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
         feature = "tracing",
         tracing::instrument(name = "reset_password", skip_all, err)
     )]
-    pub async fn execute(&self, token: &str, new_password: &str) -> Result<(), AuthError> {
-        self.password_policy.validate(new_password)?;
+    pub async fn execute(&self, token: &str, new_password: &SecretString) -> Result<(), AuthError> {
+        self.password_policy.validate(new_password.expose_secret())?;
 
         let reset_token = self.reset_repository.find_reset_token(token).await?;
 
@@ -74,7 +74,7 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
                     return Err(AuthError::TokenExpired);
                 }
 
-                let hashed = self.hasher.hash(new_password)?;
+                let hashed = self.hasher.hash(new_password.expose_secret())?;
                 self.user_repository
                     .update_password(reset_token.user_id, &hashed)
                     .await?;
@@ -90,6 +90,7 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto::SecretString;
     use crate::validators::ValidationError;
     use crate::{MockPasswordResetRepository, MockUserRepository, User};
     use chrono::Duration;
@@ -110,7 +111,8 @@ mod tests {
             .unwrap();
 
         let action = ResetPasswordAction::new(user_repo, reset_repo);
-        let result = action.execute(&token.token, "newpassword123").await;
+        let new_password = SecretString::new("newpassword123");
+        let result = action.execute(&token.token, &new_password).await;
 
         assert!(result.is_ok());
 
@@ -129,7 +131,8 @@ mod tests {
         let reset_repo = MockPasswordResetRepository::new();
 
         let action = ResetPasswordAction::new(user_repo, reset_repo);
-        let result = action.execute("invalid_token", "newpassword123").await;
+        let new_password = SecretString::new("newpassword123");
+        let result = action.execute("invalid_token", &new_password).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenInvalid);
@@ -151,7 +154,8 @@ mod tests {
             .unwrap();
 
         let action = ResetPasswordAction::new(user_repo, reset_repo);
-        let result = action.execute(&token.token, "newpassword123").await;
+        let new_password = SecretString::new("newpassword123");
+        let result = action.execute(&token.token, &new_password).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenExpired);
@@ -163,7 +167,8 @@ mod tests {
         let reset_repo = MockPasswordResetRepository::new();
 
         let action = ResetPasswordAction::new(user_repo, reset_repo);
-        let result = action.execute("sometoken", "short").await;
+        let new_password = SecretString::new("short");
+        let result = action.execute("sometoken", &new_password).await;
 
         assert!(result.is_err());
         assert_eq!(

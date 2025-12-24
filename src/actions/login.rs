@@ -1,5 +1,5 @@
 use crate::config::{RateLimitConfig, TokenConfig};
-use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::crypto::{Argon2Hasher, PasswordHasher, SecretString};
 use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
 use chrono::{Duration, Utc};
 
@@ -146,7 +146,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
     pub async fn execute(
         &self,
         email: &str,
-        password: &str,
+        password: &SecretString,
     ) -> Result<(User, AccessToken), AuthError> {
         // Check if account is locked out
         let since = Utc::now() - self.config.lockout_duration;
@@ -166,7 +166,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             }
         };
 
-        if !self.hasher.verify(password, &user.hashed_password)? {
+        if !self.hasher.verify(password.expose_secret(), &user.hashed_password)? {
             self.rate_limiter.record_attempt(email, false, None).await?;
             return Err(AuthError::InvalidCredentials);
         }
@@ -187,7 +187,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto::Argon2Hasher;
+    use crate::crypto::{Argon2Hasher, SecretString};
     use crate::{MockRateLimiterRepository, MockTokenRepository, MockUserRepository, User};
 
     fn hash_password(password: &str) -> String {
@@ -205,7 +205,8 @@ mod tests {
 
         let login = LoginAction::new(user_repo, token_repo, rate_limiter);
 
-        let result = login.execute("user@email.com", "securepassword").await;
+        let password = SecretString::new("securepassword");
+        let result = login.execute("user@email.com", &password).await;
         assert!(result.is_ok());
         let (user, token) = result.unwrap();
         assert_eq!(user.email, "user@email.com");
@@ -224,7 +225,8 @@ mod tests {
 
         let login = LoginAction::new(user_repo, token_repo, rate_limiter);
 
-        let result = login.execute("user@email.com", "wrongpassword").await;
+        let password = SecretString::new("wrongpassword");
+        let result = login.execute("user@email.com", &password).await;
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::InvalidCredentials);
     }
@@ -241,12 +243,14 @@ mod tests {
         let login = LoginAction::new(user_repo, token_repo, rate_limiter);
 
         // Make 5 failed attempts
+        let wrong_password = SecretString::new("wrongpassword");
         for _ in 0..5 {
-            let _ = login.execute("user@email.com", "wrongpassword").await;
+            let _ = login.execute("user@email.com", &wrong_password).await;
         }
 
         // 6th attempt should be blocked
-        let result = login.execute("user@email.com", "securepassword").await;
+        let correct_password = SecretString::new("securepassword");
+        let result = login.execute("user@email.com", &correct_password).await;
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TooManyAttempts);
     }

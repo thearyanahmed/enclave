@@ -1,4 +1,4 @@
-use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::crypto::{Argon2Hasher, PasswordHasher, SecretString};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, UserRepository};
 
@@ -48,8 +48,8 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
     pub async fn execute(
         &self,
         user_id: i32,
-        current_password: &str,
-        new_password: &str,
+        current_password: &SecretString,
+        new_password: &SecretString,
     ) -> Result<(), AuthError> {
         let user = self.user_repository.find_user_by_id(user_id).await?;
 
@@ -57,14 +57,14 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
             Some(user) => {
                 if !self
                     .hasher
-                    .verify(current_password, &user.hashed_password)?
+                    .verify(current_password.expose_secret(), &user.hashed_password)?
                 {
                     return Err(AuthError::InvalidCredentials);
                 }
 
-                self.password_policy.validate(new_password)?;
+                self.password_policy.validate(new_password.expose_secret())?;
 
-                let hashed = self.hasher.hash(new_password)?;
+                let hashed = self.hasher.hash(new_password.expose_secret())?;
                 self.user_repository.update_password(user_id, &hashed).await
             }
             None => Err(AuthError::UserNotFound),
@@ -75,7 +75,7 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto::Argon2Hasher;
+    use crate::crypto::{Argon2Hasher, SecretString};
     use crate::validators::ValidationError;
     use crate::{MockUserRepository, User};
 
@@ -93,7 +93,9 @@ mod tests {
         user_repo.users.lock().unwrap().push(user);
 
         let action = ChangePasswordAction::new(user_repo);
-        let result = action.execute(user_id, "oldpassword", "newpassword").await;
+        let old_password = SecretString::new("oldpassword");
+        let new_password = SecretString::new("newpassword");
+        let result = action.execute(user_id, &old_password, &new_password).await;
 
         assert!(result.is_ok());
     }
@@ -107,8 +109,10 @@ mod tests {
         user_repo.users.lock().unwrap().push(user);
 
         let action = ChangePasswordAction::new(user_repo);
+        let wrong_password = SecretString::new("wrongpassword");
+        let new_password = SecretString::new("newpassword");
         let result = action
-            .execute(user_id, "wrongpassword", "newpassword")
+            .execute(user_id, &wrong_password, &new_password)
             .await;
 
         assert!(result.is_err());
@@ -120,7 +124,9 @@ mod tests {
         let user_repo = MockUserRepository::new();
 
         let action = ChangePasswordAction::new(user_repo);
-        let result = action.execute(999, "old", "new").await;
+        let old_password = SecretString::new("old");
+        let new_password = SecretString::new("new");
+        let result = action.execute(999, &old_password, &new_password).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::UserNotFound);
@@ -135,7 +141,9 @@ mod tests {
         user_repo.users.lock().unwrap().push(user);
 
         let action = ChangePasswordAction::new(user_repo);
-        let result = action.execute(user_id, "oldpassword", "short").await;
+        let old_password = SecretString::new("oldpassword");
+        let new_password = SecretString::new("short");
+        let result = action.execute(user_id, &old_password, &new_password).await;
 
         assert!(result.is_err());
         assert_eq!(
