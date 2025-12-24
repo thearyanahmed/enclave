@@ -348,4 +348,26 @@ mod tests {
         let secret: SecretString = "password".into();
         assert_eq!(secret.expose_secret(), "password");
     }
+
+    #[test]
+    fn test_secret_string_serialize() {
+        let secret = SecretString::new("my_token");
+        let json = serde_json::to_string(&secret).unwrap();
+        assert_eq!(json, "\"my_token\"");
+    }
+
+    #[test]
+    fn test_secret_string_deserialize() {
+        let json = "\"my_token\"";
+        let secret: SecretString = serde_json::from_str(json).unwrap();
+        assert_eq!(secret.expose_secret(), "my_token");
+    }
+
+    #[test]
+    fn test_secret_string_roundtrip() {
+        let original = SecretString::new("secret_value");
+        let json = serde_json::to_string(&original).unwrap();
+        let restored: SecretString = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, restored);
+    }
 }
