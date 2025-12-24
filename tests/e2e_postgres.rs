@@ -18,6 +18,7 @@
 
 use chrono::{Duration, Utc};
 use enclave::actions::{LoginAction, SignupAction};
+use enclave::crypto::SecretString;
 #[cfg(feature = "_audit_log")]
 use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{
@@ -366,8 +367,9 @@ async fn test_signup_and_login_flow() {
 
     // Signup
     let signup = SignupAction::new(user_repo.clone());
+    let password = SecretString::new("securepassword123");
     let user = signup
-        .execute("flow@example.com", "securepassword123")
+        .execute("flow@example.com", &password)
         .await
         .expect("Failed to signup");
     assert_eq!(user.email, "flow@example.com");
@@ -375,7 +377,7 @@ async fn test_signup_and_login_flow() {
     // Login
     let login = LoginAction::new(user_repo, token_repo, rate_repo);
     let (logged_in_user, token) = login
-        .execute("flow@example.com", "securepassword123")
+        .execute("flow@example.com", &password)
         .await
         .expect("Failed to login");
     assert_eq!(logged_in_user.id, user.id);
