@@ -626,6 +626,7 @@ dependencies = [
  "futures",
  "hex",
  "jsonwebtoken",
+ "log",
  "password-hash",
  "rand 0.8.5",
  "regex",

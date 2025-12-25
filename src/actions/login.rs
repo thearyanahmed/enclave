@@ -156,6 +156,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             .get_recent_failed_attempts(email, since)
             .await?;
         if failed_attempts >= self.config.max_failed_attempts {
+            log::warn!(
+                target: "enclave_auth",
+                "msg=\"login_rate_limited\", attempts={failed_attempts}"
+            );
             return Err(AuthError::TooManyAttempts);
         }
 
@@ -163,6 +167,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             Some(u) => u,
             None => {
                 self.rate_limiter.record_attempt(email, false, None).await?;
+                log::debug!(
+                    target: "enclave_auth",
+                    "msg=\"login_failed\", reason=\"user_not_found\""
+                );
                 return Err(AuthError::InvalidCredentials);
             }
         };
@@ -172,6 +180,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             .verify(password.expose_secret(), &user.hashed_password)?
         {
             self.rate_limiter.record_attempt(email, false, None).await?;
+            log::debug!(
+                target: "enclave_auth",
+                "msg=\"login_failed\", reason=\"invalid_password\""
+            );
             return Err(AuthError::InvalidCredentials);
         }
 
@@ -184,6 +196,13 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             .token_repository
             .create_token(user.id, expires_at)
             .await?;
+
+        let user_id = user.id;
+        log::info!(
+            target: "enclave_auth",
+            "msg=\"login_success\", user_id={user_id}"
+        );
+
         Ok((user, token))
     }
 }
