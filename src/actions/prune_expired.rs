@@ -48,9 +48,9 @@ impl PruneResult {
 /// This is a maintenance action that should be run periodically to clean up
 /// expired tokens and prevent unbounded database growth.
 pub struct PruneExpiredTokensAction<T, P, E> {
-    token_repo: T,
-    password_reset_repo: P,
-    email_verification_repo: E,
+    tokens: T,
+    password_resets: P,
+    email_verifications: E,
 }
 
 impl<T, P, E> PruneExpiredTokensAction<T, P, E>
@@ -60,11 +60,11 @@ where
     E: EmailVerificationRepository,
 {
     /// Creates a new prune action with the given repositories.
-    pub fn new(token_repo: T, password_reset_repo: P, email_verification_repo: E) -> Self {
+    pub fn new(tokens: T, password_resets: P, email_verifications: E) -> Self {
         Self {
-            token_repo,
-            password_reset_repo,
-            email_verification_repo,
+            tokens,
+            password_resets,
+            email_verifications,
         }
     }
 
@@ -73,9 +73,9 @@ where
     /// Returns a [`PruneResult`] with the count of tokens removed from each repository.
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), name = "prune_expired"))]
     pub async fn execute(&self) -> Result<PruneResult, AuthError> {
-        let access_tokens = self.token_repo.prune_expired().await?;
-        let password_reset_tokens = self.password_reset_repo.prune_expired().await?;
-        let email_verification_tokens = self.email_verification_repo.prune_expired().await?;
+        let access_tokens = self.tokens.prune_expired().await?;
+        let password_reset_tokens = self.password_resets.prune_expired().await?;
+        let email_verification_tokens = self.email_verifications.prune_expired().await?;
 
         Ok(PruneResult {
             access_tokens,

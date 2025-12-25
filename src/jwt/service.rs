@@ -339,12 +339,11 @@ mod tests {
     fn test_secret_too_short() {
         let result = JwtConfig::new("short");
         assert!(result.is_err());
-        match result.unwrap_err() {
-            AuthError::ConfigurationError(msg) => {
-                assert!(msg.contains("32 bytes"));
-            }
-            _ => panic!("Expected ConfigurationError"),
-        }
+        let err = result.unwrap_err();
+        assert!(
+            matches!(err, AuthError::ConfigurationError(ref msg) if msg.contains("32 bytes")),
+            "Expected ConfigurationError with '32 bytes' message"
+        );
     }
 
     #[test]
