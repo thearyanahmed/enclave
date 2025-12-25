@@ -71,7 +71,10 @@ where
     /// Prunes all expired tokens from all repositories.
     ///
     /// Returns a [`PruneResult`] with the count of tokens removed from each repository.
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), name = "prune_expired"))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self), name = "prune_expired")
+    )]
     pub async fn execute(&self) -> Result<PruneResult, AuthError> {
         let access_tokens = self.tokens.prune_expired().await?;
         let password_reset_tokens = self.password_resets.prune_expired().await?;
@@ -153,11 +156,8 @@ mod tests {
         let password_reset_repo = MockPasswordResetRepository::new();
         let email_verification_repo = MockEmailVerificationRepository::new();
 
-        let action = PruneExpiredTokensAction::new(
-            token_repo,
-            password_reset_repo,
-            email_verification_repo,
-        );
+        let action =
+            PruneExpiredTokensAction::new(token_repo, password_reset_repo, email_verification_repo);
 
         let result = action.execute().await.unwrap();
 

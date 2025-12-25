@@ -1,8 +1,8 @@
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
-use crate::crypto::generate_token;
 use crate::AuthError;
+use crate::crypto::generate_token;
 
 use super::{JwtClaims, JwtConfig, TokenType};
 

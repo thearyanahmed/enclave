@@ -91,8 +91,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
         rate_limit_key: &str,
     ) -> Result<EmailVerificationToken, AuthError> {
         if let Some(ref rate_limit) = self.rate_limit {
-            let window_secs =
-                u64::try_from(rate_limit.window.num_seconds().max(1)).unwrap_or(60);
+            let window_secs = u64::try_from(rate_limit.window.num_seconds().max(1)).unwrap_or(60);
             let key = format!("send_verification:{rate_limit_key}");
             let info = rate_limit.store.increment(&key, window_secs).await?;
 

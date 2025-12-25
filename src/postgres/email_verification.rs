@@ -92,11 +92,10 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn prune_expired(&self) -> Result<u64, AuthError> {
-        let result =
-            sqlx::query("DELETE FROM email_verification_tokens WHERE expires_at < NOW()")
-                .execute(&self.pool)
-                .await
-                .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        let result = sqlx::query("DELETE FROM email_verification_tokens WHERE expires_at < NOW()")
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
 
         Ok(result.rows_affected())
     }
