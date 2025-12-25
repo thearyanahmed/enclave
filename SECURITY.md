@@ -1,5 +1,7 @@
 # Security Policy
 
+> **WORK IN PROGRESS**: This security policy is under active development. Some sections may be incomplete or subject to change.
+
 ## Supported Versions
 
 | Version | Supported          |
