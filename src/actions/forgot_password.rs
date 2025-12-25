@@ -238,7 +238,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
 
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"password_reset_requested\""
+                    "msg=\"password reset requested\""
                 );
 
                 Ok(Some(token))

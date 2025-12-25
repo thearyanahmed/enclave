@@ -188,7 +188,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
         let user_id = user.id;
         log::info!(
             target: "enclave_auth",
-            "msg=\"login_success\", user_id={user_id}"
+            "msg=\"login success\", user_id={user_id}"
         );
 
         Ok((user, token))

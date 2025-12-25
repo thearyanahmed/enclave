@@ -78,7 +78,7 @@ impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
                 let user_id = token.user_id;
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"token_refreshed\", user_id={user_id}"
+                    "msg=\"token refreshed\", user_id={user_id}"
                 );
 
                 Ok(new_token)

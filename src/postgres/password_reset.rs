@@ -44,7 +44,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"create_reset_token\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"create_reset_token\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -67,7 +67,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_reset_token\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"find_reset_token\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -89,7 +89,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"delete_reset_token\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"delete_reset_token\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -102,7 +102,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"prune_expired_reset_tokens\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"prune_expired_reset_tokens\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

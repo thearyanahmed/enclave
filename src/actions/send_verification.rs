@@ -134,7 +134,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
 
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"verification_sent\", user_id={user_id}"
+                    "msg=\"verification sent\", user_id={user_id}"
                 );
 
                 Ok(token)

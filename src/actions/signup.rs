@@ -57,7 +57,7 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         let user_id = user.id;
         log::info!(
             target: "enclave_auth",
-            "msg=\"signup_success\", user_id={user_id}"
+            "msg=\"signup success\", user_id={user_id}"
         );
 
         Ok(user)

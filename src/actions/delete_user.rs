@@ -18,7 +18,7 @@ impl<U: UserRepository> DeleteUserAction<U> {
 
         log::info!(
             target: "enclave_auth",
-            "msg=\"account_deleted\", user_id={user_id}"
+            "msg=\"account deleted\", user_id={user_id}"
         );
 
         Ok(())

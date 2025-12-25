@@ -85,7 +85,7 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
                 let user_id = reset_token.user_id;
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"password_reset_success\", user_id={user_id}"
+                    "msg=\"password reset success\", user_id={user_id}"
                 );
 
                 Ok(())

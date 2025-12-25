@@ -51,7 +51,7 @@ impl UserRepository for PostgresUserRepository {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_user_by_id\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"find_user_by_id\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -67,7 +67,7 @@ impl UserRepository for PostgresUserRepository {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_user_by_email\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"find_user_by_email\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -87,7 +87,7 @@ impl UserRepository for PostgresUserRepository {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"create_user\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"create_user\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -106,7 +106,7 @@ impl UserRepository for PostgresUserRepository {
                 .execute(&self.pool)
                 .await
                 .map_err(|e| {
-                    log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"update_password\", error=\"{e}\"");
+                    log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"update_password\", error=\"{e}\"");
                     AuthError::DatabaseError(e.to_string())
                 })?;
 
@@ -126,7 +126,7 @@ impl UserRepository for PostgresUserRepository {
         .execute(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"verify_email\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"verify_email\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -150,7 +150,7 @@ impl UserRepository for PostgresUserRepository {
         .map_err(|e| match e {
             sqlx::Error::RowNotFound => AuthError::UserNotFound,
             _ => {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"update_user\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"update_user\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             }
         })?;
@@ -165,7 +165,7 @@ impl UserRepository for PostgresUserRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"delete_user\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"delete_user\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

@@ -33,7 +33,7 @@ impl<T: StatefulTokenRepository> LogoutAction<T> {
 
         log::info!(
             target: "enclave_auth",
-            "msg=\"logout_success\""
+            "msg=\"logout success\""
         );
 
         Ok(())

@@ -74,7 +74,7 @@ impl TokenRepository for PostgresTokenRepository {
         };
         let abilities_json = serde_json::to_value(&abilities)
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"serialization_error\", operation=\"create_token\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"serialization error\", operation=\"create_token\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -91,7 +91,7 @@ impl TokenRepository for PostgresTokenRepository {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"create_token\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"create_token\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -110,7 +110,7 @@ impl TokenRepository for PostgresTokenRepository {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_token\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"find_token\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -129,7 +129,7 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"revoke_token\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"revoke_token\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -143,7 +143,7 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"revoke_all_user_tokens\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"revoke_all_user_tokens\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -159,7 +159,7 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"touch_token\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"touch_token\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -172,7 +172,7 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"prune_expired_tokens\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"prune_expired_tokens\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

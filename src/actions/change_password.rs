@@ -229,7 +229,7 @@ impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
 
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"password_changed\", user_id={user_id}"
+                    "msg=\"password changed\", user_id={user_id}"
                 );
 
                 Ok(())

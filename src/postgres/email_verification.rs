@@ -44,7 +44,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"create_verification_token\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"create_verification_token\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -70,7 +70,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_verification_token\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"find_verification_token\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -92,7 +92,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"delete_verification_token\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"delete_verification_token\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -105,7 +105,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"prune_expired_verification_tokens\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"prune_expired_verification_tokens\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

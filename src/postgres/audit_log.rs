@@ -88,7 +88,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"log_event\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"log_event\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -117,7 +117,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         .fetch_all(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"get_user_events\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"get_user_events\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 

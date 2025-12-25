@@ -82,7 +82,7 @@ where
 
         log::info!(
             target: "enclave_auth",
-            "msg=\"tokens_pruned\", access_tokens={access_tokens}, password_reset_tokens={password_reset_tokens}, email_verification_tokens={email_verification_tokens}"
+            "msg=\"tokens pruned\", access_tokens={access_tokens}, password_reset_tokens={password_reset_tokens}, email_verification_tokens={email_verification_tokens}"
         );
 
         Ok(PruneResult {

@@ -34,7 +34,7 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"record_attempt\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"record_attempt\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -55,7 +55,7 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"get_recent_failed_attempts\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"get_recent_failed_attempts\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -69,7 +69,7 @@ impl RateLimiterRepository for PostgresRateLimiterRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"clear_attempts\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"clear_attempts\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

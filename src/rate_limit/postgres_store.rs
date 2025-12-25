@@ -45,7 +45,7 @@ impl PostgresRateLimitStore {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"cleanup_expired_rate_limits\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"cleanup_expired_rate_limits\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 
@@ -88,7 +88,7 @@ impl RateLimitStore for PostgresRateLimitStore {
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
-            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"rate_limit_increment\", error=\"{e}\"");
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"rate_limit_increment\", error=\"{e}\"");
             AuthError::DatabaseError(e.to_string())
         })?;
 
@@ -106,7 +106,7 @@ impl RateLimitStore for PostgresRateLimitStore {
                 .fetch_optional(&self.pool)
                 .await
                 .map_err(|e| {
-                    log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"rate_limit_get\", error=\"{e}\"");
+                    log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"rate_limit_get\", error=\"{e}\"");
                     AuthError::DatabaseError(e.to_string())
                 })?;
 
@@ -123,7 +123,7 @@ impl RateLimitStore for PostgresRateLimitStore {
             .execute(&self.pool)
             .await
             .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"rate_limit_reset\", error=\"{e}\"");
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"rate_limit_reset\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

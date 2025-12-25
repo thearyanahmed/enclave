@@ -123,7 +123,7 @@ where
 
                         log::warn!(
                             target: "enclave_auth",
-                            "msg=\"rate_limited\", limit=\"{limit_name}\", retry_after={retry_after}"
+                            "msg=\"rate limited\", limit=\"{limit_name}\", retry_after={retry_after}"
                         );
 
                         let response = HttpResponse::TooManyRequests()
@@ -175,7 +175,7 @@ where
                     // Store error - let request through but log
                     log::error!(
                         target: "enclave_auth",
-                        "msg=\"rate_limit_store_error\", limit=\"{limit_name}\", error=\"{e}\""
+                        "msg=\"rate limit store error\", limit=\"{limit_name}\", error=\"{e}\""
                     );
 
                     let res = fut.await?;

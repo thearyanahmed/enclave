@@ -41,7 +41,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
 
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"email_verified\", user_id={user_id}"
+                    "msg=\"email verified\", user_id={user_id}"
                 );
 
                 Ok(())
