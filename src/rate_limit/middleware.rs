@@ -121,6 +121,11 @@ where
                             .get_message()
                             .unwrap_or("Too many requests. Please try again later.");
 
+                        log::warn!(
+                            target: "enclave_auth",
+                            "msg=\"rate_limited\", limit=\"{limit_name}\", retry_after={retry_after}"
+                        );
+
                         let response = HttpResponse::TooManyRequests()
                             .insert_header((header::RETRY_AFTER, retry_after.to_string()))
                             .insert_header(("X-RateLimit-Limit", limit.max_attempts.to_string()))
@@ -166,10 +171,12 @@ where
                         Ok(ServiceResponse::new(req, response).map_into_left_body())
                     }
                 }
-                Err(_) => {
+                Err(e) => {
                     // Store error - let request through but log
-                    #[cfg(feature = "tracing")]
-                    tracing::warn!("Rate limit store error, allowing request");
+                    log::error!(
+                        target: "enclave_auth",
+                        "msg=\"rate_limit_store_error\", limit=\"{limit_name}\", error=\"{e}\""
+                    );
 
                     let res = fut.await?;
                     Ok(res.map_into_left_body())
