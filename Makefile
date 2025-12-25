@@ -38,10 +38,10 @@ fmt-check:
 	cargo fmt -- --check
 
 md-fmt:
-	npx prettier --write --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+	npx prettier --write --no-error-on-unmatched-pattern "README.md" "SECURITY.md" "src/**/*.md" "examples/**/*.md"
 
 md-fmt-check:
-	npx prettier --check --no-error-on-unmatched-pattern "README.md" "src/**/*.md" "examples/**/*.md"
+	npx prettier --check --no-error-on-unmatched-pattern "README.md" "SECURITY.md" "src/**/*.md" "examples/**/*.md"
 
 # check (clippy + fmt + test)
 check: fmt-check clippy test
