@@ -189,8 +189,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         rate_limit_key: &str,
     ) -> Result<Option<PasswordResetToken>, AuthError> {
         if let Some(ref rate_limit) = self.rate_limit {
-            let window_secs = u64::try_from(rate_limit.window.num_seconds().max(1))
-                .unwrap_or(60);
+            let window_secs = u64::try_from(rate_limit.window.num_seconds().max(1)).unwrap_or(60);
             let key = format!("forgot_password:{rate_limit_key}");
             let info = rate_limit.store.increment(&key, window_secs).await?;
 
@@ -330,8 +329,8 @@ mod tests {
                 .max_requests(2)
                 .window(Duration::minutes(1));
 
-            let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit(rate_limit);
+            let action =
+                ForgotPasswordAction::new(user_repo, reset_repo).with_rate_limit(rate_limit);
 
             // First two requests should succeed
             let result1 = action.execute("user@example.com", "192.168.1.1").await;
@@ -358,8 +357,8 @@ mod tests {
                 .max_requests(1)
                 .window(Duration::minutes(1));
 
-            let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit(rate_limit);
+            let action =
+                ForgotPasswordAction::new(user_repo, reset_repo).with_rate_limit(rate_limit);
 
             // First IP uses its quota
             let result1 = action.execute("user@example.com", "192.168.1.1").await;
@@ -382,18 +381,24 @@ mod tests {
                 .max_requests(2)
                 .window(Duration::minutes(1));
 
-            let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit(rate_limit);
+            let action =
+                ForgotPasswordAction::new(user_repo, reset_repo).with_rate_limit(rate_limit);
 
             // Rate limiting should still apply even for non-existent users
-            let result1 = action.execute("nonexistent@example.com", "192.168.1.1").await;
+            let result1 = action
+                .execute("nonexistent@example.com", "192.168.1.1")
+                .await;
             assert!(result1.is_ok());
             assert!(result1.unwrap().is_none());
 
-            let result2 = action.execute("nonexistent@example.com", "192.168.1.1").await;
+            let result2 = action
+                .execute("nonexistent@example.com", "192.168.1.1")
+                .await;
             assert!(result2.is_ok());
 
-            let result3 = action.execute("nonexistent@example.com", "192.168.1.1").await;
+            let result3 = action
+                .execute("nonexistent@example.com", "192.168.1.1")
+                .await;
             assert_eq!(result3.unwrap_err(), AuthError::TooManyAttempts);
         }
 
@@ -404,8 +409,8 @@ mod tests {
 
             let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()));
 
-            let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit(rate_limit);
+            let action =
+                ForgotPasswordAction::new(user_repo, reset_repo).with_rate_limit(rate_limit);
 
             // Default is 120 requests per minute
             for _ in 0..120 {

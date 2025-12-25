@@ -193,7 +193,9 @@ impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
 
         // Revoke all sessions if configured
         if self.config.revoke_all_sessions {
-            self.token_repository.revoke_all_user_tokens(user_id).await?;
+            self.token_repository
+                .revoke_all_user_tokens(user_id)
+                .await?;
         }
 
         Ok(())
