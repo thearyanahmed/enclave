@@ -47,6 +47,7 @@ async fn main() -> std::io::Result<()> {
 
     // Configure JWT with short-lived access tokens and long-lived refresh tokens
     let jwt_config = JwtConfig::new(jwt_secret)
+        .expect("JWT secret must be at least 32 bytes")
         .with_access_expiry(chrono::Duration::minutes(15))
         .with_refresh_expiry(chrono::Duration::days(7))
         .with_issuer("enclave-example");

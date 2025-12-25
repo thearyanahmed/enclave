@@ -1,9 +1,13 @@
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
+use crate::crypto::generate_token;
 use crate::AuthError;
 
 use super::{JwtClaims, JwtConfig, TokenType};
+
+/// Length of the JWT ID (jti) in bytes.
+const JTI_LENGTH: usize = 16;
 
 /// A pair of access and refresh tokens.
 #[derive(Debug, Clone)]
@@ -46,11 +50,13 @@ impl JwtService {
     pub fn encode_access_token(&self, user_id: i32) -> Result<String, AuthError> {
         let now = Utc::now();
         let exp = now + self.config.access_expiry();
+        let jti = generate_token(JTI_LENGTH);
 
         let claims = JwtClaims {
             sub: user_id.to_string(),
             exp: exp.timestamp(),
             iat: now.timestamp(),
+            jti,
             token_type: TokenType::Access,
             iss: self.config.issuer.clone(),
             aud: self.config.audience.clone(),
@@ -64,11 +70,13 @@ impl JwtService {
     pub fn encode_refresh_token(&self, user_id: i32) -> Result<String, AuthError> {
         let now = Utc::now();
         let exp = now + self.config.refresh_expiry();
+        let jti = generate_token(JTI_LENGTH);
 
         let claims = JwtClaims {
             sub: user_id.to_string(),
             exp: exp.timestamp(),
             iat: now.timestamp(),
+            jti,
             token_type: TokenType::Refresh,
             iss: self.config.issuer.clone(),
             aud: self.config.audience.clone(),
@@ -182,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_encode_decode() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-01").unwrap();
         let service = JwtService::new(config);
 
         let token = service.encode(42).unwrap();
@@ -193,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_invalid_token() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-02").unwrap();
         let service = JwtService::new(config);
 
         let result = service.decode("invalid-token");
@@ -203,8 +211,8 @@ mod tests {
 
     #[test]
     fn test_wrong_secret() {
-        let config1 = JwtConfig::new("secret-one-32-bytes-long!!!!!!!!");
-        let config2 = JwtConfig::new("secret-two-32-bytes-long!!!!!!!!");
+        let config1 = JwtConfig::new("test-secret-32-bytes-long-key-03").unwrap();
+        let config2 = JwtConfig::new("test-secret-32-bytes-long-key-04").unwrap();
 
         let service1 = JwtService::new(config1);
         let service2 = JwtService::new(config2);
@@ -218,7 +226,7 @@ mod tests {
 
     #[test]
     fn test_expired_token() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-05").unwrap();
         let service = JwtService::new(config);
 
         // Manually create an expired token
@@ -226,12 +234,13 @@ mod tests {
             sub: "42".to_owned(),
             exp: Utc::now().timestamp() - 3600, // 1 hour in the past
             iat: Utc::now().timestamp() - 7200,
+            jti: "test-jti".to_owned(),
             token_type: TokenType::Access,
             iss: None,
             aud: None,
         };
 
-        let encoding_key = EncodingKey::from_secret(b"test-secret-key-32-bytes-long!!");
+        let encoding_key = EncodingKey::from_secret(b"test-secret-32-bytes-long-key-05");
         let token = jsonwebtoken::encode(&Header::default(), &claims, &encoding_key).unwrap();
 
         let result = service.decode(&token);
@@ -241,7 +250,8 @@ mod tests {
 
     #[test]
     fn test_with_issuer_and_audience() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!")
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-06")
+            .unwrap()
             .with_issuer("enclave")
             .with_audience("my-app");
 
@@ -255,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_token_pair() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-07").unwrap();
         let service = JwtService::new(config);
 
         let pair = service.create_token_pair(42).unwrap();
@@ -273,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_refresh_access_token() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-08").unwrap();
         let service = JwtService::new(config);
 
         let pair = service.create_token_pair(42).unwrap();
@@ -292,7 +302,7 @@ mod tests {
 
     #[test]
     fn test_validate_rejects_refresh_token() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-09").unwrap();
         let service = JwtService::new(config);
 
         let pair = service.create_token_pair(42).unwrap();
@@ -309,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_rotate_tokens() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-10").unwrap();
         let service = JwtService::new(config);
 
         let pair = service.create_token_pair(42).unwrap();
@@ -323,5 +333,48 @@ mod tests {
         // Rotating with access token should fail
         let result = service.rotate_tokens(&pair.access_token);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_secret_too_short() {
+        let result = JwtConfig::new("short");
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            AuthError::ConfigurationError(msg) => {
+                assert!(msg.contains("32 bytes"));
+            }
+            _ => panic!("Expected ConfigurationError"),
+        }
+    }
+
+    #[test]
+    fn test_jti_unique() {
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-11").unwrap();
+        let service = JwtService::new(config);
+
+        let token1 = service.encode(42).unwrap();
+        let token2 = service.encode(42).unwrap();
+
+        let claims1 = service.decode(&token1).unwrap();
+        let claims2 = service.decode(&token2).unwrap();
+
+        // Each token should have a unique jti
+        assert_ne!(claims1.jti(), claims2.jti());
+        assert!(!claims1.jti().is_empty());
+        assert!(!claims2.jti().is_empty());
+    }
+
+    #[test]
+    fn test_token_pair_unique_jti() {
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-12").unwrap();
+        let service = JwtService::new(config);
+
+        let pair = service.create_token_pair(42).unwrap();
+
+        let access_claims = service.decode(&pair.access_token).unwrap();
+        let refresh_claims = service.decode(&pair.refresh_token).unwrap();
+
+        // Access and refresh tokens should have different jti
+        assert_ne!(access_claims.jti(), refresh_claims.jti());
     }
 }

@@ -22,7 +22,7 @@ fn create_repos() -> (
     MockPasswordResetRepository,
     MockEmailVerificationRepository,
 ) {
-    let jwt_config = JwtConfig::new("test-secret-key-for-jwt-testing!!");
+    let jwt_config = JwtConfig::new("test-secret-key-for-jwt-testing!!").unwrap();
     let jwt_service = JwtService::new(jwt_config);
     let jwt_provider = JwtTokenProvider::new(jwt_service);
 

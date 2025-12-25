@@ -1,4 +1,10 @@
 use chrono::Duration;
+use std::fmt;
+
+use crate::AuthError;
+
+/// Minimum required length for JWT secret in bytes.
+pub const MIN_SECRET_LENGTH: usize = 32;
 
 /// Configuration for JWT token generation and validation.
 #[derive(Clone)]
@@ -15,19 +21,43 @@ pub struct JwtConfig {
     pub(crate) audience: Option<String>,
 }
 
+impl fmt::Debug for JwtConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("JwtConfig")
+            .field("secret", &"[REDACTED]")
+            .field("access_expiry", &self.access_expiry)
+            .field("refresh_expiry", &self.refresh_expiry)
+            .field("issuer", &self.issuer)
+            .field("audience", &self.audience)
+            .finish()
+    }
+}
+
 impl JwtConfig {
     /// Creates a new JWT configuration with the given secret.
     ///
     /// # Arguments
-    /// * `secret` - The secret key for signing tokens. Should be at least 32 bytes.
-    pub fn new(secret: impl Into<String>) -> Self {
-        Self {
-            secret: secret.into(),
+    /// * `secret` - The secret key for signing tokens. Must be at least 32 bytes.
+    ///
+    /// # Errors
+    /// Returns `AuthError::ConfigurationError` if the secret is less than 32 bytes.
+    pub fn new(secret: impl Into<String>) -> Result<Self, AuthError> {
+        let secret = secret.into();
+
+        if secret.len() < MIN_SECRET_LENGTH {
+            return Err(AuthError::ConfigurationError(format!(
+                "JWT secret must be at least {MIN_SECRET_LENGTH} bytes, got {}",
+                secret.len()
+            )));
+        }
+
+        Ok(Self {
+            secret,
             access_expiry: Duration::minutes(15),
             refresh_expiry: Duration::days(7),
             issuer: None,
             audience: None,
-        }
+        })
     }
 
     /// Sets the access token expiry duration.

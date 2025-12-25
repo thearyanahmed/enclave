@@ -74,6 +74,7 @@ pub enum AuthError {
     EmailAlreadyVerified,
     TooManyAttempts,
     Validation(validators::ValidationError),
+    ConfigurationError(String),
     DatabaseError(String),
     #[deprecated(note = "Use specific error variants instead")]
     Other(String),
@@ -104,6 +105,7 @@ impl fmt::Display for AuthError {
                 write!(f, "Too many failed attempts, please try again later")
             }
             AuthError::Validation(err) => write!(f, "Validation error: {err}"),
+            AuthError::ConfigurationError(msg) => write!(f, "Configuration error: {msg}"),
             AuthError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
             AuthError::Other(msg) => write!(f, "{msg}"),
         }

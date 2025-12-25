@@ -21,6 +21,8 @@ pub struct JwtClaims {
     pub exp: i64,
     /// Issued at time (Unix timestamp).
     pub iat: i64,
+    /// JWT ID - unique identifier for this token.
+    pub jti: String,
     /// Token type (access or refresh).
     #[serde(rename = "typ", default = "default_token_type")]
     pub token_type: TokenType,
@@ -40,6 +42,11 @@ impl JwtClaims {
     /// Returns the user ID from the claims.
     pub fn user_id(&self) -> Result<i32, AuthError> {
         self.sub.parse().map_err(|_| AuthError::TokenInvalid)
+    }
+
+    /// Returns the JWT ID (unique identifier for this token).
+    pub fn jti(&self) -> &str {
+        &self.jti
     }
 
     /// Returns true if this is an access token.

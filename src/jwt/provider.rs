@@ -104,7 +104,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_jwt_provider_create_and_find() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-13").unwrap();
         let service = JwtService::new(config);
         let provider = JwtTokenProvider::new(service);
 
@@ -123,7 +123,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_jwt_provider_invalid_token() {
-        let config = JwtConfig::new("test-secret-key-32-bytes-long!!");
+        let config = JwtConfig::new("test-secret-32-bytes-long-key-13").unwrap();
         let service = JwtService::new(config);
         let provider = JwtTokenProvider::new(service);
 

@@ -131,6 +131,7 @@ impl From<crate::AuthError> for ErrorResponse {
             crate::AuthError::TooManyAttempts => "TOO_MANY_ATTEMPTS",
             crate::AuthError::Validation(_) => "VALIDATION_ERROR",
             crate::AuthError::DatabaseError(_) => "DATABASE_ERROR",
+            crate::AuthError::ConfigurationError(_) => "CONFIGURATION_ERROR",
             #[allow(deprecated)]
             crate::AuthError::Other(_) => "UNKNOWN_ERROR",
         };
