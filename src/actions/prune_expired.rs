@@ -80,6 +80,11 @@ where
         let password_reset_tokens = self.password_resets.prune_expired().await?;
         let email_verification_tokens = self.email_verifications.prune_expired().await?;
 
+        log::info!(
+            target: "enclave_auth",
+            "msg=\"tokens_pruned\", access_tokens={access_tokens}, password_reset_tokens={password_reset_tokens}, email_verification_tokens={email_verification_tokens}"
+        );
+
         Ok(PruneResult {
             access_tokens,
             password_reset_tokens,
