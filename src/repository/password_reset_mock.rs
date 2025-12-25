@@ -66,4 +66,14 @@ impl PasswordResetRepository for MockPasswordResetRepository {
         drop(tokens);
         Ok(())
     }
+
+    async fn prune_expired(&self) -> Result<u64, AuthError> {
+        let mut tokens = self.tokens.lock().unwrap();
+        let now = Utc::now();
+        let before_len = tokens.len();
+        tokens.retain(|t| t.expires_at > now);
+        let after_len = tokens.len();
+        drop(tokens);
+        Ok((before_len - after_len) as u64)
+    }
 }
