@@ -7,47 +7,18 @@ use crate::rate_limit::RateLimitStore;
 use std::sync::Arc;
 
 /// Configuration for password reset behavior.
-///
-/// # Example
-///
-/// ```rust
-/// use enclave::actions::ForgotPasswordConfig;
-/// use chrono::Duration;
-///
-/// // Default: 120 requests per minute
-/// let config = ForgotPasswordConfig::default();
-///
-/// // Custom: 60 requests per hour
-/// let config = ForgotPasswordConfig {
-///     password_reset_expiry: Duration::hours(1),
-///     rate_limit_requests: 60,
-///     rate_limit_window: Duration::hours(1),
-/// };
-/// ```
 #[derive(Debug, Clone)]
 pub struct ForgotPasswordConfig {
     /// How long password reset tokens remain valid.
     ///
     /// Default: 1 hour
     pub password_reset_expiry: Duration,
-
-    /// Maximum number of password reset requests allowed per window.
-    ///
-    /// Default: 120
-    pub rate_limit_requests: u32,
-
-    /// Time window for rate limiting.
-    ///
-    /// Default: 1 minute
-    pub rate_limit_window: Duration,
 }
 
 impl Default for ForgotPasswordConfig {
     fn default() -> Self {
         Self {
             password_reset_expiry: Duration::hours(1),
-            rate_limit_requests: 120,
-            rate_limit_window: Duration::minutes(1),
         }
     }
 }
@@ -57,8 +28,68 @@ impl ForgotPasswordConfig {
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             password_reset_expiry: tokens.password_reset_expiry,
-            ..Default::default()
         }
+    }
+}
+
+/// Configuration for rate limiting.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use enclave::actions::RateLimitConfig;
+/// use enclave::rate_limit::InMemoryStore;
+/// use chrono::Duration;
+/// use std::sync::Arc;
+///
+/// // Default: 120 requests per minute
+/// let config = RateLimitConfig::new(Arc::new(InMemoryStore::new()));
+///
+/// // Custom: 60 requests per hour
+/// let config = RateLimitConfig::new(Arc::new(InMemoryStore::new()))
+///     .max_requests(60)
+///     .window(Duration::hours(1));
+/// ```
+#[cfg(feature = "rate_limit")]
+#[derive(Clone)]
+pub struct RateLimitConfig {
+    /// The store to use for tracking rate limits.
+    pub store: Arc<dyn RateLimitStore>,
+
+    /// Maximum number of requests allowed per window.
+    ///
+    /// Default: 120
+    pub max_requests: u32,
+
+    /// Time window for rate limiting.
+    ///
+    /// Default: 1 minute
+    pub window: Duration,
+}
+
+#[cfg(feature = "rate_limit")]
+impl RateLimitConfig {
+    /// Creates a new rate limit config with default settings (120 requests per minute).
+    pub fn new(store: Arc<dyn RateLimitStore>) -> Self {
+        Self {
+            store,
+            max_requests: 120,
+            window: Duration::minutes(1),
+        }
+    }
+
+    /// Sets the maximum number of requests allowed per window.
+    #[must_use]
+    pub fn max_requests(mut self, max_requests: u32) -> Self {
+        self.max_requests = max_requests;
+        self
+    }
+
+    /// Sets the time window for rate limiting.
+    #[must_use]
+    pub fn window(mut self, window: Duration) -> Self {
+        self.window = window;
+        self
     }
 }
 
@@ -70,7 +101,7 @@ where
     user_repository: U,
     reset_repository: P,
     #[cfg(feature = "rate_limit")]
-    rate_limit_store: Option<Arc<dyn RateLimitStore>>,
+    rate_limit: Option<RateLimitConfig>,
     config: ForgotPasswordConfig,
 }
 
@@ -92,7 +123,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
             user_repository,
             reset_repository,
             #[cfg(feature = "rate_limit")]
-            rate_limit_store: None,
+            rate_limit: None,
             config,
         }
     }
@@ -107,44 +138,31 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
 
 #[cfg(feature = "rate_limit")]
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
-    /// Adds a rate limit store to enable rate limiting.
-    ///
-    /// Rate limiting uses the config values:
-    /// - `rate_limit_requests`: max requests allowed (default: 120)
-    /// - `rate_limit_window`: time window (default: 1 minute)
+    /// Adds rate limiting to the password reset action.
     ///
     /// # Example
     ///
     /// ```rust,ignore
+    /// use enclave::actions::{ForgotPasswordAction, RateLimitConfig};
     /// use enclave::rate_limit::InMemoryStore;
+    /// use chrono::Duration;
     /// use std::sync::Arc;
     ///
-    /// let store = Arc::new(InMemoryStore::new());
+    /// // Default: 120 requests per minute
     /// let action = ForgotPasswordAction::new(user_repo, reset_repo)
-    ///     .with_rate_limit_store(store);
+    ///     .with_rate_limit(RateLimitConfig::new(Arc::new(InMemoryStore::new())));
+    ///
+    /// // Custom: 5 requests per hour
+    /// let action = ForgotPasswordAction::new(user_repo, reset_repo)
+    ///     .with_rate_limit(
+    ///         RateLimitConfig::new(Arc::new(InMemoryStore::new()))
+    ///             .max_requests(5)
+    ///             .window(Duration::hours(1))
+    ///     );
     /// ```
     #[must_use]
-    pub fn with_rate_limit_store(mut self, store: Arc<dyn RateLimitStore>) -> Self {
-        self.rate_limit_store = Some(store);
-        self
-    }
-
-    /// Sets the rate limit (requests per window).
-    ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// use chrono::Duration;
-    ///
-    /// // 60 requests per hour
-    /// let action = ForgotPasswordAction::new(user_repo, reset_repo)
-    ///     .with_rate_limit_store(store)
-    ///     .rate_limit(60, Duration::hours(1));
-    /// ```
-    #[must_use]
-    pub fn rate_limit(mut self, requests: u32, window: Duration) -> Self {
-        self.config.rate_limit_requests = requests;
-        self.config.rate_limit_window = window;
+    pub fn with_rate_limit(mut self, config: RateLimitConfig) -> Self {
+        self.rate_limit = Some(config);
         self
     }
 
@@ -156,11 +174,6 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
     /// Returns `Ok(None)` if no user exists with that email (prevents user enumeration).
     /// Returns `Err(AuthError::TooManyAttempts)` if rate limited.
     /// Returns `Err` for other errors (database failures, etc.).
-    ///
-    /// # Rate Limiting
-    ///
-    /// When a rate limit store is configured, requests are limited to
-    /// `config.rate_limit_requests` per `config.rate_limit_window` (default: 120/minute per IP).
     ///
     /// # Security
     ///
@@ -175,13 +188,13 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         email: &str,
         rate_limit_key: &str,
     ) -> Result<Option<PasswordResetToken>, AuthError> {
-        if let Some(ref store) = self.rate_limit_store {
-            let window_secs = u64::try_from(self.config.rate_limit_window.num_seconds().max(1))
+        if let Some(ref rate_limit) = self.rate_limit {
+            let window_secs = u64::try_from(rate_limit.window.num_seconds().max(1))
                 .unwrap_or(60);
             let key = format!("forgot_password:{rate_limit_key}");
-            let info = store.increment(&key, window_secs).await?;
+            let info = rate_limit.store.increment(&key, window_secs).await?;
 
-            if info.attempts > self.config.rate_limit_requests {
+            if info.attempts > rate_limit.max_requests {
                 return Err(AuthError::TooManyAttempts);
             }
         }
@@ -313,10 +326,12 @@ mod tests {
             let user = User::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user);
 
-            let store = Arc::new(InMemoryStore::new());
+            let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()))
+                .max_requests(2)
+                .window(Duration::minutes(1));
+
             let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit_store(store)
-                .rate_limit(2, Duration::minutes(1));
+                .with_rate_limit(rate_limit);
 
             // First two requests should succeed
             let result1 = action.execute("user@example.com", "192.168.1.1").await;
@@ -339,10 +354,12 @@ mod tests {
             let user = User::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user);
 
-            let store = Arc::new(InMemoryStore::new());
+            let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()))
+                .max_requests(1)
+                .window(Duration::minutes(1));
+
             let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit_store(store)
-                .rate_limit(1, Duration::minutes(1));
+                .with_rate_limit(rate_limit);
 
             // First IP uses its quota
             let result1 = action.execute("user@example.com", "192.168.1.1").await;
@@ -361,13 +378,14 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let reset_repo = MockPasswordResetRepository::new();
 
-            let store = Arc::new(InMemoryStore::new());
+            let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()))
+                .max_requests(2)
+                .window(Duration::minutes(1));
+
             let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit_store(store)
-                .rate_limit(2, Duration::minutes(1));
+                .with_rate_limit(rate_limit);
 
             // Rate limiting should still apply even for non-existent users
-            // (prevents user enumeration via rate limit behavior)
             let result1 = action.execute("nonexistent@example.com", "192.168.1.1").await;
             assert!(result1.is_ok());
             assert!(result1.unwrap().is_none());
@@ -384,11 +402,12 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let reset_repo = MockPasswordResetRepository::new();
 
-            let store = Arc::new(InMemoryStore::new());
-            let action = ForgotPasswordAction::new(user_repo, reset_repo)
-                .with_rate_limit_store(store);
+            let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()));
 
-            // Default is 120 requests per minute - should not be rate limited
+            let action = ForgotPasswordAction::new(user_repo, reset_repo)
+                .with_rate_limit(rate_limit);
+
+            // Default is 120 requests per minute
             for _ in 0..120 {
                 let result = action.execute("test@example.com", "192.168.1.1").await;
                 assert!(result.is_ok());
@@ -400,14 +419,14 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_forgot_password_no_rate_limit_without_store() {
+        async fn test_forgot_password_no_rate_limit_without_config() {
             let user_repo = MockUserRepository::new();
             let reset_repo = MockPasswordResetRepository::new();
 
-            // No rate limit store configured
+            // No rate limit configured
             let action = ForgotPasswordAction::new(user_repo, reset_repo);
 
-            // Should not be rate limited even after many requests
+            // Should not be rate limited
             for _ in 0..200 {
                 let result = action.execute("test@example.com", "192.168.1.1").await;
                 assert!(result.is_ok());

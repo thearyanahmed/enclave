@@ -14,6 +14,8 @@ pub mod verify_email;
 pub use change_password::{ChangePasswordAction, ChangePasswordConfig, NoTokenRevocation};
 pub use delete_user::DeleteUserAction;
 pub use forgot_password::{ForgotPasswordAction, ForgotPasswordConfig};
+#[cfg(feature = "rate_limit")]
+pub use forgot_password::RateLimitConfig;
 pub use get_user::GetUserAction;
 pub use login::{LoginAction, LoginConfig};
 pub use logout::LogoutAction;
