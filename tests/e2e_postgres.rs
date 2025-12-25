@@ -19,13 +19,13 @@
 use chrono::{Duration, Utc};
 use enclave::SecretString;
 use enclave::actions::{LoginAction, SignupAction};
-#[cfg(feature = "_audit_log")]
+#[cfg(feature = "audit_log")]
 use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{
     PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
     PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,
 };
-#[cfg(feature = "_audit_log")]
+#[cfg(feature = "audit_log")]
 use enclave::{AuditEventType, AuditLogRepository};
 use enclave::{
     EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
@@ -311,8 +311,8 @@ async fn test_rate_limiter_repository() {
 
 #[tokio::test]
 #[serial]
-#[cfg(feature = "_audit_log")]
-async fn test_audit_log_repository() {
+#[cfg(feature = "audit_log")]
+async fn testaudit_log_repository() {
     let pool = setup_db().await;
     let user_repo = PostgresUserRepository::new(pool.clone());
     let audit_repo = PostgresAuditLogRepository::new(pool);

@@ -1,4 +1,4 @@
-#[cfg(feature = "_audit_log")]
+#[cfg(feature = "audit_log")]
 mod audit_log;
 mod email_verification;
 mod password_reset;
@@ -6,7 +6,7 @@ mod rate_limiter;
 mod token;
 mod user;
 
-#[cfg(feature = "_audit_log")]
+#[cfg(feature = "audit_log")]
 pub use audit_log::PostgresAuditLogRepository;
 pub use email_verification::PostgresEmailVerificationRepository;
 pub use password_reset::PostgresPasswordResetRepository;

@@ -35,8 +35,7 @@ tracing = ["dep:tracing"]
 jwt = ["jsonwebtoken"]
 mocks = []
 rate_limit = ["futures"]
-# Internal/unstable features - do not use
-_audit_log = []
+audit_log = []
 
 [dev-dependencies]
 actix-rt = "2"
