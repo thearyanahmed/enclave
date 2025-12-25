@@ -11,7 +11,7 @@ pub mod signup;
 pub mod update_user;
 pub mod verify_email;
 
-pub use change_password::ChangePasswordAction;
+pub use change_password::{ChangePasswordAction, ChangePasswordConfig, NoTokenRevocation};
 pub use delete_user::DeleteUserAction;
 pub use forgot_password::{ForgotPasswordAction, ForgotPasswordConfig};
 pub use get_user::GetUserAction;
