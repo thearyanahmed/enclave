@@ -101,6 +101,31 @@ where
     }
 }
 
+#[cfg(feature = "rate_limit")]
+pub async fn forgot_password<U, P>(
+    req: HttpRequest,
+    body: web::Json<ForgotPasswordRequest>,
+    user_repo: web::Data<U>,
+    reset_repo: web::Data<P>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    P: PasswordResetRepository + Clone + Send + Sync + 'static,
+{
+    let action =
+        ForgotPasswordAction::new(user_repo.get_ref().clone(), reset_repo.get_ref().clone());
+
+    let client_ip = crate::rate_limit::extract_client_ip(&req);
+
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email, &client_ip).await;
+
+    HttpResponse::Ok().json(MessageResponse {
+        message: "If the email exists, a password reset link has been sent".to_owned(),
+    })
+}
+
+#[cfg(not(feature = "rate_limit"))]
 pub async fn forgot_password<U, P>(
     body: web::Json<ForgotPasswordRequest>,
     user_repo: web::Data<U>,
