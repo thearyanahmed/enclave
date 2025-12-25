@@ -127,9 +127,17 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
                 }
 
                 let expires_at = Utc::now() + self.config.email_verification_expiry;
-                self.verification_repository
+                let token = self
+                    .verification_repository
                     .create_verification_token(user.id, expires_at)
-                    .await
+                    .await?;
+
+                log::info!(
+                    target: "enclave_auth",
+                    "msg=\"verification_sent\", user_id={user_id}"
+                );
+
+                Ok(token)
             }
             None => Err(AuthError::UserNotFound),
         }

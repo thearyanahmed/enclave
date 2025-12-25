@@ -70,9 +70,18 @@ impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
                 // Revoke old token and create new one
                 self.token_repository.revoke_token(current_token).await?;
                 let new_expires_at = Utc::now() + self.config.access_token_expiry;
-                self.token_repository
+                let new_token = self
+                    .token_repository
                     .create_token(token.user_id, new_expires_at)
-                    .await
+                    .await?;
+
+                let user_id = token.user_id;
+                log::info!(
+                    target: "enclave_auth",
+                    "msg=\"token_refreshed\", user_id={user_id}"
+                );
+
+                Ok(new_token)
             }
             None => Err(AuthError::TokenInvalid),
         }

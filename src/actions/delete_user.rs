@@ -14,7 +14,14 @@ impl<U: UserRepository> DeleteUserAction<U> {
         tracing::instrument(name = "delete_user", skip_all, err)
     )]
     pub async fn execute(&self, user_id: i32) -> Result<(), AuthError> {
-        self.user_repository.delete_user(user_id).await
+        self.user_repository.delete_user(user_id).await?;
+
+        log::info!(
+            target: "enclave_auth",
+            "msg=\"account_deleted\", user_id={user_id}"
+        );
+
+        Ok(())
     }
 }
 
