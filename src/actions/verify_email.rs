@@ -33,16 +33,20 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
                     return Err(AuthError::TokenExpired);
                 }
 
-                self.user_repository
-                    .verify_email(verification_token.user_id)
-                    .await?;
+                let user_id = verification_token.user_id;
+                self.user_repository.verify_email(user_id).await?;
                 self.verification_repository
                     .delete_verification_token(token)
                     .await?;
 
+                log::info!(
+                    target: "enclave_auth",
+                    "msg=\"email_verified\", user_id={user_id}"
+                );
+
                 Ok(())
             }
-            None => Err(AuthError::TokenInvalid),
+            None => Err(AuthError::TokenInvalid)
         }
     }
 }

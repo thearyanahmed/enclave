@@ -43,7 +43,10 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         .bind(expires_at)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"create_verification_token\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         Ok(EmailVerificationToken {
             token: SecretString::new(plain_token),
@@ -66,7 +69,10 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         .bind(&token_hash)
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_verification_token\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| EmailVerificationToken {
@@ -85,7 +91,10 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
             .bind(&token_hash)
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"delete_verification_token\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(())
     }
@@ -95,7 +104,10 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
         let result = sqlx::query("DELETE FROM email_verification_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"prune_expired_verification_tokens\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(result.rows_affected())
     }

@@ -225,9 +225,16 @@ impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
                     .validate(new_password.expose_secret())?;
 
                 let hashed = self.hasher.hash(new_password.expose_secret())?;
-                self.user_repository.update_password(user_id, &hashed).await
+                self.user_repository.update_password(user_id, &hashed).await?;
+
+                log::info!(
+                    target: "enclave_auth",
+                    "msg=\"password_changed\", user_id={user_id}"
+                );
+
+                Ok(())
             }
-            None => Err(AuthError::UserNotFound),
+            None => Err(AuthError::UserNotFound)
         }
     }
 }

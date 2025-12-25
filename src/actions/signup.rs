@@ -52,7 +52,15 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         }
 
         let hashed = self.hasher.hash(password.expose_secret())?;
-        self.repository.create_user(email, &hashed).await
+        let user = self.repository.create_user(email, &hashed).await?;
+
+        let user_id = user.id;
+        log::info!(
+            target: "enclave_auth",
+            "msg=\"signup_success\", user_id={user_id}"
+        );
+
+        Ok(user)
     }
 }
 

@@ -235,6 +235,12 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
                     .reset_repository
                     .create_reset_token(user.id, expires_at)
                     .await?;
+
+                log::info!(
+                    target: "enclave_auth",
+                    "msg=\"password_reset_requested\""
+                );
+
                 Ok(Some(token))
             }
             None => Ok(None),

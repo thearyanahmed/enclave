@@ -87,7 +87,10 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         .bind(metadata_json)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"log_event\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         Ok(AuditLog {
             id: row.id,
@@ -113,7 +116,10 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         .bind(i64::try_from(limit).unwrap_or(i64::MAX))
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"get_user_events\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         Ok(rows
             .into_iter()

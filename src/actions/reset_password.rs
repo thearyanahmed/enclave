@@ -82,9 +82,15 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
                     .await?;
                 self.reset_repository.delete_reset_token(token).await?;
 
+                let user_id = reset_token.user_id;
+                log::info!(
+                    target: "enclave_auth",
+                    "msg=\"password_reset_success\", user_id={user_id}"
+                );
+
                 Ok(())
             }
-            None => Err(AuthError::TokenInvalid),
+            None => Err(AuthError::TokenInvalid)
         }
     }
 }

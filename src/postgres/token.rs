@@ -73,7 +73,10 @@ impl TokenRepository for PostgresTokenRepository {
             options.abilities
         };
         let abilities_json = serde_json::to_value(&abilities)
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"serialization_error\", operation=\"create_token\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         let row: TokenRecord = sqlx::query_as(
             r"INSERT INTO access_tokens (token_hash, user_id, name, abilities, expires_at)
@@ -87,7 +90,10 @@ impl TokenRepository for PostgresTokenRepository {
         .bind(expires_at)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"create_token\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         Ok(row.into_access_token(plain_token))
     }
@@ -103,7 +109,10 @@ impl TokenRepository for PostgresTokenRepository {
         .bind(&token_hash)
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"find_token\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         Ok(row.map(|r| r.into_access_token(token.to_owned())))
     }
@@ -119,7 +128,10 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .bind(&token_hash)
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"revoke_token\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(())
     }
@@ -130,7 +142,10 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .bind(user_id)
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"revoke_all_user_tokens\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(())
     }
@@ -143,7 +158,10 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .bind(&token_hash)
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"touch_token\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(())
     }
@@ -153,7 +171,10 @@ impl StatefulTokenRepository for PostgresTokenRepository {
         let result = sqlx::query("DELETE FROM access_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"prune_expired_tokens\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(result.rows_affected())
     }

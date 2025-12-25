@@ -29,7 +29,14 @@ impl<T: StatefulTokenRepository> LogoutAction<T> {
         tracing::instrument(name = "logout", skip_all, err)
     )]
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
-        self.token_repository.revoke_token(token).await
+        self.token_repository.revoke_token(token).await?;
+
+        log::info!(
+            target: "enclave_auth",
+            "msg=\"logout_success\""
+        );
+
+        Ok(())
     }
 }
 

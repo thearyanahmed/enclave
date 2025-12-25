@@ -44,7 +44,10 @@ impl PostgresRateLimitStore {
         let result = sqlx::query("DELETE FROM rate_limits WHERE reset_at < NOW()")
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"cleanup_expired_rate_limits\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(result.rows_affected())
     }
@@ -84,7 +87,10 @@ impl RateLimitStore for PostgresRateLimitStore {
         .bind(&window_interval)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"rate_limit_increment\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
 
         Ok(RateLimitInfo {
             attempts: u32::try_from(row.attempts).unwrap_or(u32::MAX),
@@ -99,7 +105,10 @@ impl RateLimitStore for PostgresRateLimitStore {
                 .bind(key)
                 .fetch_optional(&self.pool)
                 .await
-                .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+                .map_err(|e| {
+                    log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"rate_limit_get\", error=\"{e}\"");
+                    AuthError::DatabaseError(e.to_string())
+                })?;
 
         Ok(row.map(|r| RateLimitInfo {
             attempts: u32::try_from(r.attempts).unwrap_or(u32::MAX),
@@ -113,7 +122,10 @@ impl RateLimitStore for PostgresRateLimitStore {
             .bind(key)
             .execute(&self.pool)
             .await
-            .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database_error\", operation=\"rate_limit_reset\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
 
         Ok(())
     }
