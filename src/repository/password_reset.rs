@@ -30,14 +30,24 @@ impl std::fmt::Debug for PasswordResetToken {
 
 /// Storage for password reset tokens.
 ///
-/// Tokens should be deleted after use or expiration. Consider running periodic cleanup.
+/// Tokens should be deleted after use or expiration. Use `prune_expired` for periodic cleanup.
 #[async_trait]
 pub trait PasswordResetRepository {
+    /// Creates a new password reset token for a user.
     async fn create_reset_token(
         &self,
         user_id: i32,
         expires_at: DateTime<Utc>,
     ) -> Result<PasswordResetToken, AuthError>;
+
+    /// Finds a password reset token by its plaintext value.
     async fn find_reset_token(&self, token: &str) -> Result<Option<PasswordResetToken>, AuthError>;
+
+    /// Deletes a password reset token after use.
     async fn delete_reset_token(&self, token: &str) -> Result<(), AuthError>;
+
+    /// Removes all expired password reset tokens.
+    ///
+    /// Returns the number of tokens deleted. Run this periodically to clean up the database.
+    async fn prune_expired(&self) -> Result<u64, AuthError>;
 }
