@@ -73,15 +73,16 @@ Enclave does **not** protect against:
 
 ### Rate Limiting
 
-| Endpoint | Default Limit | Lockout |
-|----------|---------------|---------|
-| Login | 5 failed attempts | 15 minutes |
-| Password reset | 5 requests | 1 hour |
-| Email verification | 5 requests | 1 hour |
+| Endpoint           | Default Limit     | Lockout    |
+| ------------------ | ----------------- | ---------- |
+| Login              | 5 failed attempts | 15 minutes |
+| Password reset     | 5 requests        | 1 hour     |
+| Email verification | 5 requests        | 1 hour     |
 
 ### Audit Logging
 
 Enable `audit_log` feature for security event tracking:
+
 - `Signup`, `LoginSuccess`, `LoginFailed`, `Logout`
 - `PasswordChanged`, `PasswordResetRequested`, `PasswordReset`
 - `EmailVerificationSent`, `EmailVerified`
