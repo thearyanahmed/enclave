@@ -118,27 +118,98 @@ impl From<crate::User> for UserResponse {
 
 impl From<crate::AuthError> for ErrorResponse {
     fn from(err: crate::AuthError) -> Self {
-        let code = match &err {
-            crate::AuthError::UserNotFound => "USER_NOT_FOUND",
-            crate::AuthError::UserAlreadyExists => "USER_ALREADY_EXISTS",
-            crate::AuthError::InvalidCredentials => "INVALID_CREDENTIALS",
-            crate::AuthError::InvalidEmail => "INVALID_EMAIL",
-            crate::AuthError::InvalidPassword => "INVALID_PASSWORD",
-            crate::AuthError::PasswordHashError => "PASSWORD_HASH_ERROR",
-            crate::AuthError::TokenExpired => "TOKEN_EXPIRED",
-            crate::AuthError::TokenInvalid => "TOKEN_INVALID",
-            crate::AuthError::EmailAlreadyVerified => "EMAIL_ALREADY_VERIFIED",
-            crate::AuthError::TooManyAttempts => "TOO_MANY_ATTEMPTS",
-            crate::AuthError::Validation(_) => "VALIDATION_ERROR",
-            crate::AuthError::DatabaseError(_) => "DATABASE_ERROR",
-            crate::AuthError::ConfigurationError(_) => "CONFIGURATION_ERROR",
+        // Map error to code and determine if message should be sanitized
+        let (code, sanitized_message) = match &err {
+            crate::AuthError::UserNotFound => ("USER_NOT_FOUND", None),
+            crate::AuthError::UserAlreadyExists => ("USER_ALREADY_EXISTS", None),
+            crate::AuthError::InvalidCredentials => ("INVALID_CREDENTIALS", None),
+            crate::AuthError::InvalidEmail => ("INVALID_EMAIL", None),
+            crate::AuthError::InvalidPassword => ("INVALID_PASSWORD", None),
+            crate::AuthError::PasswordHashError => ("PASSWORD_HASH_ERROR", None),
+            crate::AuthError::TokenExpired => ("TOKEN_EXPIRED", None),
+            crate::AuthError::TokenInvalid => ("TOKEN_INVALID", None),
+            crate::AuthError::EmailAlreadyVerified => ("EMAIL_ALREADY_VERIFIED", None),
+            crate::AuthError::TooManyAttempts => ("TOO_MANY_ATTEMPTS", None),
+            crate::AuthError::Validation(_) => ("VALIDATION_ERROR", None),
+            // Sanitize internal errors to prevent information leakage
+            crate::AuthError::DatabaseError(_) => {
+                ("DATABASE_ERROR", Some("An internal error occurred"))
+            }
+            crate::AuthError::ConfigurationError(_) => {
+                ("CONFIGURATION_ERROR", Some("An internal error occurred"))
+            }
             #[allow(deprecated)]
-            crate::AuthError::Other(_) => "UNKNOWN_ERROR",
+            crate::AuthError::Other(_) => ("UNKNOWN_ERROR", Some("An internal error occurred")),
         };
 
         ErrorResponse {
-            error: err.to_string(),
+            error: sanitized_message.map_or_else(|| err.to_string(), ToOwned::to_owned),
             code: code.to_owned(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_database_error_is_sanitized() {
+        let err = crate::AuthError::DatabaseError(
+            "ERROR: relation \"users\" does not exist".to_owned(),
+        );
+        let response: ErrorResponse = err.into();
+
+        assert_eq!(response.code, "DATABASE_ERROR");
+        assert_eq!(response.error, "An internal error occurred");
+        assert!(!response.error.contains("users"));
+        assert!(!response.error.contains("relation"));
+    }
+
+    #[test]
+    fn test_configuration_error_is_sanitized() {
+        let err =
+            crate::AuthError::ConfigurationError("secret key: abc123xyz".to_owned());
+        let response: ErrorResponse = err.into();
+
+        assert_eq!(response.code, "CONFIGURATION_ERROR");
+        assert_eq!(response.error, "An internal error occurred");
+        assert!(!response.error.contains("abc123xyz"));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_other_error_is_sanitized() {
+        let err = crate::AuthError::Other("internal stack trace here".to_owned());
+        let response: ErrorResponse = err.into();
+
+        assert_eq!(response.code, "UNKNOWN_ERROR");
+        assert_eq!(response.error, "An internal error occurred");
+        assert!(!response.error.contains("stack trace"));
+    }
+
+    #[test]
+    fn test_user_facing_errors_preserve_message() {
+        let test_cases = [
+            (crate::AuthError::UserNotFound, "USER_NOT_FOUND", "User not found"),
+            (
+                crate::AuthError::UserAlreadyExists,
+                "USER_ALREADY_EXISTS",
+                "User already exists",
+            ),
+            (
+                crate::AuthError::InvalidCredentials,
+                "INVALID_CREDENTIALS",
+                "Invalid email or password",
+            ),
+            (crate::AuthError::TokenExpired, "TOKEN_EXPIRED", "Token has expired"),
+            (crate::AuthError::TokenInvalid, "TOKEN_INVALID", "Invalid token"),
+        ];
+
+        for (err, expected_code, expected_message) in test_cases {
+            let response: ErrorResponse = err.into();
+            assert_eq!(response.code, expected_code);
+            assert_eq!(response.error, expected_message);
         }
     }
 }
