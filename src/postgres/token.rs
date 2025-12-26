@@ -22,7 +22,6 @@ impl PostgresTokenRepository {
 struct TokenRecord {
     user_id: i32,
     name: Option<String>,
-    abilities: serde_json::Value,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
     last_used_at: Option<DateTime<Utc>>,
@@ -30,14 +29,10 @@ struct TokenRecord {
 
 impl TokenRecord {
     fn into_access_token(self, plain_token: String) -> AccessToken {
-        let abilities: Vec<String> =
-            serde_json::from_value(self.abilities).unwrap_or_else(|_| vec!["*".to_owned()]);
-
         AccessToken {
             token: SecretString::new(plain_token),
             user_id: self.user_id,
             name: self.name,
-            abilities,
             expires_at: self.expires_at,
             created_at: self.created_at,
             last_used_at: self.last_used_at,
@@ -67,26 +62,14 @@ impl TokenRepository for PostgresTokenRepository {
         let plain_token = generate_token_default();
         let token_hash = hash_token(&plain_token);
 
-        let abilities = if options.abilities.is_empty() {
-            vec!["*".to_owned()]
-        } else {
-            options.abilities
-        };
-        let abilities_json = serde_json::to_value(&abilities)
-            .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"serialization error\", operation=\"create_token\", error=\"{e}\"");
-                AuthError::DatabaseError(e.to_string())
-            })?;
-
         let row: TokenRecord = sqlx::query_as(
-            r"INSERT INTO access_tokens (token_hash, user_id, name, abilities, expires_at)
-               VALUES ($1, $2, $3, $4, $5)
-               RETURNING user_id, name, abilities, expires_at, created_at, last_used_at",
+            r"INSERT INTO access_tokens (token_hash, user_id, name, expires_at)
+               VALUES ($1, $2, $3, $4)
+               RETURNING user_id, name, expires_at, created_at, last_used_at",
         )
         .bind(&token_hash)
         .bind(user_id)
         .bind(&options.name)
-        .bind(&abilities_json)
         .bind(expires_at)
         .fetch_one(&self.pool)
         .await
@@ -103,7 +86,7 @@ impl TokenRepository for PostgresTokenRepository {
         let token_hash = hash_token(token);
 
         let row: Option<TokenRecord> = sqlx::query_as(
-            r"SELECT user_id, name, abilities, expires_at, created_at, last_used_at
+            r"SELECT user_id, name, expires_at, created_at, last_used_at
                FROM access_tokens WHERE token_hash = $1",
         )
         .bind(&token_hash)

@@ -44,17 +44,10 @@ impl TokenRepository for MockTokenRepository {
         let hashed_token = hash_token(&plain_token);
         let now = Utc::now();
 
-        let abilities = if options.abilities.is_empty() {
-            vec!["*".to_owned()]
-        } else {
-            options.abilities.clone()
-        };
-
         let stored_token = AccessToken {
             token: SecretString::new(hashed_token),
             user_id,
             name: options.name.clone(),
-            abilities: abilities.clone(),
             expires_at,
             created_at: now,
             last_used_at: None,
@@ -68,7 +61,6 @@ impl TokenRepository for MockTokenRepository {
             token: SecretString::new(plain_token),
             user_id,
             name: options.name,
-            abilities,
             expires_at,
             created_at: now,
             last_used_at: None,

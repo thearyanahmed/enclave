@@ -174,7 +174,6 @@ impl crate::TokenRepository for MockTokenRepo {
             user_id,
             token: SecretString::new("unused"),
             name: None,
-            abilities: vec!["*".to_owned()],
             expires_at,
             created_at: Utc::now(),
             last_used_at: None,
@@ -191,11 +190,6 @@ impl crate::TokenRepository for MockTokenRepo {
             user_id,
             token: SecretString::new("unused"),
             name: options.name,
-            abilities: if options.abilities.is_empty() {
-                vec!["*".to_owned()]
-            } else {
-                options.abilities
-            },
             expires_at,
             created_at: Utc::now(),
             last_used_at: None,

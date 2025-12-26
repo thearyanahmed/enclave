@@ -50,17 +50,10 @@ impl TokenRepository for JwtTokenProvider {
         let now = Utc::now();
         let expires_at = now + self.service.expiry();
 
-        let abilities = if options.abilities.is_empty() {
-            vec!["*".to_owned()]
-        } else {
-            options.abilities
-        };
-
         Ok(AccessToken {
             token: SecretString::new(token),
             user_id,
             name: options.name,
-            abilities,
             expires_at,
             created_at: now,
             last_used_at: None,
@@ -80,7 +73,6 @@ impl TokenRepository for JwtTokenProvider {
                     token: SecretString::new(token),
                     user_id,
                     name: None,
-                    abilities: vec!["*".to_owned()],
                     expires_at,
                     created_at,
                     last_used_at: None,

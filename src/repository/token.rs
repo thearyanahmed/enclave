@@ -16,8 +16,6 @@ pub struct AccessToken {
     pub user_id: i32,
     /// Optional name for the token (e.g., "mobile-app", "cli").
     pub name: Option<String>,
-    /// Token abilities/scopes. Default is `["*"]` (all abilities).
-    pub abilities: Vec<String>,
     /// When the token expires.
     pub expires_at: DateTime<Utc>,
     /// When the token was created.
@@ -32,28 +30,10 @@ impl std::fmt::Debug for AccessToken {
             .field("token", &"[REDACTED]")
             .field("user_id", &self.user_id)
             .field("name", &self.name)
-            .field("abilities", &self.abilities)
             .field("expires_at", &self.expires_at)
             .field("created_at", &self.created_at)
             .field("last_used_at", &self.last_used_at)
             .finish()
-    }
-}
-
-impl AccessToken {
-    /// Checks if the token has a specific ability.
-    pub fn has_ability(&self, ability: &str) -> bool {
-        self.abilities.contains(&"*".to_owned()) || self.abilities.contains(&ability.to_owned())
-    }
-
-    /// Checks if the token has all of the specified abilities.
-    pub fn has_all_abilities(&self, abilities: &[&str]) -> bool {
-        abilities.iter().all(|a| self.has_ability(a))
-    }
-
-    /// Checks if the token has any of the specified abilities.
-    pub fn has_any_ability(&self, abilities: &[&str]) -> bool {
-        abilities.iter().any(|a| self.has_ability(a))
     }
 }
 
@@ -62,8 +42,6 @@ impl AccessToken {
 pub struct CreateTokenOptions {
     /// Optional name for the token.
     pub name: Option<String>,
-    /// Token abilities. Defaults to `["*"]` if empty.
-    pub abilities: Vec<String>,
 }
 
 /// Storage abstraction for access tokens.
@@ -84,7 +62,7 @@ pub trait TokenRepository: Send + Sync {
         expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError>;
 
-    /// Creates a new token with custom options (name, abilities).
+    /// Creates a new token with custom options.
     async fn create_token_with_options(
         &self,
         user_id: i32,
