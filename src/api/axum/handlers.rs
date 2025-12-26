@@ -30,7 +30,7 @@ pub async fn register<U, T, R, P, E>(
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
-    T: TokenRepository + Clone + Send + Sync + 'static,
+    T: Clone + Send + Sync + 'static,
     R: Clone + Send + Sync + 'static,
     P: Clone + Send + Sync + 'static,
     E: Clone + Send + Sync + 'static,
@@ -291,6 +291,7 @@ where
 ///
 /// GET /me
 pub async fn get_current_user<U, T, R, P, E>(
+    _state: State<AppState<U, T, R, P, E>>,
     user: AuthenticatedUser<U, T>,
 ) -> impl IntoResponse
 where
@@ -379,6 +380,7 @@ where
 #[cfg(all(feature = "magic_link", feature = "rate_limit"))]
 pub async fn request_magic_link<U, T, R, P, E, M>(
     State(state): State<AppState<U, T, R, P, E>>,
+    magic_link_repo: axum::Extension<M>,
     headers: axum::http::HeaderMap,
     Json(body): Json<crate::api::MagicLinkRequest>,
 ) -> impl IntoResponse
@@ -390,9 +392,13 @@ where
     E: Clone + Send + Sync + 'static,
     M: crate::MagicLinkRepository + Clone + Send + Sync + 'static,
 {
-    // Magic link repo would need to be added to AppState or passed differently
-    // For now, this is a placeholder showing the pattern
-    let _ = (state, headers, body);
+    use crate::actions::RequestMagicLinkAction;
+
+    let action = RequestMagicLinkAction::new(state.user_repo, magic_link_repo.0);
+    let client_ip = extract_client_ip(&headers);
+
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email, &client_ip).await;
 
     (
         StatusCode::OK,
@@ -408,6 +414,7 @@ where
 #[cfg(all(feature = "magic_link", not(feature = "rate_limit")))]
 pub async fn request_magic_link<U, T, R, P, E, M>(
     State(state): State<AppState<U, T, R, P, E>>,
+    magic_link_repo: axum::Extension<M>,
     Json(body): Json<crate::api::MagicLinkRequest>,
 ) -> impl IntoResponse
 where
@@ -418,9 +425,12 @@ where
     E: Clone + Send + Sync + 'static,
     M: crate::MagicLinkRepository + Clone + Send + Sync + 'static,
 {
-    // Magic link repo would need to be added to AppState or passed differently
-    // For now, this is a placeholder showing the pattern
-    let _ = (state, body);
+    use crate::actions::RequestMagicLinkAction;
+
+    let action = RequestMagicLinkAction::new(state.user_repo, magic_link_repo.0);
+
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email).await;
 
     (
         StatusCode::OK,
@@ -436,6 +446,7 @@ where
 #[cfg(feature = "magic_link")]
 pub async fn verify_magic_link<U, T, R, P, E, M>(
     State(state): State<AppState<U, T, R, P, E>>,
+    magic_link_repo: axum::Extension<M>,
     Json(body): Json<crate::api::VerifyMagicLinkRequest>,
 ) -> impl IntoResponse
 where
@@ -446,16 +457,26 @@ where
     E: Clone + Send + Sync + 'static,
     M: crate::MagicLinkRepository + Clone + Send + Sync + 'static,
 {
-    // Magic link repo would need to be added to AppState or passed differently
-    // For now, this is a placeholder showing the pattern
-    let _ = (state, body);
+    use crate::actions::VerifyMagicLinkAction;
 
-    (
-        StatusCode::BAD_REQUEST,
-        Json(ErrorResponse {
-            error: "magic link verification not implemented".to_owned(),
-        }),
-    )
+    let action =
+        VerifyMagicLinkAction::new(state.user_repo, state.token_repo, magic_link_repo.0);
+
+    match action.execute(&body.token).await {
+        Ok((user, token)) => (
+            StatusCode::OK,
+            Json(AuthResponse {
+                user: UserResponse::from(user),
+                token: token.token,
+                expires_at: token.expires_at,
+            }),
+        )
+            .into_response(),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            (StatusCode::BAD_REQUEST, Json(error_response)).into_response()
+        }
+    }
 }
 
 // =============================================================================
