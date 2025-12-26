@@ -790,6 +790,7 @@ dependencies = [
  "futures",
  "hex",
  "hmac",
+ "http-body-util",
  "jsonwebtoken",
  "log",
  "password-hash",
