@@ -40,6 +40,10 @@ pub use repository::AuditLogRepository;
 pub use repository::EmailVerificationRepository;
 pub use repository::EmailVerificationToken;
 pub use repository::LoginAttempt;
+#[cfg(feature = "magic_link")]
+pub use repository::MagicLinkRepository;
+#[cfg(feature = "magic_link")]
+pub use repository::MagicLinkToken;
 pub use repository::PasswordResetRepository;
 pub use repository::PasswordResetToken;
 pub use repository::RateLimiterRepository;
@@ -52,6 +56,8 @@ pub use repository::UserRepository;
 pub use repository::MockAuditLogRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use repository::MockEmailVerificationRepository;
+#[cfg(all(feature = "magic_link", any(test, feature = "mocks")))]
+pub use repository::MockMagicLinkRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use repository::MockPasswordResetRepository;
 #[cfg(any(test, feature = "mocks"))]
