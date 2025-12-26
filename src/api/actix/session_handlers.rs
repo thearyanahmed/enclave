@@ -176,7 +176,6 @@ impl crate::TokenRepository for MockTokenRepo {
             name: None,
             expires_at,
             created_at: Utc::now(),
-            last_used_at: None,
         })
     }
 
@@ -192,7 +191,6 @@ impl crate::TokenRepository for MockTokenRepo {
             name: options.name,
             expires_at,
             created_at: Utc::now(),
-            last_used_at: None,
         })
     }
 

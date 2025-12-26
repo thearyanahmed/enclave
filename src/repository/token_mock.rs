@@ -50,7 +50,6 @@ impl TokenRepository for MockTokenRepository {
             name: options.name.clone(),
             expires_at,
             created_at: now,
-            last_used_at: None,
         };
 
         let mut tokens = self.tokens.lock().unwrap();
@@ -63,7 +62,6 @@ impl TokenRepository for MockTokenRepository {
             name: options.name,
             expires_at,
             created_at: now,
-            last_used_at: None,
         })
     }
 
@@ -90,19 +88,6 @@ impl StatefulTokenRepository for MockTokenRepository {
     async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.user_id != user_id);
-        drop(tokens);
-        Ok(())
-    }
-
-    async fn touch_token(&self, token: &str) -> Result<(), AuthError> {
-        let hashed = hash_token(token);
-        let mut tokens = self.tokens.lock().unwrap();
-        if let Some(t) = tokens
-            .iter_mut()
-            .find(|t| t.token.expose_secret() == hashed)
-        {
-            t.last_used_at = Some(Utc::now());
-        }
         drop(tokens);
         Ok(())
     }

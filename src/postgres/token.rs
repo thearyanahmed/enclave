@@ -24,7 +24,6 @@ struct TokenRecord {
     name: Option<String>,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
-    last_used_at: Option<DateTime<Utc>>,
 }
 
 impl TokenRecord {
@@ -35,7 +34,6 @@ impl TokenRecord {
             name: self.name,
             expires_at: self.expires_at,
             created_at: self.created_at,
-            last_used_at: self.last_used_at,
         }
     }
 }
@@ -65,7 +63,7 @@ impl TokenRepository for PostgresTokenRepository {
         let row: TokenRecord = sqlx::query_as(
             r"INSERT INTO access_tokens (token_hash, user_id, name, expires_at)
                VALUES ($1, $2, $3, $4)
-               RETURNING user_id, name, expires_at, created_at, last_used_at",
+               RETURNING user_id, name, expires_at, created_at",
         )
         .bind(&token_hash)
         .bind(user_id)
@@ -86,7 +84,7 @@ impl TokenRepository for PostgresTokenRepository {
         let token_hash = hash_token(token);
 
         let row: Option<TokenRecord> = sqlx::query_as(
-            r"SELECT user_id, name, expires_at, created_at, last_used_at
+            r"SELECT user_id, name, expires_at, created_at
                FROM access_tokens WHERE token_hash = $1",
         )
         .bind(&token_hash)
@@ -127,22 +125,6 @@ impl StatefulTokenRepository for PostgresTokenRepository {
             .await
             .map_err(|e| {
                 log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"revoke_all_user_tokens\", error=\"{e}\"");
-                AuthError::DatabaseError(e.to_string())
-            })?;
-
-        Ok(())
-    }
-
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, token), err))]
-    async fn touch_token(&self, token: &str) -> Result<(), AuthError> {
-        let token_hash = hash_token(token);
-
-        sqlx::query("UPDATE access_tokens SET last_used_at = NOW() WHERE token_hash = $1")
-            .bind(&token_hash)
-            .execute(&self.pool)
-            .await
-            .map_err(|e| {
-                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"touch_token\", error=\"{e}\"");
                 AuthError::DatabaseError(e.to_string())
             })?;
 

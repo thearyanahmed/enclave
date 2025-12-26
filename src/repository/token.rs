@@ -20,8 +20,6 @@ pub struct AccessToken {
     pub expires_at: DateTime<Utc>,
     /// When the token was created.
     pub created_at: DateTime<Utc>,
-    /// When the token was last used (updated on each request).
-    pub last_used_at: Option<DateTime<Utc>>,
 }
 
 impl std::fmt::Debug for AccessToken {
@@ -32,7 +30,6 @@ impl std::fmt::Debug for AccessToken {
             .field("name", &self.name)
             .field("expires_at", &self.expires_at)
             .field("created_at", &self.created_at)
-            .field("last_used_at", &self.last_used_at)
             .finish()
     }
 }
@@ -86,9 +83,6 @@ pub trait StatefulTokenRepository: TokenRepository {
 
     /// Revokes all tokens for a user (e.g., "logout from all devices").
     async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError>;
-
-    /// Updates the `last_used_at` timestamp for a token.
-    async fn touch_token(&self, token: &str) -> Result<(), AuthError>;
 
     /// Removes all expired tokens from storage.
     /// Returns the number of tokens removed.

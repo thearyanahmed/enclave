@@ -56,7 +56,6 @@ impl TokenRepository for JwtTokenProvider {
             name: options.name,
             expires_at,
             created_at: now,
-            last_used_at: None,
         })
     }
 
@@ -75,7 +74,6 @@ impl TokenRepository for JwtTokenProvider {
                     name: None,
                     expires_at,
                     created_at,
-                    last_used_at: None,
                 }))
             }
             Err(AuthError::TokenExpired) => Err(AuthError::TokenExpired),
