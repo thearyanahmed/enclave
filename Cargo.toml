@@ -42,7 +42,7 @@ rate_limit = ["futures"]
 audit_log = []
 sessions = ["actix", "hmac"]
 magic_link = []
-axum_support = ["axum", "tower", "tower-http"]
+axum_api = ["axum", "tower", "tower-http"]
 
 [dev-dependencies]
 actix-rt = "2"
@@ -134,8 +134,8 @@ required-features = ["sessions", "mocks"]
 
 [[example]]
 name = "axum_jwt_server"
-required-features = ["axum_support", "jwt", "mocks"]
+required-features = ["axum_api", "jwt", "mocks"]
 
 [[example]]
 name = "axum_postgres_server"
-required-features = ["axum_support", "sqlx_postgres"]
+required-features = ["axum_api", "sqlx_postgres"]
