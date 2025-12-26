@@ -60,6 +60,7 @@ Expected tables:
 - `password_reset_tokens`
 - `email_verification_tokens`
 - `login_attempts`
+- `magic_link_tokens` (if magic_link feature enabled)
 - `audit_logs` (if audit_log feature enabled)
 
 ### 3. Create Indexes (Optional)
@@ -155,6 +156,7 @@ SELECT cron.schedule('prune-tokens', '0 * * * *', $$
   DELETE FROM access_tokens WHERE expires_at < NOW();
   DELETE FROM password_reset_tokens WHERE expires_at < NOW();
   DELETE FROM email_verification_tokens WHERE expires_at < NOW();
+  DELETE FROM magic_link_tokens WHERE expires_at < NOW();
   DELETE FROM login_attempts WHERE attempted_at < NOW() - INTERVAL '1 day';
 $$);
 ```

@@ -6,6 +6,7 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 0.3.x   | :white_check_mark: |
 | 0.2.x   | :white_check_mark: |
 | < 0.2   | :x:                |
 
@@ -78,6 +79,7 @@ Enclave does **not** protect against:
 | Login              | 5 failed attempts | 15 minutes |
 | Password reset     | 5 requests        | 1 hour     |
 | Email verification | 5 requests        | 1 hour     |
+| Magic link request | 5 requests        | 1 hour     |
 
 ### Audit Logging
 
@@ -153,13 +155,21 @@ let config = AuthConfig::strict(); // 3 attempts, 30 min lockout
 
 1. **HS256 only**: JWT uses symmetric signing. Asymmetric (RS256) not yet supported.
 2. **No MFA/2FA**: Multi-factor authentication planned for v0.5.
-3. **No session management**: Token-based only; no server-side session store.
-4. **No OAuth2/Social login**: Use dedicated OAuth2 libraries.
-5. **Single token type per user**: No device-specific token tracking yet.
+3. **No OAuth2/Social login**: Use dedicated OAuth2 libraries.
+4. **Single token type per user**: No device-specific token tracking yet.
 
 ---
 
 ## Security Changelog
+
+### v0.3.0
+
+- Added cookie-based session authentication (`sessions` feature)
+- Added magic link passwordless authentication (`magic_link` feature)
+- Added rate limiting to magic link request endpoint
+- Added structured logging for security events
+- Added security-focused test suite (27 tests)
+- Sanitized database errors in HTTP responses
 
 ### v0.2.0
 
