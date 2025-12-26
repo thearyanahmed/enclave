@@ -98,7 +98,7 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 pub mod actions;
-#[cfg(feature = "actix")]
+#[cfg(any(feature = "actix", feature = "axum_support"))]
 pub mod api;
 pub mod config;
 pub mod crypto;
