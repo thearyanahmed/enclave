@@ -150,9 +150,7 @@ mod tests {
             .unwrap();
 
         let action = VerifyMagicLinkAction::new(user_repo, token_repo, magic_link_repo.clone());
-        let result = action
-            .execute(magic_link_token.token.expose_secret())
-            .await;
+        let result = action.execute(magic_link_token.token.expose_secret()).await;
 
         assert!(result.is_ok());
         let (returned_user, access_token) = result.unwrap();
@@ -199,9 +197,7 @@ mod tests {
             .unwrap();
 
         let action = VerifyMagicLinkAction::new(user_repo, token_repo, magic_link_repo.clone());
-        let result = action
-            .execute(magic_link_token.token.expose_secret())
-            .await;
+        let result = action.execute(magic_link_token.token.expose_secret()).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenInvalid);
@@ -228,9 +224,7 @@ mod tests {
             .unwrap();
 
         let action = VerifyMagicLinkAction::new(user_repo, token_repo, magic_link_repo);
-        let result = action
-            .execute(magic_link_token.token.expose_secret())
-            .await;
+        let result = action.execute(magic_link_token.token.expose_secret()).await;
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), AuthError::TokenInvalid);

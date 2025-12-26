@@ -41,10 +41,8 @@ pub trait MagicLinkRepository {
     ) -> Result<MagicLinkToken, AuthError>;
 
     /// Finds a magic link token by its plaintext value.
-    async fn find_magic_link_token(
-        &self,
-        token: &str,
-    ) -> Result<Option<MagicLinkToken>, AuthError>;
+    async fn find_magic_link_token(&self, token: &str)
+    -> Result<Option<MagicLinkToken>, AuthError>;
 
     /// Deletes a magic link token after use.
     async fn delete_magic_link_token(&self, token: &str) -> Result<(), AuthError>;

@@ -1,11 +1,11 @@
 use actix_web::web;
 
+#[cfg(feature = "magic_link")]
+use crate::MagicLinkRepository;
 use crate::{
     EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     StatefulTokenRepository, TokenRepository, UserRepository,
 };
-#[cfg(feature = "magic_link")]
-use crate::MagicLinkRepository;
 
 use super::handlers;
 
