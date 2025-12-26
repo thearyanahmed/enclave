@@ -3,7 +3,7 @@
 //! Suitable for development, testing, and single-instance deployments.
 
 use std::collections::HashMap;
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -23,15 +23,16 @@ use super::{Session, SessionData};
 ///
 /// Sessions are lost when the process restarts.
 /// For persistent storage, use [`FileSessionRepository`](super::FileSessionRepository).
+#[derive(Clone)]
 pub struct InMemorySessionRepository {
-    sessions: RwLock<HashMap<String, SessionData>>,
+    sessions: Arc<RwLock<HashMap<String, SessionData>>>,
 }
 
 impl InMemorySessionRepository {
     /// Creates a new in-memory session repository.
     pub fn new() -> Self {
         Self {
-            sessions: RwLock::new(HashMap::new()),
+            sessions: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 

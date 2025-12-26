@@ -123,3 +123,7 @@ required-features = ["actix", "jwt", "mocks"]
 [[example]]
 name = "postgres_server"
 required-features = ["actix", "sqlx_postgres"]
+
+[[example]]
+name = "session_server"
+required-features = ["sessions", "mocks"]
