@@ -6,11 +6,11 @@
 #![cfg(all(feature = "actix", feature = "jwt", feature = "mocks"))]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
-use actix_web::{http::StatusCode, test as actix_test, web, App};
+use actix_web::{App, http::StatusCode, test as actix_test, web};
 use chrono::{Duration, Utc};
 
 use enclave::api::actix::stateless_auth_routes;
-use enclave::crypto::{generate_token, hash_token, Argon2Hasher, PasswordHasher};
+use enclave::crypto::{Argon2Hasher, PasswordHasher, generate_token, hash_token};
 use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 use enclave::validators::PasswordPolicy;
 use enclave::{
@@ -374,11 +374,13 @@ async fn login_invalid_email_returns_generic_error() {
 
     let body: serde_json::Value = actix_test::read_body_json(resp).await;
     // Error should be generic, not revealing that email doesn't exist
-    assert!(body["error"]
-        .as_str()
-        .unwrap()
-        .to_lowercase()
-        .contains("invalid"));
+    assert!(
+        body["error"]
+            .as_str()
+            .unwrap()
+            .to_lowercase()
+            .contains("invalid")
+    );
 }
 
 #[actix_rt::test]
@@ -428,11 +430,13 @@ async fn login_wrong_password_returns_same_error() {
 
     let body: serde_json::Value = actix_test::read_body_json(resp).await;
     // Same generic error as non-existent email
-    assert!(body["error"]
-        .as_str()
-        .unwrap()
-        .to_lowercase()
-        .contains("invalid"));
+    assert!(
+        body["error"]
+            .as_str()
+            .unwrap()
+            .to_lowercase()
+            .contains("invalid")
+    );
 }
 
 // =============================================================================
@@ -552,7 +556,9 @@ async fn revoked_tokens_cannot_be_used() {
     assert!(found.is_some());
 
     // Revoke the token
-    repo.revoke_token(token.token.expose_secret()).await.unwrap();
+    repo.revoke_token(token.token.expose_secret())
+        .await
+        .unwrap();
 
     // Token should no longer be findable
     let found = repo.find_token(token.token.expose_secret()).await.unwrap();
@@ -570,29 +576,33 @@ async fn revoke_all_user_tokens_works() {
     let token2 = repo.create_token(user_id, expires_at).await.unwrap();
 
     // Both should be findable
-    assert!(repo
-        .find_token(token1.token.expose_secret())
-        .await
-        .unwrap()
-        .is_some());
-    assert!(repo
-        .find_token(token2.token.expose_secret())
-        .await
-        .unwrap()
-        .is_some());
+    assert!(
+        repo.find_token(token1.token.expose_secret())
+            .await
+            .unwrap()
+            .is_some()
+    );
+    assert!(
+        repo.find_token(token2.token.expose_secret())
+            .await
+            .unwrap()
+            .is_some()
+    );
 
     // Revoke all tokens for the user
     repo.revoke_all_user_tokens(user_id).await.unwrap();
 
     // Neither should be findable now
-    assert!(repo
-        .find_token(token1.token.expose_secret())
-        .await
-        .unwrap()
-        .is_none());
-    assert!(repo
-        .find_token(token2.token.expose_secret())
-        .await
-        .unwrap()
-        .is_none());
+    assert!(
+        repo.find_token(token1.token.expose_secret())
+            .await
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        repo.find_token(token2.token.expose_secret())
+            .await
+            .unwrap()
+            .is_none()
+    );
 }
