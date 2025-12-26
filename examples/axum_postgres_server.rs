@@ -27,7 +27,7 @@
 //!     -d '{"email": "user@example.com", "password": "securepassword"}'
 
 use axum::Router;
-use enclave::api::axum::{auth_routes, AppState};
+use enclave::api::axum::{AppState, auth_routes};
 use enclave::postgres::{
     PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
     PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,

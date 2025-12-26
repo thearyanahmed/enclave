@@ -6,13 +6,13 @@
 #![cfg(all(feature = "axum_api", feature = "mocks"))]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
+use axum::Router;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use axum::Router;
 use http_body_util::BodyExt;
 use tower::ServiceExt;
 
-use enclave::api::axum::{auth_routes, AppState};
+use enclave::api::axum::{AppState, auth_routes};
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,
     MockTokenRepository, MockUserRepository,

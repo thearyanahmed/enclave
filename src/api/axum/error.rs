@@ -1,11 +1,11 @@
 //! Error handling for Axum API layer.
 
+use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 
-use crate::api::ErrorResponse;
 use crate::AuthError;
+use crate::api::ErrorResponse;
 
 /// Application error wrapper for Axum responses.
 ///

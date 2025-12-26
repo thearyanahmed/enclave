@@ -32,7 +32,7 @@
 //!     -H "Authorization: Bearer <access_token>"
 
 use axum::Router;
-use enclave::api::axum::{stateless_auth_routes, AppState};
+use enclave::api::axum::{AppState, stateless_auth_routes};
 use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,

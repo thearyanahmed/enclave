@@ -1,7 +1,7 @@
 //! Route configuration for Axum authentication endpoints.
 
-use axum::routing::{get, post, put};
 use axum::Router;
+use axum::routing::{get, post, put};
 
 #[cfg(feature = "magic_link")]
 use crate::MagicLinkRepository;
@@ -46,9 +46,7 @@ where
     P: PasswordResetRepository + Clone + Send + Sync + 'static,
     E: EmailVerificationRepository + Clone + Send + Sync + 'static,
 {
-    Router::new()
-        .merge(public_routes())
-        .merge(private_routes())
+    Router::new().merge(public_routes()).merge(private_routes())
 }
 
 /// Creates public authentication routes (no authentication required).

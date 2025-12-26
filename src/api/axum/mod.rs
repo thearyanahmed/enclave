@@ -37,10 +37,10 @@ mod routes;
 
 pub use cors::{custom as custom_cors, default as default_cors, permissive as permissive_cors};
 pub use error::AppError;
-pub use middleware::{extract_bearer_token, AuthenticatedUser};
+pub use middleware::{AuthenticatedUser, extract_bearer_token};
 pub use routes::{
-    auth_routes, private_routes, public_routes, stateless_auth_routes, stateless_private_routes,
-    stateless_public_routes, AppState,
+    AppState, auth_routes, private_routes, public_routes, stateless_auth_routes,
+    stateless_private_routes, stateless_public_routes,
 };
 
 #[cfg(feature = "magic_link")]

@@ -1,11 +1,11 @@
 //! HTTP handlers for Axum authentication endpoints.
 
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
 
-use super::middleware::{extract_bearer_token, AuthenticatedUser};
+use super::middleware::{AuthenticatedUser, extract_bearer_token};
 use super::routes::AppState;
 use crate::actions::{
     ChangePasswordAction, ForgotPasswordAction, LoginAction, LogoutAction, RefreshTokenAction,
@@ -325,7 +325,9 @@ where
         .execute(user.user().id, &body.name, &body.email)
         .await
     {
-        Ok(updated_user) => (StatusCode::OK, Json(UserResponse::from(updated_user))).into_response(),
+        Ok(updated_user) => {
+            (StatusCode::OK, Json(UserResponse::from(updated_user))).into_response()
+        }
         Err(err) => {
             let error_response = ErrorResponse::from(err);
             (StatusCode::BAD_REQUEST, Json(error_response)).into_response()
@@ -459,8 +461,7 @@ where
 {
     use crate::actions::VerifyMagicLinkAction;
 
-    let action =
-        VerifyMagicLinkAction::new(state.user_repo, state.token_repo, magic_link_repo.0);
+    let action = VerifyMagicLinkAction::new(state.user_repo, state.token_repo, magic_link_repo.0);
 
     match action.execute(&body.token).await {
         Ok((user, token)) => (

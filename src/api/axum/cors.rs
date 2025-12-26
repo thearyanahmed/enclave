@@ -1,6 +1,6 @@
 //! CORS configuration for Axum using tower-http.
 
-use axum::http::{header, Method};
+use axum::http::{Method, header};
 use tower_http::cors::CorsLayer;
 
 /// Creates a permissive CORS configuration that allows all origins.
