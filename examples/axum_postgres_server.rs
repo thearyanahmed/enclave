@@ -16,7 +16,7 @@
 //!   - PostgreSQL running (use docker-compose up -d)
 //!   - Run migrations: sqlx migrate run
 //!
-//! Run with: `cargo run --example axum_postgres_server --features "axum_support sqlx_postgres"`
+//! Run with: `cargo run --example axum_postgres_server --features "axum_api sqlx_postgres"`
 //!
 //! Environment variables:
 //!   DATABASE_URL=postgres://user:password@localhost:5432/enclave

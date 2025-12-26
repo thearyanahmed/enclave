@@ -17,7 +17,7 @@
 //! - Long-lived refresh tokens (7 days default)
 //! - Token rotation for security
 //!
-//! Run with: `cargo run --example axum_jwt_server --features "axum_support jwt mocks"`
+//! Run with: `cargo run --example axum_jwt_server --features "axum_api jwt mocks"`
 //!
 //! Test endpoints:
 //!   curl -X POST http://localhost:8080/auth/register \
