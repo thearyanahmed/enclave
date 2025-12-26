@@ -39,6 +39,7 @@ mocks = []
 rate_limit = ["futures"]
 audit_log = []
 sessions = ["actix", "hmac"]
+magic_link = []
 
 [dev-dependencies]
 actix-rt = "2"

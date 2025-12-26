@@ -1,6 +1,8 @@
 #[cfg(feature = "audit_log")]
 mod audit_log;
 mod email_verification;
+#[cfg(feature = "magic_link")]
+mod magic_link;
 mod password_reset;
 mod rate_limiter;
 mod token;
@@ -10,6 +12,8 @@ mod user;
 mod audit_log_mock;
 #[cfg(any(test, feature = "mocks"))]
 mod email_verification_mock;
+#[cfg(all(feature = "magic_link", any(test, feature = "mocks")))]
+mod magic_link_mock;
 #[cfg(any(test, feature = "mocks"))]
 mod password_reset_mock;
 #[cfg(any(test, feature = "mocks"))]
@@ -27,6 +31,10 @@ pub use audit_log::AuditLog;
 pub use audit_log::AuditLogRepository;
 pub use email_verification::EmailVerificationRepository;
 pub use email_verification::EmailVerificationToken;
+#[cfg(feature = "magic_link")]
+pub use magic_link::MagicLinkRepository;
+#[cfg(feature = "magic_link")]
+pub use magic_link::MagicLinkToken;
 pub use password_reset::PasswordResetRepository;
 pub use password_reset::PasswordResetToken;
 pub use rate_limiter::LoginAttempt;
@@ -42,6 +50,8 @@ pub use user::UserRepository;
 pub use audit_log_mock::MockAuditLogRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use email_verification_mock::MockEmailVerificationRepository;
+#[cfg(all(feature = "magic_link", any(test, feature = "mocks")))]
+pub use magic_link_mock::MockMagicLinkRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use password_reset_mock::MockPasswordResetRepository;
 #[cfg(any(test, feature = "mocks"))]
