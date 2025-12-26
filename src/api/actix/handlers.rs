@@ -274,3 +274,91 @@ where
         }
     }
 }
+
+// Magic Link handlers
+
+#[cfg(all(feature = "magic_link", feature = "rate_limit"))]
+pub async fn request_magic_link<U, M>(
+    req: HttpRequest,
+    body: web::Json<crate::api::MagicLinkRequest>,
+    user_repo: web::Data<U>,
+    magic_link_repo: web::Data<M>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    M: crate::MagicLinkRepository + Clone + Send + Sync + 'static,
+{
+    use crate::actions::RequestMagicLinkAction;
+
+    let action = RequestMagicLinkAction::new(
+        user_repo.get_ref().clone(),
+        magic_link_repo.get_ref().clone(),
+    );
+
+    let client_ip = crate::rate_limit::extract_client_ip(&req);
+
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email, &client_ip).await;
+
+    HttpResponse::Ok().json(MessageResponse {
+        message: "If the email exists, a login link has been sent".to_owned(),
+    })
+}
+
+#[cfg(all(feature = "magic_link", not(feature = "rate_limit")))]
+pub async fn request_magic_link<U, M>(
+    body: web::Json<crate::api::MagicLinkRequest>,
+    user_repo: web::Data<U>,
+    magic_link_repo: web::Data<M>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    M: crate::MagicLinkRepository + Clone + Send + Sync + 'static,
+{
+    use crate::actions::RequestMagicLinkAction;
+
+    let action = RequestMagicLinkAction::new(
+        user_repo.get_ref().clone(),
+        magic_link_repo.get_ref().clone(),
+    );
+
+    // Don't reveal whether user exists - always return success regardless of result
+    let _ = action.execute(&body.email).await;
+
+    HttpResponse::Ok().json(MessageResponse {
+        message: "If the email exists, a login link has been sent".to_owned(),
+    })
+}
+
+#[cfg(feature = "magic_link")]
+pub async fn verify_magic_link<U, T, M>(
+    body: web::Json<crate::api::VerifyMagicLinkRequest>,
+    user_repo: web::Data<U>,
+    token_repo: web::Data<T>,
+    magic_link_repo: web::Data<M>,
+) -> HttpResponse
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    T: TokenRepository + Clone + Send + Sync + 'static,
+    M: crate::MagicLinkRepository + Clone + Send + Sync + 'static,
+{
+    use crate::actions::VerifyMagicLinkAction;
+
+    let action = VerifyMagicLinkAction::new(
+        user_repo.get_ref().clone(),
+        token_repo.get_ref().clone(),
+        magic_link_repo.get_ref().clone(),
+    );
+
+    match action.execute(&body.token).await {
+        Ok((user, token)) => HttpResponse::Ok().json(AuthResponse {
+            user: UserResponse::from(user),
+            token: token.token,
+            expires_at: token.expires_at,
+        }),
+        Err(err) => {
+            let error_response = ErrorResponse::from(err);
+            HttpResponse::BadRequest().json(error_response)
+        }
+    }
+}

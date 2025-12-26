@@ -18,6 +18,8 @@ pub use routes::{
     auth_routes, private_routes, public_routes, stateless_auth_routes, stateless_private_routes,
     stateless_public_routes,
 };
+#[cfg(feature = "magic_link")]
+pub use routes::magic_link_routes;
 
 #[cfg(feature = "sessions")]
 pub use session_handlers::SessionUserResponse;

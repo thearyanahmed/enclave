@@ -50,6 +50,18 @@ pub struct VerifyEmailRequest {
     pub token: String,
 }
 
+#[cfg(feature = "magic_link")]
+#[derive(Debug, Deserialize)]
+pub struct MagicLinkRequest {
+    pub email: String,
+}
+
+#[cfg(feature = "magic_link")]
+#[derive(Debug, Deserialize)]
+pub struct VerifyMagicLinkRequest {
+    pub token: String,
+}
+
 // Response DTOs
 
 #[derive(Debug, Serialize)]

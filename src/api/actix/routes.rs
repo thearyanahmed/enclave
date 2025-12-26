@@ -4,6 +4,8 @@ use crate::{
     EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     StatefulTokenRepository, TokenRepository, UserRepository,
 };
+#[cfg(feature = "magic_link")]
+use crate::MagicLinkRepository;
 
 use super::handlers;
 
@@ -178,4 +180,45 @@ where
             "/change-password",
             web::post().to(handlers::change_password::<U, T>),
         );
+}
+
+// =============================================================================
+// Magic Link Routes
+// =============================================================================
+//
+// These routes are for passwordless magic link authentication.
+// Requires the `magic_link` feature flag to be enabled.
+
+/// Configures magic link authentication routes.
+///
+/// Routes:
+/// - `POST /magic-link` - Request magic link
+/// - `POST /magic-link/verify` - Verify magic link and login
+///
+/// These routes can be added to an existing auth scope:
+///
+/// ```rust,ignore
+/// use enclave::api::actix::{auth_routes, magic_link_routes};
+///
+/// App::new().service(
+///     web::scope("/auth")
+///         .configure(auth_routes::<...>)
+///         .configure(magic_link_routes::<U, T, M>)
+/// )
+/// ```
+#[cfg(feature = "magic_link")]
+pub fn magic_link_routes<U, T, M>(cfg: &mut web::ServiceConfig)
+where
+    U: UserRepository + Clone + Send + Sync + 'static,
+    T: TokenRepository + Clone + Send + Sync + 'static,
+    M: MagicLinkRepository + Clone + Send + Sync + 'static,
+{
+    cfg.route(
+        "/magic-link",
+        web::post().to(handlers::request_magic_link::<U, M>),
+    )
+    .route(
+        "/magic-link/verify",
+        web::post().to(handlers::verify_magic_link::<U, T, M>),
+    );
 }
