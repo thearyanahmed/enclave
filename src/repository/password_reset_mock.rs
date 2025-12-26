@@ -10,12 +10,7 @@ use crate::SecretString;
 use super::password_reset::{PasswordResetRepository, PasswordResetToken};
 
 fn generate_token() -> SecretString {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    let token: String = (0..32)
-        .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
-        .collect();
-    SecretString::new(token)
+    SecretString::new(crate::crypto::generate_token(32))
 }
 
 #[derive(Clone)]

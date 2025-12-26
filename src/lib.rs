@@ -27,7 +27,7 @@
 //! | Feature | Description |
 //! |---------|-------------|
 //! | `actix` | HTTP handlers and routes for [actix-web](https://actix.rs/) |
-//! | `sqlx_postgres` | PostgreSQL repository implementations via [sqlx](https://docs.rs/sqlx) |
+//! | `sqlx_postgres` | `PostgreSQL` repository implementations via [sqlx](https://docs.rs/sqlx) |
 //! | `jwt` | JWT token provider using [jsonwebtoken](https://docs.rs/jsonwebtoken) |
 //! | `mocks` | In-memory mock repositories for testing |
 //! | `tracing` | Span instrumentation for all actions |
@@ -79,7 +79,7 @@
 //! ### Feature-gated Modules
 //!
 //! - [`api`] - HTTP layer for actix-web *(requires `actix`)*
-//! - [`postgres`] - PostgreSQL implementations *(requires `sqlx_postgres`)*
+//! - [`postgres`] - `PostgreSQL` implementations *(requires `sqlx_postgres`)*
 //! - [`jwt`] - JWT token provider *(requires `jwt`)*
 //! - [`rate_limit`] - Rate limiting *(requires `rate_limit`)*
 //! - [`session`] - Cookie sessions *(requires `sessions`)*

@@ -154,11 +154,7 @@ fn uuid() -> String {
 }
 
 fn rand_suffix() -> String {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    (0..8)
-        .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
-        .collect()
+    crate::crypto::generate_token(8)
 }
 
 #[cfg(test)]

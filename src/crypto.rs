@@ -27,8 +27,8 @@
 
 use crate::AuthError;
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
+use password_hash::rand_core::{OsRng, RngCore};
 use password_hash::{PasswordHash, PasswordHasher as ArgonPasswordHasher, SaltString};
-use rand::rngs::OsRng;
 use sha2::{Digest, Sha256};
 
 /// Default token length in characters.
@@ -172,10 +172,13 @@ impl PasswordHasher for Argon2Hasher {
 /// assert_eq!(token.len(), 32);
 /// ```
 pub fn generate_token(length: usize) -> String {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
+    const ALPHANUMERIC: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let mut rng = OsRng;
     (0..length)
-        .map(|_| char::from(rng.sample(rand::distributions::Alphanumeric)))
+        .map(|_| {
+            let idx = usize::try_from(rng.next_u32()).unwrap_or(0) % ALPHANUMERIC.len();
+            char::from(ALPHANUMERIC.get(idx).copied().unwrap_or(b'a'))
+        })
         .collect()
 }
 
