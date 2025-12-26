@@ -27,6 +27,7 @@ futures = { version = "0.3", optional = true }
 sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "migrate"], optional = true }
 tracing = { version = "0.1", optional = true }
 jsonwebtoken = { version = "9", optional = true }
+hmac = { version = "0.12", optional = true }
 
 [features]
 default = []
@@ -37,6 +38,7 @@ jwt = ["jsonwebtoken"]
 mocks = []
 rate_limit = ["futures"]
 audit_log = []
+sessions = ["actix", "hmac"]
 
 [dev-dependencies]
 actix-rt = "2"
