@@ -7,8 +7,8 @@ use std::path::PathBuf;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
-use crate::crypto::generate_token;
 use crate::AuthError;
+use crate::crypto::generate_token;
 
 use super::repository::SessionRepository;
 use super::{Session, SessionData};
@@ -58,13 +58,11 @@ impl FileSessionRepository {
             return Ok(None);
         }
 
-        let content = std::fs::read_to_string(&path).map_err(|e| {
-            AuthError::DatabaseError(format!("Failed to read session file: {e}"))
-        })?;
+        let content = std::fs::read_to_string(&path)
+            .map_err(|e| AuthError::DatabaseError(format!("Failed to read session file: {e}")))?;
 
-        let data: SessionData = serde_json::from_str(&content).map_err(|e| {
-            AuthError::DatabaseError(format!("Failed to parse session file: {e}"))
-        })?;
+        let data: SessionData = serde_json::from_str(&content)
+            .map_err(|e| AuthError::DatabaseError(format!("Failed to parse session file: {e}")))?;
 
         Ok(Some(data))
     }
@@ -73,13 +71,11 @@ impl FileSessionRepository {
     fn write_session(&self, session_id: &str, data: &SessionData) -> Result<(), AuthError> {
         let path = self.session_path(session_id);
 
-        let content = serde_json::to_string_pretty(data).map_err(|e| {
-            AuthError::DatabaseError(format!("Failed to serialize session: {e}"))
-        })?;
+        let content = serde_json::to_string_pretty(data)
+            .map_err(|e| AuthError::DatabaseError(format!("Failed to serialize session: {e}")))?;
 
-        std::fs::write(&path, content).map_err(|e| {
-            AuthError::DatabaseError(format!("Failed to write session file: {e}"))
-        })?;
+        std::fs::write(&path, content)
+            .map_err(|e| AuthError::DatabaseError(format!("Failed to write session file: {e}")))?;
 
         Ok(())
     }

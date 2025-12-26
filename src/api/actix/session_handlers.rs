@@ -1,14 +1,18 @@
 //! Session-based authentication handlers.
 
-use actix_web::{HttpRequest, HttpResponse, cookie::{Cookie, SameSite as ActixSameSite, time::Duration as CookieDuration}, web};
+use actix_web::{
+    HttpRequest, HttpResponse,
+    cookie::{Cookie, SameSite as ActixSameSite, time::Duration as CookieDuration},
+    web,
+};
 use chrono::Utc;
 
 use super::session_middleware::SessionAuthenticatedUser;
+use crate::actions::LoginAction;
 use crate::api::{ErrorResponse, LoginRequest, MessageResponse};
+use crate::crypto::Argon2Hasher;
 use crate::session::{SameSite, SessionConfig, SessionData, SessionRepository, sign_session_id};
 use crate::{AuthError, RateLimiterRepository, SecretString, UserRepository};
-use crate::actions::LoginAction;
-use crate::crypto::Argon2Hasher;
 
 /// Response for session-based user info.
 #[derive(Debug, serde::Serialize)]
@@ -93,13 +97,11 @@ where
                     let signed_value = sign_session_id(&session_id, &session_config.secret_key);
                     let cookie = build_session_cookie(signed_value, &session_config);
 
-                    HttpResponse::Ok()
-                        .cookie(cookie)
-                        .json(SessionUserResponse {
-                            user_id: user.id,
-                            email: user.email,
-                            name: user.name,
-                        })
+                    HttpResponse::Ok().cookie(cookie).json(SessionUserResponse {
+                        user_id: user.id,
+                        email: user.email,
+                        name: user.name,
+                    })
                 }
                 Err(err) => {
                     let error_response = ErrorResponse::from(err);

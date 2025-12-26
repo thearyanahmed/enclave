@@ -155,9 +155,8 @@ mod tests {
 
     #[test]
     fn test_database_error_is_sanitized() {
-        let err = crate::AuthError::DatabaseError(
-            "ERROR: relation \"users\" does not exist".to_owned(),
-        );
+        let err =
+            crate::AuthError::DatabaseError("ERROR: relation \"users\" does not exist".to_owned());
         let response: ErrorResponse = err.into();
 
         assert_eq!(response.code, "DATABASE_ERROR");
@@ -168,8 +167,7 @@ mod tests {
 
     #[test]
     fn test_configuration_error_is_sanitized() {
-        let err =
-            crate::AuthError::ConfigurationError("secret key: abc123xyz".to_owned());
+        let err = crate::AuthError::ConfigurationError("secret key: abc123xyz".to_owned());
         let response: ErrorResponse = err.into();
 
         assert_eq!(response.code, "CONFIGURATION_ERROR");
@@ -191,7 +189,11 @@ mod tests {
     #[test]
     fn test_user_facing_errors_preserve_message() {
         let test_cases = [
-            (crate::AuthError::UserNotFound, "USER_NOT_FOUND", "User not found"),
+            (
+                crate::AuthError::UserNotFound,
+                "USER_NOT_FOUND",
+                "User not found",
+            ),
             (
                 crate::AuthError::UserAlreadyExists,
                 "USER_ALREADY_EXISTS",
@@ -202,8 +204,16 @@ mod tests {
                 "INVALID_CREDENTIALS",
                 "Invalid email or password",
             ),
-            (crate::AuthError::TokenExpired, "TOKEN_EXPIRED", "Token has expired"),
-            (crate::AuthError::TokenInvalid, "TOKEN_INVALID", "Invalid token"),
+            (
+                crate::AuthError::TokenExpired,
+                "TOKEN_EXPIRED",
+                "Token has expired",
+            ),
+            (
+                crate::AuthError::TokenInvalid,
+                "TOKEN_INVALID",
+                "Invalid token",
+            ),
         ];
 
         for (err, expected_code, expected_message) in test_cases {

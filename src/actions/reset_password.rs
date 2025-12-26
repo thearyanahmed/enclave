@@ -90,7 +90,7 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
 
                 Ok(())
             }
-            None => Err(AuthError::TokenInvalid)
+            None => Err(AuthError::TokenInvalid),
         }
     }
 }

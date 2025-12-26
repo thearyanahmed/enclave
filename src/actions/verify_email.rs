@@ -46,7 +46,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
 
                 Ok(())
             }
-            None => Err(AuthError::TokenInvalid)
+            None => Err(AuthError::TokenInvalid),
         }
     }
 }

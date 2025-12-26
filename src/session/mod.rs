@@ -28,8 +28,8 @@ mod file_store;
 mod memory_store;
 mod repository;
 
-pub use config::SessionConfig;
 pub use config::SameSite;
+pub use config::SessionConfig;
 pub use cookie::{sign_session_id, verify_signed_cookie};
 pub use file_store::FileSessionRepository;
 pub use memory_store::InMemorySessionRepository;

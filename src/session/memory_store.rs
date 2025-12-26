@@ -8,8 +8,8 @@ use std::sync::{Arc, RwLock};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
-use crate::crypto::generate_token;
 use crate::AuthError;
+use crate::crypto::generate_token;
 
 use super::repository::SessionRepository;
 use super::{Session, SessionData};
@@ -38,10 +38,7 @@ impl InMemorySessionRepository {
 
     /// Returns the number of sessions currently stored.
     pub fn len(&self) -> usize {
-        self.sessions
-            .read()
-            .map(|guard| guard.len())
-            .unwrap_or(0)
+        self.sessions.read().map(|guard| guard.len()).unwrap_or(0)
     }
 
     /// Returns true if there are no sessions stored.

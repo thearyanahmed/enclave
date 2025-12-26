@@ -89,11 +89,13 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(session_repo.clone()))
             .app_data(web::Data::new(rate_limiter.clone()))
             .app_data(web::Data::new(session_config.clone()))
-            .configure(session_auth_routes::<
-                MockUserRepository,
-                InMemorySessionRepository,
-                MockRateLimiterRepository,
-            >)
+            .configure(
+                session_auth_routes::<
+                    MockUserRepository,
+                    InMemorySessionRepository,
+                    MockRateLimiterRepository,
+                >,
+            )
     })
     .bind("127.0.0.1:8080")?
     .run()

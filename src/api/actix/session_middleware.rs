@@ -6,8 +6,8 @@ use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-use crate::session::{Session, SessionConfig, SessionRepository, verify_signed_cookie};
 use crate::AuthError;
+use crate::session::{Session, SessionConfig, SessionRepository, verify_signed_cookie};
 
 use super::middleware::AuthenticationError;
 
@@ -69,13 +69,9 @@ where
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
-        let session_config = req
-            .app_data::<web::Data<SessionConfig>>()
-            .cloned();
+        let session_config = req.app_data::<web::Data<SessionConfig>>().cloned();
 
-        let session_repo = req
-            .app_data::<web::Data<S>>()
-            .cloned();
+        let session_repo = req.app_data::<web::Data<S>>().cloned();
 
         let cookie_value = session_config
             .as_ref()

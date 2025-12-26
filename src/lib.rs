@@ -13,9 +13,9 @@ pub mod postgres;
 #[cfg(feature = "rate_limit")]
 pub mod rate_limit;
 pub mod repository;
+pub mod secret;
 #[cfg(feature = "sessions")]
 pub mod session;
-pub mod secret;
 pub mod validators;
 
 pub use config::AuthConfig;

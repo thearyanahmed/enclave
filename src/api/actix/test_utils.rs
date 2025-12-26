@@ -94,11 +94,16 @@ where
         let hasher = Argon2Hasher::default();
         let hashed_password = hasher.hash(&self.password)?;
 
-        let user = self.user_repo.create_user(&self.email, &hashed_password).await?;
+        let user = self
+            .user_repo
+            .create_user(&self.email, &hashed_password)
+            .await?;
 
         // Update name if provided
         let user = if let Some(name) = self.name {
-            self.user_repo.update_user(user.id, &name, &user.email).await?
+            self.user_repo
+                .update_user(user.id, &name, &user.email)
+                .await?
         } else {
             user
         };
