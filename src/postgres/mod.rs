@@ -1,6 +1,8 @@
 #[cfg(feature = "audit_log")]
 mod audit_log;
 mod email_verification;
+#[cfg(feature = "magic_link")]
+mod magic_link;
 mod password_reset;
 mod rate_limiter;
 mod token;
@@ -9,6 +11,8 @@ mod user;
 #[cfg(feature = "audit_log")]
 pub use audit_log::PostgresAuditLogRepository;
 pub use email_verification::PostgresEmailVerificationRepository;
+#[cfg(feature = "magic_link")]
+pub use magic_link::PostgresMagicLinkRepository;
 pub use password_reset::PostgresPasswordResetRepository;
 pub use rate_limiter::PostgresRateLimiterRepository;
 pub use token::PostgresTokenRepository;
