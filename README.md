@@ -22,15 +22,16 @@ enclave = { version = "0.1", features = ["actix", "sqlx_postgres"] }
 
 ## Feature Flags
 
-| Feature         | Description                            | Dependencies          |
-| --------------- | -------------------------------------- | --------------------- |
-| `actix`         | HTTP handlers and routes for actix-web | actix-web, actix-cors |
-| `sqlx_postgres` | PostgreSQL repository implementations  | sqlx                  |
-| `jwt`           | JWT token provider                     | jsonwebtoken          |
-| `mocks`         | In-memory repositories for testing     | -                     |
-| `tracing`       | Span instrumentation for all actions   | tracing               |
-| `rate_limit`    | Rate limiting utilities                | futures               |
-| `magic_link`    | Passwordless magic link authentication | -                     |
+| Feature         | Description                            | Dependencies            |
+| --------------- | -------------------------------------- | ----------------------- |
+| `actix`         | HTTP handlers and routes for actix-web | actix-web, actix-cors   |
+| `axum_api`      | HTTP handlers and routes for Axum      | axum, tower, tower-http |
+| `sqlx_postgres` | PostgreSQL repository implementations  | sqlx                    |
+| `jwt`           | JWT token provider                     | jsonwebtoken            |
+| `mocks`         | In-memory repositories for testing     | -                       |
+| `tracing`       | Span instrumentation for all actions   | tracing                 |
+| `rate_limit`    | Rate limiting utilities                | futures                 |
+| `magic_link`    | Passwordless magic link authentication | -                       |
 
 ## Core Concepts
 
@@ -301,7 +302,7 @@ let token = generate_token_default(); // 32 characters (default)
 
 - Use `TokenRepository` only
 - No logout/refresh endpoints
-- Use `stateless_auth_routes` with actix
+- Use `stateless_auth_routes` (actix) or `stateless_auth_routes` (axum)
 
 ## Configuration
 
@@ -439,6 +440,64 @@ Same as above, minus `/auth/logout` and `/auth/refresh-token`.
 | POST   | /auth/magic-link        | Request magic link   |
 | POST   | /auth/magic-link/verify | Login via magic link |
 
+## HTTP Layer (Axum)
+
+Requires `features = ["axum_api"]`.
+
+### Routes
+
+Axum uses an `AppState` struct to hold all repositories:
+
+```rust
+use axum::Router;
+use enclave::api::axum::{auth_routes, AppState};
+
+let state = AppState {
+    user_repo,
+    token_repo,      // Must implement StatefulTokenRepository
+    rate_limiter,
+    password_reset,
+    email_verification,
+};
+
+let app = Router::new()
+    .nest("/auth", auth_routes::<
+        UserRepo,
+        TokenRepo,
+        RateLimiterRepo,
+        PasswordResetRepo,
+        EmailVerificationRepo,
+    >())
+    .with_state(state);
+```
+
+For JWT (stateless tokens), use `stateless_auth_routes`:
+
+```rust
+use enclave::api::axum::{stateless_auth_routes, AppState};
+
+// No logout or refresh-token endpoints
+let app = Router::new()
+    .nest("/auth", stateless_auth_routes::<...>())
+    .with_state(state);
+```
+
+### CORS
+
+```rust
+use enclave::api::axum::cors;
+
+let app = Router::new()
+    .nest("/auth", auth_routes::<...>())
+    .layer(cors::permissive())  // Development
+    // .layer(cors::default(&["https://example.com"]))  // Production
+    .with_state(state);
+```
+
+### Endpoints
+
+Same endpoints as actix (see above).
+
 ## PostgreSQL (sqlx_postgres)
 
 Requires `features = ["sqlx_postgres"]`.
@@ -512,12 +571,24 @@ let provider = JwtTokenProvider::new(service);
 
 ## Examples
 
+### Actix
+
 ```bash
 # PostgreSQL server
 cargo run --example postgres_server --features "actix sqlx_postgres"
 
 # JWT server (in-memory storage)
 cargo run --example jwt_server --features "actix jwt mocks"
+```
+
+### Axum
+
+```bash
+# PostgreSQL server
+cargo run --example axum_postgres_server --features "axum_api sqlx_postgres"
+
+# JWT server (in-memory storage)
+cargo run --example axum_jwt_server --features "axum_api jwt mocks"
 ```
 
 Test with curl:
