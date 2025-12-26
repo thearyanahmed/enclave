@@ -74,6 +74,8 @@ impl AuthConfig {
                 refresh_token_expiry: Duration::days(7),
                 password_reset_expiry: Duration::hours(2),
                 email_verification_expiry: Duration::days(7),
+                #[cfg(feature = "magic_link")]
+                magic_link_expiry: Duration::minutes(30),
             },
             rate_limit: RateLimitConfig {
                 max_failed_attempts: 10,
@@ -93,6 +95,8 @@ impl AuthConfig {
                 refresh_token_expiry: Duration::days(1),
                 password_reset_expiry: Duration::minutes(30),
                 email_verification_expiry: Duration::hours(12),
+                #[cfg(feature = "magic_link")]
+                magic_link_expiry: Duration::minutes(10),
             },
             rate_limit: RateLimitConfig {
                 max_failed_attempts: 3,
@@ -127,6 +131,14 @@ pub struct TokenConfig {
     ///
     /// Default: 24 hours
     pub email_verification_expiry: Duration,
+
+    /// How long magic link tokens remain valid.
+    ///
+    /// Default: 15 minutes
+    ///
+    /// Only used when the `magic_link` feature is enabled.
+    #[cfg(feature = "magic_link")]
+    pub magic_link_expiry: Duration,
 }
 
 impl Default for TokenConfig {
@@ -136,6 +148,8 @@ impl Default for TokenConfig {
             refresh_token_expiry: Duration::days(30),
             password_reset_expiry: Duration::hours(1),
             email_verification_expiry: Duration::hours(24),
+            #[cfg(feature = "magic_link")]
+            magic_link_expiry: Duration::minutes(15),
         }
     }
 }
