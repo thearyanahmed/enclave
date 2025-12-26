@@ -1,4 +1,4 @@
-.PHONY: build build-release build-all test unit-test e2e-test e2e-test-local test-all test-all-local clippy fmt fmt-check md-fmt md-fmt-check check lint docker-up docker-down docker-logs clean help
+.PHONY: build build-release build-all test unit-test e2e-test e2e-test-local test-all test-all-local clippy fmt fmt-check md-fmt md-fmt-check check lint docker-up docker-down docker-logs clean doc help
 
 # build
 build:
@@ -58,6 +58,10 @@ docker-down:
 docker-logs:
 	docker-compose logs -f
 
+# docs
+doc:
+	cargo clean --doc && cargo doc --no-deps --all-features --open
+
 # clean
 clean:
 	cargo clean
@@ -94,4 +98,5 @@ help:
 	@echo "  docker-logs     - tail postgres logs"
 	@echo ""
 	@echo "Other:"
+	@echo "  doc             - generate and open documentation"
 	@echo "  clean           - cargo clean"
