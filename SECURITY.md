@@ -168,7 +168,6 @@ let config = AuthConfig::strict(); // 3 attempts, 30 min lockout
 - Added rate limiting to password reset endpoint
 - Added rate limiting to email verification endpoint
 - Added session revocation on password change
-- Stabilized audit log feature
 - Added `SecretString` wrapper for token handling
 
 ### v0.1.0
