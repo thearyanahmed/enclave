@@ -175,10 +175,8 @@ impl SessionRepository for FileSessionRepository {
             if path.extension().is_some_and(|ext| ext == "json") {
                 if let Ok(content) = std::fs::read_to_string(&path) {
                     if let Ok(data) = serde_json::from_str::<SessionData>(&content) {
-                        if data.expires_at <= now {
-                            if std::fs::remove_file(&path).is_ok() {
-                                pruned += 1;
-                            }
+                        if data.expires_at <= now && std::fs::remove_file(&path).is_ok() {
+                            pruned += 1;
                         }
                     }
                 }
@@ -198,8 +196,8 @@ mod tests {
     fn create_test_session_data(user_id: i32) -> SessionData {
         SessionData {
             user_id,
-            email: format!("user{}@example.com", user_id),
-            name: format!("User {}", user_id),
+            email: format!("user{user_id}@example.com"),
+            name: format!("User {user_id}"),
             created_at: Utc::now(),
             expires_at: Utc::now() + Duration::hours(2),
         }

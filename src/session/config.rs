@@ -28,7 +28,7 @@ pub struct SessionConfig {
     pub cookie_secure: bool,
     /// Whether the cookie is inaccessible to JavaScript.
     pub cookie_http_only: bool,
-    /// SameSite attribute for the cookie.
+    /// `SameSite` attribute for the cookie.
     pub cookie_same_site: SameSite,
     /// Session lifetime (sliding window).
     pub session_lifetime: Duration,

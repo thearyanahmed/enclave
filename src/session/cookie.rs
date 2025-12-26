@@ -34,9 +34,15 @@ pub fn verify_signed_cookie(cookie_value: &str, secret: &SecretString) -> Option
 }
 
 /// Computes HMAC-SHA256.
+///
+/// # Panics
+///
+/// This function cannot panic as HMAC accepts keys of any size.
 fn compute_hmac(message: &[u8], key: &[u8]) -> Vec<u8> {
-    let mut mac =
-        HmacSha256::new_from_slice(key).expect("HMAC can take key of any size");
+    // SAFETY: HmacSha256::new_from_slice only fails if the key is invalid,
+    // but HMAC-SHA256 accepts keys of any length, so this cannot fail.
+    #[allow(clippy::expect_used)]
+    let mut mac = HmacSha256::new_from_slice(key).expect("HMAC accepts keys of any size");
     mac.update(message);
     mac.finalize().into_bytes().to_vec()
 }
@@ -74,7 +80,10 @@ mod tests {
         let secret = SecretString::new("test-secret-key-that-is-long-enough");
         let session_id = "abc123session";
 
+        // Verify normal signing works first
         let signed = sign_session_id(session_id, &secret);
+        assert!(verify_signed_cookie(&signed, &secret).is_some());
+
         // Tamper with the signature
         let tampered = format!("{}.{}", session_id, "0".repeat(64));
 
@@ -89,8 +98,8 @@ mod tests {
 
         let signed = sign_session_id(session_id, &secret);
         // Replace session ID but keep signature
-        let parts: Vec<&str> = signed.rsplitn(2, '.').collect();
-        let tampered = format!("different_session.{}", parts[0]);
+        let signature = signed.rsplit_once('.').unwrap().1;
+        let tampered = format!("different_session.{signature}");
 
         let verified = verify_signed_cookie(&tampered, &secret);
         assert!(verified.is_none());

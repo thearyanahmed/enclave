@@ -60,12 +60,10 @@ impl SessionRepository for InMemorySessionRepository {
     async fn create(&self, data: SessionData) -> Result<String, AuthError> {
         let session_id = generate_token(32);
 
-        let mut sessions = self
-            .sessions
+        self.sessions
             .write()
-            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?;
-
-        sessions.insert(session_id.clone(), data);
+            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?
+            .insert(session_id.clone(), data);
 
         Ok(session_id)
     }
@@ -87,12 +85,12 @@ impl SessionRepository for InMemorySessionRepository {
         session_id: &str,
         new_expires_at: DateTime<Utc>,
     ) -> Result<(), AuthError> {
-        let mut sessions = self
+        if let Some(data) = self
             .sessions
             .write()
-            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?;
-
-        if let Some(data) = sessions.get_mut(session_id) {
+            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?
+            .get_mut(session_id)
+        {
             data.expires_at = new_expires_at;
         }
 
@@ -100,27 +98,24 @@ impl SessionRepository for InMemorySessionRepository {
     }
 
     async fn destroy(&self, session_id: &str) -> Result<(), AuthError> {
-        let mut sessions = self
-            .sessions
+        self.sessions
             .write()
-            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?;
-
-        sessions.remove(session_id);
+            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?
+            .remove(session_id);
 
         Ok(())
     }
 
     async fn destroy_user_sessions(&self, user_id: i32) -> Result<(), AuthError> {
-        let mut sessions = self
-            .sessions
+        self.sessions
             .write()
-            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?;
-
-        sessions.retain(|_, data| data.user_id != user_id);
+            .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?
+            .retain(|_, data| data.user_id != user_id);
 
         Ok(())
     }
 
+    #[allow(clippy::significant_drop_tightening)]
     async fn prune_expired(&self) -> Result<u64, AuthError> {
         let mut sessions = self
             .sessions
@@ -145,8 +140,8 @@ mod tests {
     fn create_test_session_data(user_id: i32) -> SessionData {
         SessionData {
             user_id,
-            email: format!("user{}@example.com", user_id),
-            name: format!("User {}", user_id),
+            email: format!("user{user_id}@example.com"),
+            name: format!("User {user_id}"),
             created_at: Utc::now(),
             expires_at: Utc::now() + Duration::hours(2),
         }
