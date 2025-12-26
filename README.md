@@ -30,6 +30,7 @@ enclave = { version = "0.1", features = ["actix", "sqlx_postgres"] }
 | `mocks`         | In-memory repositories for testing     | -                     |
 | `tracing`       | Span instrumentation for all actions   | tracing               |
 | `rate_limit`    | Rate limiting utilities                | futures               |
+| `magic_link`    | Passwordless magic link authentication | -                     |
 
 ## Core Concepts
 
@@ -62,6 +63,8 @@ Available actions:
 | `UpdateUserAction`       | Update user profile             |
 | `DeleteUserAction`       | Delete user account             |
 | `GetUserAction`          | Retrieve user by ID             |
+| `RequestMagicLinkAction` | Create magic link token         |
+| `VerifyMagicLinkAction`  | Login via magic link            |
 
 ### Repository Traits
 
@@ -75,6 +78,7 @@ Storage is abstracted through traits. Implement these for custom backends.
 | `PasswordResetRepository`     | Password reset tokens                        |
 | `EmailVerificationRepository` | Email verification tokens                    |
 | `RateLimiterRepository`       | Login attempt tracking                       |
+| `MagicLinkRepository`         | Magic link tokens                            |
 | `PasswordHasher`              | Password hashing and verification            |
 
 ## Custom Implementations
@@ -226,6 +230,29 @@ impl RateLimiterRepository for MyRateLimiter {
     ) -> Result<u32, AuthError>;
 
     async fn clear_attempts(&self, email: &str) -> Result<(), AuthError>;
+}
+```
+
+### MagicLinkRepository
+
+Requires `features = ["magic_link"]`.
+
+```rust
+use enclave::{MagicLinkRepository, MagicLinkToken, AuthError};
+use chrono::{DateTime, Utc};
+use async_trait::async_trait;
+
+#[async_trait]
+impl MagicLinkRepository for MyMagicLinkStore {
+    async fn create_magic_link_token(
+        &self,
+        user_id: i32,
+        expires_at: DateTime<Utc>,
+    ) -> Result<MagicLinkToken, AuthError>;
+
+    async fn find_magic_link_token(&self, token: &str) -> Result<Option<MagicLinkToken>, AuthError>;
+    async fn delete_magic_link_token(&self, token: &str) -> Result<(), AuthError>;
+    async fn prune_expired(&self) -> Result<u64, AuthError>;
 }
 ```
 
@@ -405,6 +432,13 @@ App::new()
 
 Same as above, minus `/auth/logout` and `/auth/refresh-token`.
 
+**Magic link routes** (`magic_link_routes`, requires `magic_link` feature):
+
+| Method | Path                    | Description          |
+| ------ | ----------------------- | -------------------- |
+| POST   | /auth/magic-link        | Request magic link   |
+| POST   | /auth/magic-link/verify | Login via magic link |
+
 ## PostgreSQL (sqlx_postgres)
 
 Requires `features = ["sqlx_postgres"]`.
@@ -426,6 +460,7 @@ use enclave::postgres::{
     PostgresRateLimiterRepository,
     PostgresPasswordResetRepository,
     PostgresEmailVerificationRepository,
+    // PostgresMagicLinkRepository,  // requires "magic_link" feature
 };
 
 let pool = PgPoolOptions::new()
@@ -446,6 +481,7 @@ Migrations create:
 - `password_reset_tokens` - Reset tokens (hashed)
 - `email_verification_tokens` - Verification tokens (hashed)
 - `login_attempts` - Rate limiting data
+- `magic_link_tokens` - Magic link tokens (hashed, requires `magic_link` feature)
 
 ## JWT (jwt)
 
