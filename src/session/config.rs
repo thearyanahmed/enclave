@@ -3,7 +3,7 @@
 use crate::SecretString;
 use chrono::Duration;
 
-/// SameSite cookie attribute.
+/// `SameSite` cookie attribute.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SameSite {
     /// Cookies are sent with every request (least secure).
