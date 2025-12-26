@@ -1,3 +1,36 @@
+//! Authentication actions.
+//!
+//! This module contains all the business logic for authentication operations.
+//! Each action is a struct that takes repository traits and executes a specific operation.
+//!
+//! # Usage
+//!
+//! ```rust,ignore
+//! use enclave::actions::LoginAction;
+//! use enclave::{MockUserRepository, MockTokenRepository, MockRateLimiterRepository};
+//!
+//! let action = LoginAction::new(user_repo, token_repo, rate_limiter);
+//! let (user, token) = action.execute("user@example.com", &password).await?;
+//! ```
+//!
+//! # Available Actions
+//!
+//! | Action | Description |
+//! |--------|-------------|
+//! | [`SignupAction`] | Register a new user |
+//! | [`LoginAction`] | Authenticate and get access token |
+//! | [`LogoutAction`] | Revoke access token |
+//! | [`ForgotPasswordAction`] | Request password reset |
+//! | [`ResetPasswordAction`] | Reset password with token |
+//! | [`RefreshTokenAction`] | Get new access token |
+//! | [`SendVerificationAction`] | Send email verification |
+//! | [`VerifyEmailAction`] | Verify email address |
+//! | [`ChangePasswordAction`] | Change password |
+//! | [`UpdateUserAction`] | Update user profile |
+//! | [`DeleteUserAction`] | Delete user account |
+//! | [`GetUserAction`] | Get user by ID |
+//! | [`PruneExpiredTokensAction`] | Clean up expired tokens |
+
 pub mod change_password;
 pub mod delete_user;
 pub mod forgot_password;

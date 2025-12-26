@@ -1,3 +1,38 @@
+//! Repository traits and data types.
+//!
+//! This module defines the storage abstractions used throughout enclave.
+//! Implement these traits to use your own database or storage backend.
+//!
+//! # Traits
+//!
+//! | Trait | Description |
+//! |-------|-------------|
+//! | [`UserRepository`] | User CRUD operations |
+//! | [`TokenRepository`] | Token creation and lookup |
+//! | [`StatefulTokenRepository`] | Token revocation (extends `TokenRepository`) |
+//! | [`PasswordResetRepository`] | Password reset tokens |
+//! | [`EmailVerificationRepository`] | Email verification tokens |
+//! | [`RateLimiterRepository`] | Login attempt tracking |
+//!
+//! # Data Types
+//!
+//! | Type | Description |
+//! |------|-------------|
+//! | [`User`] | User account data |
+//! | [`AccessToken`] | Authentication token |
+//! | [`PasswordResetToken`] | Password reset token |
+//! | [`EmailVerificationToken`] | Email verification token |
+//!
+//! # Mock Implementations
+//!
+//! Enable the `mocks` feature for in-memory implementations useful for testing:
+//!
+//! - [`MockUserRepository`]
+//! - [`MockTokenRepository`]
+//! - [`MockPasswordResetRepository`]
+//! - [`MockEmailVerificationRepository`]
+//! - [`MockRateLimiterRepository`]
+
 #[cfg(feature = "audit_log")]
 mod audit_log;
 mod email_verification;

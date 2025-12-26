@@ -1,3 +1,30 @@
+//! Cryptographic utilities for password hashing and token generation.
+//!
+//! This module provides:
+//!
+//! - [`Argon2Hasher`] - Argon2id password hashing (OWASP 2024 recommended)
+//! - [`hash_token`] - SHA-256 token hashing for storage
+//! - [`generate_token`] - Cryptographically secure token generation
+//!
+//! # Password Hashing
+//!
+//! ```rust
+//! use enclave::crypto::{PasswordHasher, Argon2Hasher};
+//!
+//! let hasher = Argon2Hasher::default();
+//! let hash = hasher.hash("password123").unwrap();
+//! assert!(hasher.verify("password123", &hash).unwrap());
+//! ```
+//!
+//! # Token Generation
+//!
+//! ```rust
+//! use enclave::crypto::{generate_token, hash_token};
+//!
+//! let token = generate_token(32);  // 32-character token
+//! let hashed = hash_token(&token); // SHA-256 hash for storage
+//! ```
+
 use crate::AuthError;
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
 use password_hash::{PasswordHash, PasswordHasher as ArgonPasswordHasher, SaltString};
