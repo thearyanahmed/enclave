@@ -31,6 +31,7 @@ use enclave::api::actix::auth_routes;
 use enclave::postgres::{
     PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
     PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,
+    create_repositories,
 };
 use sqlx::postgres::PgPoolOptions;
 
@@ -52,12 +53,9 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to run migrations");
 
-    // Create repositories
-    let user_repo = PostgresUserRepository::new(pool.clone());
-    let token_repo = PostgresTokenRepository::new(pool.clone());
-    let rate_limiter = PostgresRateLimiterRepository::new(pool.clone());
-    let password_reset = PostgresPasswordResetRepository::new(pool.clone());
-    let email_verification = PostgresEmailVerificationRepository::new(pool.clone());
+    // Create repositories using the helper function
+    let (user_repo, token_repo, password_reset, email_verification, rate_limiter) =
+        create_repositories(pool);
 
     println!("Starting PostgreSQL auth server on http://localhost:8080");
     println!("Connected to database");
