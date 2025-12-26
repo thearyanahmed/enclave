@@ -81,8 +81,7 @@ where
         Some(t) => t,
         None => {
             return HttpResponse::Unauthorized().json(ErrorResponse {
-                error: "Missing authorization token".to_owned(),
-                code: "TOKEN_INVALID".to_owned(),
+                error: "missing authorization token".to_owned(),
             });
         }
     };
