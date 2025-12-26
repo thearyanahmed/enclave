@@ -1,3 +1,99 @@
+//! # Enclave
+//!
+//! Authentication library for Rust applications.
+//!
+//! Enclave provides the building blocks for user authentication: password hashing,
+//! token management, rate limiting, and optional HTTP/database integrations.
+//! It uses a trait-based architecture allowing custom storage backends.
+//!
+//! # Quick Start
+//!
+//! ```rust,ignore
+//! use enclave::actions::SignupAction;
+//! use enclave::{MockUserRepository, Argon2Hasher, SecretString};
+//!
+//! let user_repo = MockUserRepository::new();
+//! let hasher = Argon2Hasher::default();
+//!
+//! let signup = SignupAction::new(user_repo, hasher);
+//! let password = SecretString::new("secure_password123");
+//! let user = signup.execute("user@example.com", &password).await?;
+//! ```
+//!
+//! # Feature Flags
+//!
+//! Enclave uses feature flags to minimize dependencies. Enable only what you need.
+//!
+//! | Feature | Description |
+//! |---------|-------------|
+//! | `actix` | HTTP handlers and routes for [actix-web](https://actix.rs/) |
+//! | `sqlx_postgres` | PostgreSQL repository implementations via [sqlx](https://docs.rs/sqlx) |
+//! | `jwt` | JWT token provider using [jsonwebtoken](https://docs.rs/jsonwebtoken) |
+//! | `mocks` | In-memory mock repositories for testing |
+//! | `tracing` | Span instrumentation for all actions |
+//! | `rate_limit` | Rate limiting middleware and utilities |
+//! | `sessions` | Cookie-based session authentication |
+//! | `magic_link` | Passwordless magic link authentication |
+//! | `audit_log` | Security event audit logging |
+//!
+//! # Architecture
+//!
+//! ## Actions
+//!
+//! Business logic is encapsulated in action structs. Each action accepts repository
+//! traits and executes a specific operation.
+//!
+//! - [`actions::SignupAction`] - Register new user
+//! - [`actions::LoginAction`] - Authenticate user, return token
+//! - [`actions::LogoutAction`] - Revoke token (stateful only)
+//! - [`actions::ForgotPasswordAction`] - Create password reset token
+//! - [`actions::ResetPasswordAction`] - Reset password with token
+//! - [`actions::RefreshTokenAction`] - Issue new token (stateful only)
+//! - [`actions::SendVerificationAction`] - Create email verification token
+//! - [`actions::VerifyEmailAction`] - Mark email as verified
+//! - [`actions::ChangePasswordAction`] - Change password (authenticated)
+//! - [`actions::UpdateUserAction`] - Update user profile
+//! - [`actions::DeleteUserAction`] - Delete user account
+//! - [`actions::GetUserAction`] - Retrieve user by ID
+//!
+//! ## Repository Traits
+//!
+//! Storage is abstracted through traits. Implement these for custom backends.
+//!
+//! - [`UserRepository`] - User CRUD operations
+//! - [`TokenRepository`] - Token creation and lookup
+//! - [`StatefulTokenRepository`] - Token revocation (extends `TokenRepository`)
+//! - [`PasswordResetRepository`] - Password reset tokens
+//! - [`EmailVerificationRepository`] - Email verification tokens
+//! - [`RateLimiterRepository`] - Login attempt tracking
+//!
+//! ## Modules
+//!
+//! - [`actions`] - Business logic actions
+//! - [`config`] - Configuration structs ([`AuthConfig`], [`TokenConfig`])
+//! - [`crypto`] - Password hashing ([`Argon2Hasher`]) and token utilities
+//! - [`repository`] - Repository traits and data types
+//! - [`validators`] - Input validation ([`PasswordPolicy`])
+//! - [`secret`] - Sensitive data wrapper ([`SecretString`])
+//!
+//! ### Feature-gated Modules
+//!
+//! - [`api`] - HTTP layer for actix-web *(requires `actix`)*
+//! - [`postgres`] - PostgreSQL implementations *(requires `sqlx_postgres`)*
+//! - [`jwt`] - JWT token provider *(requires `jwt`)*
+//! - [`rate_limit`] - Rate limiting *(requires `rate_limit`)*
+//! - [`session`] - Cookie sessions *(requires `sessions`)*
+//!
+//! # Security
+//!
+//! - **Password hashing**: Argon2id (OWASP 2024 recommended)
+//! - **Token storage**: SHA-256 hashed before database storage
+//! - **Rate limiting**: Configurable per-endpoint limits
+//! - **Secret protection**: [`SecretString`] prevents accidental logging
+//!
+//! See [SECURITY.md](https://github.com/thearyanahmed/enclave/blob/master/SECURITY.md)
+//! for the full threat model.
+
 // allow unwrap/expect in test code
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 

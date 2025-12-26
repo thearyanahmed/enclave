@@ -108,7 +108,7 @@ where
 /// endpoints since JWT tokens cannot be revoked server-side.
 ///
 /// For JWT token refresh, implement a separate refresh token mechanism using
-/// [`JwtService::refresh_access_token`] directly.
+/// `JwtService::refresh_access_token` directly.
 pub fn stateless_auth_routes<U, T, R, P, E>(cfg: &mut web::ServiceConfig)
 where
     U: UserRepository + Clone + Send + Sync + 'static,
