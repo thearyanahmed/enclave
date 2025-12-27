@@ -1,4 +1,4 @@
-.PHONY: build build-release build-all test unit-test e2e-test e2e-test-local test-all test-all-local clippy fmt fmt-check md-fmt md-fmt-check check lint docker-up docker-down docker-logs clean doc help
+.PHONY: build build-release build-all test unit-test e2e-test e2e-test-local test-all test-all-local clippy fmt fmt-check md-fmt md-fmt-check check lint docker-up docker-down docker-logs clean doc codegen help
 
 # build
 build:
@@ -66,6 +66,19 @@ doc:
 clean:
 	cargo clean
 
+# codegen
+codegen:
+	cargo run -p enclave-codegen -- \
+		--source ./src \
+		--output ./autogen/types \
+		--types "AuthUser:repository/user.rs" \
+		--types "AuthError:lib.rs" \
+		--types "UserResponse:api/types.rs" \
+		--types "AuthResponse:api/types.rs" \
+		--types "TokenResponse:api/types.rs" \
+		--types "MessageResponse:api/types.rs" \
+		--types "ErrorResponse:api/types.rs"
+
 # help
 help:
 	@echo "Available targets:"
@@ -100,3 +113,4 @@ help:
 	@echo "Other:"
 	@echo "  doc             - generate and open documentation"
 	@echo "  clean           - cargo clean"
+	@echo "  codegen         - generate TypeScript types in autogen/types/"

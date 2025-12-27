@@ -25,11 +25,15 @@ mod typescript;
 #[command(name = "enclave-codegen")]
 #[command(version, about = "Generate TypeScript types from Rust source files")]
 struct Cli {
-    /// Path to the Rust source directory.
+    /// Working directory (changes to this directory before running).
+    #[arg(short = 'C', long = "dir")]
+    dir: Option<PathBuf>,
+
+    /// Path to the Rust source directory (relative to working directory).
     #[arg(short, long)]
     source: PathBuf,
 
-    /// Output directory for TypeScript files.
+    /// Output directory for TypeScript files (relative to working directory).
     #[arg(short, long, default_value = "./types")]
     output: PathBuf,
 
@@ -65,6 +69,14 @@ impl TypeSpec {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
+
+    // Change to working directory if specified
+    if let Some(dir) = &cli.dir {
+        if let Err(e) = std::env::set_current_dir(dir) {
+            eprintln!("Error: failed to change to directory '{}': {e}", dir.display());
+            return ExitCode::FAILURE;
+        }
+    }
 
     // Validate source directory
     if !cli.source.exists() {
