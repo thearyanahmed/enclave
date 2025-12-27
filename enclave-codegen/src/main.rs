@@ -43,7 +43,7 @@ struct Cli {
     types: Vec<String>,
 
     /// Generate an index.ts file that re-exports all types.
-    #[arg(long, default_value = "true")]
+    #[arg(long, default_value = "false")]
     index: bool,
 }
 
