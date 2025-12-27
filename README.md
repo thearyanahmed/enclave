@@ -745,6 +745,21 @@ use enclave::teams::{
 };
 ```
 
+## TypeScript & JavaScript Types
+
+Pre-generated type definitions are available in the [`autogen/`](./autogen) directory:
+
+- **TypeScript**: `autogen/types/typescript/` - interfaces and type aliases
+- **JavaScript**: `autogen/types/javascript/` - JSDoc annotated files with documentation from Rust comments
+
+To regenerate after modifying Rust types:
+
+```bash
+make codegen
+```
+
+See [`autogen/README.md`](./autogen/README.md) for usage details.
+
 ## License
 
 MIT

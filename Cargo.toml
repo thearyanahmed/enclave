@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "enclave-codegen"]
+
 [package]
 name = "enclave"
 version = "0.1.0"
