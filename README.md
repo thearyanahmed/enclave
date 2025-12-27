@@ -32,6 +32,7 @@ enclave = { version = "0.1", features = ["actix", "sqlx_postgres"] }
 | `tracing`       | Span instrumentation for all actions   | tracing                 |
 | `rate_limit`    | Rate limiting utilities                | futures                 |
 | `magic_link`    | Passwordless magic link authentication | -                       |
+| `teams`         | Multi-tenant team support              | -                       |
 
 ## Core Concepts
 
@@ -617,6 +618,131 @@ curl -X POST http://localhost:8080/auth/login \
 # Protected endpoint
 curl http://localhost:8080/auth/me \
   -H "Authorization: Bearer <token>"
+```
+
+## Teams (teams)
+
+Requires `features = ["teams"]`.
+
+Multi-tenant team support with roles, permissions, and invitations.
+
+### Types
+
+```rust
+use enclave::teams::{Team, TeamMembership, TeamInvitation, UserTeamContext};
+
+// Team - organizational unit with name, slug, owner
+// TeamMembership - links users to teams with roles
+// TeamInvitation - pending invitation with expiry
+// UserTeamContext - tracks user's currently selected team
+```
+
+### Custom Roles and Permissions
+
+Define your own roles, resources, and actions:
+
+```rust
+use enclave::teams::{Role, Resource, Action, PermissionSet, PermissionSetBuilder};
+
+#[derive(Clone, PartialEq)]
+enum AppRole { Owner, Admin, Member }
+
+impl Role for AppRole {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Owner => "owner",
+            Self::Admin => "admin",
+            Self::Member => "member",
+        }
+    }
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "owner" => Some(Self::Owner),
+            "admin" => Some(Self::Admin),
+            "member" => Some(Self::Member),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum AppResource { Project, Settings, Billing }
+
+impl Resource for AppResource {
+    fn as_str(&self) -> &'static str { /* ... */ }
+    fn from_str(s: &str) -> Option<Self> { /* ... */ }
+}
+
+#[derive(Clone, PartialEq)]
+enum AppAction { Create, Read, Update, Delete, All }
+
+impl Action for AppAction {
+    fn as_str(&self) -> &'static str { /* ... */ }
+    fn from_str(s: &str) -> Option<Self> { /* ... */ }
+    fn is_all(&self) -> bool { matches!(self, Self::All) }
+}
+```
+
+### Permission Sets
+
+```rust
+// Build permission sets
+let admin_perms = PermissionSetBuilder::<AppResource, AppAction>::new()
+    .grant(AppResource::Project, AppAction::All)
+    .grant(AppResource::Settings, AppAction::Read)
+    .build();
+
+// Check permissions
+if admin_perms.can(&AppResource::Project, &AppAction::Create) {
+    // User can create projects
+}
+
+// Serialize to JSON for storage
+let json = admin_perms.to_json();
+let restored = PermissionSet::from_json(&json).unwrap();
+```
+
+### Repository Traits
+
+| Trait                            | Purpose                |
+| -------------------------------- | ---------------------- |
+| `TeamRepository`                 | Team CRUD, ownership   |
+| `TeamMembershipRepository`       | Member management      |
+| `TeamInvitationRepository`       | Invitation lifecycle   |
+| `TeamMemberPermissionRepository` | Permission management  |
+| `UserTeamContextRepository`      | Team context switching |
+
+### PostgreSQL Support
+
+With `features = ["teams", "sqlx_postgres"]`:
+
+```rust
+use enclave::postgres::{
+    PostgresTeamRepository,
+    PostgresTeamMembershipRepository,
+    PostgresTeamInvitationRepository,
+    PostgresTeamMemberPermissionRepository,
+    PostgresUserTeamContextRepository,
+};
+
+let team_repo = PostgresTeamRepository::new(pool.clone());
+let membership_repo = PostgresTeamMembershipRepository::new(pool.clone());
+let permission_repo: PostgresTeamMemberPermissionRepository<AppResource, AppAction> =
+    PostgresTeamMemberPermissionRepository::new(pool.clone());
+```
+
+### Mock Repositories
+
+With `features = ["teams", "mocks"]`:
+
+```rust
+use enclave::teams::{
+    MockTeamRepository,
+    MockTeamMembershipRepository,
+    MockTeamInvitationRepository,
+    MockTeamMemberPermissionRepository,
+    MockUserTeamContextRepository,
+};
 ```
 
 ## License
