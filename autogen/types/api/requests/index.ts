@@ -1,0 +1,10 @@
+export { RegisterRequest } from './RegisterRequest';
+export { LoginRequest } from './LoginRequest';
+export { ForgotPasswordRequest } from './ForgotPasswordRequest';
+export { ResetPasswordRequest } from './ResetPasswordRequest';
+export { ChangePasswordRequest } from './ChangePasswordRequest';
+export { UpdateUserRequest } from './UpdateUserRequest';
+export { RefreshTokenRequest } from './RefreshTokenRequest';
+export { VerifyEmailRequest } from './VerifyEmailRequest';
+export { MagicLinkRequest } from './MagicLinkRequest';
+export { VerifyMagicLinkRequest } from './VerifyMagicLinkRequest';
