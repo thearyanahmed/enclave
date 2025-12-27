@@ -68,16 +68,7 @@ clean:
 
 # codegen
 codegen:
-	cargo run -p enclave-codegen -- \
-		--source ./src \
-		--output ./autogen/types \
-		--types "AuthUser:repository/user.rs" \
-		--types "AuthError:lib.rs" \
-		--types "UserResponse:api/types.rs" \
-		--types "AuthResponse:api/types.rs" \
-		--types "TokenResponse:api/types.rs" \
-		--types "MessageResponse:api/types.rs" \
-		--types "ErrorResponse:api/types.rs"
+	./scripts/codegen.sh
 
 # help
 help:
