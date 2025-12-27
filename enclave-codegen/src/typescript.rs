@@ -108,7 +108,9 @@ pub fn generate_typescript(def: &TypeDefinition) -> String {
 fn collect_imports(ty: &RustType, imports: &mut BTreeSet<String>, uses_secret_string: &mut bool) {
     match ty {
         RustType::Simple(name) => {
-            if !PRIMITIVE_TYPES.contains(&name.as_str()) {
+            if name == "SecretString" {
+                *uses_secret_string = true;
+            } else if !PRIMITIVE_TYPES.contains(&name.as_str()) {
                 imports.insert(name.clone());
             }
         }
