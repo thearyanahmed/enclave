@@ -131,6 +131,32 @@ impl Permission for AppPermission {
     }
 }
 
+// Helper functions for role-based permission tests
+fn owner_permissions() -> PermissionSet<AppResource, AppAction> {
+    PermissionSetBuilder::new()
+        .grant(AppResource::Project, AppAction::All)
+        .grant(AppResource::Member, AppAction::All)
+        .grant(AppResource::Settings, AppAction::All)
+        .grant(AppResource::Billing, AppAction::All)
+        .build()
+}
+
+fn admin_permissions() -> PermissionSet<AppResource, AppAction> {
+    PermissionSetBuilder::new()
+        .grant(AppResource::Project, AppAction::All)
+        .grant(AppResource::Member, AppAction::All)
+        .grant(AppResource::Settings, AppAction::Read)
+        .build()
+}
+
+fn member_permissions() -> PermissionSet<AppResource, AppAction> {
+    PermissionSetBuilder::new()
+        .grant(AppResource::Project, AppAction::Create)
+        .grant(AppResource::Project, AppAction::Read)
+        .grant(AppResource::Project, AppAction::Update)
+        .build()
+}
+
 #[tokio::test]
 async fn test_team_creation_workflow() {
     let team_repo = MockTeamRepository::new();
@@ -183,7 +209,7 @@ async fn test_team_creation_workflow() {
     // Find user's teams
     let user_teams = membership_repo.find_by_user(1).await.unwrap();
     assert_eq!(user_teams.len(), 1);
-    assert_eq!(user_teams[0].team_id, team.id);
+    assert_eq!(user_teams.first().map(|t| t.team_id), Some(team.id));
 }
 
 #[tokio::test]
@@ -288,7 +314,7 @@ async fn test_expired_invitation_handling() {
     // Pending should only return non-expired
     let pending = invitation_repo.find_pending_by_team(1).await.unwrap();
     assert_eq!(pending.len(), 1);
-    assert_eq!(pending[0].email, "valid@example.com");
+    assert_eq!(pending.first().map(|p| p.email.as_str()), Some("valid@example.com"));
 
     // Delete expired
     let deleted_count = invitation_repo.delete_expired().await.unwrap();
@@ -401,32 +427,6 @@ async fn test_role_based_permission_assignment() {
         MockTeamMemberPermissionRepository::new();
 
     let team_id = 1;
-
-    // Define role-based permission sets
-    fn owner_permissions() -> PermissionSet<AppResource, AppAction> {
-        PermissionSetBuilder::new()
-            .grant(AppResource::Project, AppAction::All)
-            .grant(AppResource::Member, AppAction::All)
-            .grant(AppResource::Settings, AppAction::All)
-            .grant(AppResource::Billing, AppAction::All)
-            .build()
-    }
-
-    fn admin_permissions() -> PermissionSet<AppResource, AppAction> {
-        PermissionSetBuilder::new()
-            .grant(AppResource::Project, AppAction::All)
-            .grant(AppResource::Member, AppAction::All)
-            .grant(AppResource::Settings, AppAction::Read)
-            .build()
-    }
-
-    fn member_permissions() -> PermissionSet<AppResource, AppAction> {
-        PermissionSetBuilder::new()
-            .grant(AppResource::Project, AppAction::Create)
-            .grant(AppResource::Project, AppAction::Read)
-            .grant(AppResource::Project, AppAction::Update)
-            .build()
-    }
 
     // Assign permissions based on roles
     let owner_id = 1;
