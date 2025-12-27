@@ -35,6 +35,9 @@ mod handlers;
 mod middleware;
 mod routes;
 
+#[cfg(feature = "teams")]
+pub mod teams;
+
 pub use cors::{custom as custom_cors, default as default_cors, permissive as permissive_cors};
 pub use error::AppError;
 pub use middleware::{AuthenticatedUser, extract_bearer_token};
