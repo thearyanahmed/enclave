@@ -59,10 +59,7 @@ where
 
     /// Grant a permission for a resource and action.
     pub fn grant(&mut self, resource: R, action: A) {
-        self.permissions
-            .entry(resource)
-            .or_default()
-            .push(action);
+        self.permissions.entry(resource).or_default().push(action);
     }
 
     /// Check if the permission set allows an action on a resource.

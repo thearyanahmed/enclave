@@ -6,9 +6,9 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
-use super::types::{Team, TeamInvitation, TeamMembership, UserTeamContext};
 use super::PermissionSet;
 use super::traits::{Action, Resource};
+use super::types::{Team, TeamInvitation, TeamMembership, UserTeamContext};
 use crate::AuthError;
 
 /// Data for creating a new team.
@@ -63,8 +63,12 @@ pub trait TeamRepository: Send + Sync {
     async fn find_by_slug(&self, slug: &str) -> Result<Option<Team>, AuthError>;
 
     /// Update a team's name and/or slug.
-    async fn update(&self, id: i32, name: Option<&str>, slug: Option<&str>)
-        -> Result<Team, AuthError>;
+    async fn update(
+        &self,
+        id: i32,
+        name: Option<&str>,
+        slug: Option<&str>,
+    ) -> Result<Team, AuthError>;
 
     /// Delete a team.
     async fn delete(&self, id: i32) -> Result<(), AuthError>;
@@ -118,8 +122,10 @@ pub trait TeamInvitationRepository: Send + Sync {
     async fn find_by_id(&self, id: i32) -> Result<Option<TeamInvitation>, AuthError>;
 
     /// Find an invitation by token hash.
-    async fn find_by_token_hash(&self, token_hash: &str)
-        -> Result<Option<TeamInvitation>, AuthError>;
+    async fn find_by_token_hash(
+        &self,
+        token_hash: &str,
+    ) -> Result<Option<TeamInvitation>, AuthError>;
 
     /// Find pending invitations for a team.
     async fn find_pending_by_team(&self, team_id: i32) -> Result<Vec<TeamInvitation>, AuthError>;
@@ -197,7 +203,11 @@ pub trait UserTeamContextRepository: Send + Sync {
     async fn get_context(&self, user_id: i32) -> Result<Option<UserTeamContext>, AuthError>;
 
     /// Set the user's current team.
-    async fn set_current_team(&self, user_id: i32, team_id: i32) -> Result<UserTeamContext, AuthError>;
+    async fn set_current_team(
+        &self,
+        user_id: i32,
+        team_id: i32,
+    ) -> Result<UserTeamContext, AuthError>;
 
     /// Clear the user's current team context.
     async fn clear_context(&self, user_id: i32) -> Result<(), AuthError>;

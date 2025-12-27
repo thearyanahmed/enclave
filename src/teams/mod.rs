@@ -68,6 +68,6 @@ mod mocks;
 
 #[cfg(feature = "mocks")]
 pub use mocks::{
-    MockTeamInvitationRepository, MockTeamMemberPermissionRepository,
-    MockTeamMembershipRepository, MockTeamRepository, MockUserTeamContextRepository,
+    MockTeamInvitationRepository, MockTeamMemberPermissionRepository, MockTeamMembershipRepository,
+    MockTeamRepository, MockUserTeamContextRepository,
 };

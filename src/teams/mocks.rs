@@ -5,12 +5,13 @@
 #![allow(clippy::significant_drop_tightening)]
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::RwLock;
+use std::sync::atomic::{AtomicI32, Ordering};
 
 use async_trait::async_trait;
 use chrono::Utc;
 
+use super::PermissionSet;
 use super::repository::{
     CreateInvitation, CreateMembership, CreateTeam, TeamInvitationRepository,
     TeamMemberPermissionRepository, TeamMembershipRepository, TeamRepository,
@@ -18,7 +19,6 @@ use super::repository::{
 };
 use super::traits::{Action, Resource};
 use super::types::{Team, TeamInvitation, TeamMembership, UserTeamContext};
-use super::PermissionSet;
 use crate::AuthError;
 
 /// Mock team repository.
@@ -342,9 +342,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
         let now = Utc::now();
         Ok(invitations
             .values()
-            .filter(|i| {
-                i.team_id == team_id && i.accepted_at.is_none() && i.expires_at > now
-            })
+            .filter(|i| i.team_id == team_id && i.accepted_at.is_none() && i.expires_at > now)
             .cloned()
             .collect())
     }
@@ -357,9 +355,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
         let now = Utc::now();
         Ok(invitations
             .values()
-            .filter(|i| {
-                i.email == email && i.accepted_at.is_none() && i.expires_at > now
-            })
+            .filter(|i| i.email == email && i.accepted_at.is_none() && i.expires_at > now)
             .cloned()
             .collect())
     }
@@ -644,10 +640,7 @@ mod tests {
         let by_slug = repo.find_by_slug("test-team").await.unwrap();
         assert!(by_slug.is_some());
 
-        let updated = repo
-            .update(team.id, Some("New Name"), None)
-            .await
-            .unwrap();
+        let updated = repo.update(team.id, Some("New Name"), None).await.unwrap();
         assert_eq!(updated.name, "New Name");
 
         repo.delete(team.id).await.unwrap();
@@ -693,18 +686,21 @@ mod tests {
             .await
             .unwrap();
 
-        assert!(repo
-            .has_permission(1, 2, &TestResource::Project, &TestAction::Create)
-            .await
-            .unwrap());
+        assert!(
+            repo.has_permission(1, 2, &TestResource::Project, &TestAction::Create)
+                .await
+                .unwrap()
+        );
 
         repo.revoke_permission(1, 2, &TestResource::Project, &TestAction::Create)
             .await
             .unwrap();
 
-        assert!(!repo
-            .has_permission(1, 2, &TestResource::Project, &TestAction::Create)
-            .await
-            .unwrap());
+        assert!(
+            !repo
+                .has_permission(1, 2, &TestResource::Project, &TestAction::Create)
+                .await
+                .unwrap()
+        );
     }
 }
