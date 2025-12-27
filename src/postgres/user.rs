@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::{AuthError, User, UserRepository};
+use crate::{AuthError, AuthUser, UserRepository};
 
 #[derive(Clone)]
 pub struct PostgresUserRepository {
@@ -26,9 +26,9 @@ struct UserRecord {
     updated_at: DateTime<Utc>,
 }
 
-impl From<UserRecord> for User {
+impl From<UserRecord> for AuthUser {
     fn from(row: UserRecord) -> Self {
-        User {
+        AuthUser {
             id: row.id,
             email: row.email,
             name: row.name,
@@ -43,7 +43,7 @@ impl From<UserRecord> for User {
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError> {
+    async fn find_user_by_id(&self, id: i32) -> Result<Option<AuthUser>, AuthError> {
         let row: Option<UserRecord> = sqlx::query_as(
             "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE id = $1"
         )
@@ -59,7 +59,7 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email), err))]
-    async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
+    async fn find_user_by_email(&self, email: &str) -> Result<Option<AuthUser>, AuthError> {
         let row: Option<UserRecord> = sqlx::query_as(
             "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE email = $1"
         )
@@ -78,7 +78,7 @@ impl UserRepository for PostgresUserRepository {
         feature = "tracing",
         tracing::instrument(skip(self, email, hashed_password), err)
     )]
-    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
+    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<AuthUser, AuthError> {
         let row: UserRecord = sqlx::query_as(
             "INSERT INTO users (email, hashed_password) VALUES ($1, $2) RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at"
         )
@@ -138,7 +138,12 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, name, email), err))]
-    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
+    async fn update_user(
+        &self,
+        user_id: i32,
+        name: &str,
+        email: &str,
+    ) -> Result<AuthUser, AuthError> {
         let row: UserRecord = sqlx::query_as(
             "UPDATE users SET name = $1, email = $2, updated_at = NOW() WHERE id = $3 RETURNING id, email, name, hashed_password, email_verified_at, created_at, updated_at"
         )

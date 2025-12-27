@@ -6,11 +6,11 @@ use std::sync::{Arc, Mutex};
 
 use crate::AuthError;
 
-use super::user::{User, UserRepository};
+use super::user::{AuthUser, UserRepository};
 
 #[derive(Clone)]
 pub struct MockUserRepository {
-    pub users: Arc<Mutex<Vec<User>>>,
+    pub users: Arc<Mutex<Vec<AuthUser>>>,
 }
 
 impl MockUserRepository {
@@ -23,18 +23,18 @@ impl MockUserRepository {
 
 #[async_trait]
 impl UserRepository for MockUserRepository {
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError> {
+    async fn find_user_by_id(&self, id: i32) -> Result<Option<AuthUser>, AuthError> {
         let users = self.users.lock().unwrap();
         Ok(users.iter().find(|u| u.id == id).cloned())
     }
 
-    async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
+    async fn find_user_by_email(&self, email: &str) -> Result<Option<AuthUser>, AuthError> {
         let users = self.users.lock().unwrap();
         Ok(users.iter().find(|u| u.email == email).cloned())
     }
 
-    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError> {
-        let user = User::mock_from_credentials(email, hashed_password);
+    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<AuthUser, AuthError> {
+        let user = AuthUser::mock_from_credentials(email, hashed_password);
 
         let mut users = self.users.lock().unwrap();
         users.push(user.clone());
@@ -65,7 +65,12 @@ impl UserRepository for MockUserRepository {
         }
     }
 
-    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
+    async fn update_user(
+        &self,
+        user_id: i32,
+        name: &str,
+        email: &str,
+    ) -> Result<AuthUser, AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
             name.clone_into(&mut user.name);
