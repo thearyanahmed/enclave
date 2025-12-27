@@ -5,8 +5,8 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use sqlx::{FromRow, PgPool};
 
-use crate::teams::{Action, PermissionSet, Resource, TeamMemberPermissionRepository};
 use crate::AuthError;
+use crate::teams::{Action, PermissionSet, Resource, TeamMemberPermissionRepository};
 
 /// PostgreSQL-backed team member permission repository.
 ///
@@ -111,7 +111,10 @@ where
         Ok(())
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, resource, action), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, resource, action), err)
+    )]
     async fn grant_permission(
         &self,
         team_id: i32,
@@ -124,7 +127,10 @@ where
         self.set_permissions(team_id, user_id, &perms).await
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, resource, action), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, resource, action), err)
+    )]
     async fn revoke_permission(
         &self,
         team_id: i32,
@@ -137,7 +143,10 @@ where
         self.set_permissions(team_id, user_id, &perms).await
     }
 
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, resource, action), err))]
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, resource, action), err)
+    )]
     async fn has_permission(
         &self,
         team_id: i32,

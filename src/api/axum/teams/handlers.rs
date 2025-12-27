@@ -413,7 +413,10 @@ where
 
     match state.membership_repo.find_by_team(team_id).await {
         Ok(members) => {
-            let responses: Vec<_> = members.into_iter().map(TeamMembershipResponse::from).collect();
+            let responses: Vec<_> = members
+                .into_iter()
+                .map(TeamMembershipResponse::from)
+                .collect();
             Json(responses).into_response()
         }
         Err(err) => {
@@ -503,9 +506,11 @@ where
     };
 
     match state.membership_repo.create(data).await {
-        Ok(membership) => {
-            (StatusCode::CREATED, Json(TeamMembershipResponse::from(membership))).into_response()
-        }
+        Ok(membership) => (
+            StatusCode::CREATED,
+            Json(TeamMembershipResponse::from(membership)),
+        )
+            .into_response(),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
             (StatusCode::BAD_REQUEST, Json(error_response)).into_response()
@@ -586,7 +591,11 @@ where
         }
     };
 
-    match state.membership_repo.update_role(membership.id, &body.role).await {
+    match state
+        .membership_repo
+        .update_role(membership.id, &body.role)
+        .await
+    {
         Ok(updated) => Json(TeamMembershipResponse::from(updated)).into_response(),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -742,7 +751,11 @@ where
         Ok(invitation) => {
             // In a real application, you would send an email with the token here
             // For now, we return the invitation info (without the token for security)
-            (StatusCode::CREATED, Json(TeamInvitationResponse::from(invitation))).into_response()
+            (
+                StatusCode::CREATED,
+                Json(TeamInvitationResponse::from(invitation)),
+            )
+                .into_response()
         }
         Err(err) => {
             let error_response = ErrorResponse::from(err);
@@ -1026,7 +1039,11 @@ where
         log::error!(target: "enclave_auth", "msg=\"failed to mark invitation as accepted\", error=\"{e}\"");
     }
 
-    (StatusCode::OK, Json(TeamMembershipResponse::from(membership))).into_response()
+    (
+        StatusCode::OK,
+        Json(TeamMembershipResponse::from(membership)),
+    )
+        .into_response()
 }
 
 // =============================================================================

@@ -11,8 +11,8 @@ use chrono::{Duration, Utc};
 use enclave::teams::{
     Action, CreateInvitation, CreateMembership, CreateTeam, MockTeamInvitationRepository,
     MockTeamMemberPermissionRepository, MockTeamMembershipRepository, MockTeamRepository,
-    MockUserTeamContextRepository, Permission, PermissionSet, PermissionSetBuilder, Resource,
-    Role, TeamInvitationRepository, TeamMemberPermissionRepository, TeamMembershipRepository,
+    MockUserTeamContextRepository, Permission, PermissionSet, PermissionSetBuilder, Resource, Role,
+    TeamInvitationRepository, TeamMemberPermissionRepository, TeamMembershipRepository,
     TeamRepository, UserTeamContextRepository,
 };
 
@@ -314,7 +314,10 @@ async fn test_expired_invitation_handling() {
     // Pending should only return non-expired
     let pending = invitation_repo.find_pending_by_team(1).await.unwrap();
     assert_eq!(pending.len(), 1);
-    assert_eq!(pending.first().map(|p| p.email.as_str()), Some("valid@example.com"));
+    assert_eq!(
+        pending.first().map(|p| p.email.as_str()),
+        Some("valid@example.com")
+    );
 
     // Delete expired
     let deleted_count = invitation_repo.delete_expired().await.unwrap();
@@ -465,14 +468,24 @@ async fn test_role_based_permission_assignment() {
     // Member cannot delete projects
     assert!(
         !permission_repo
-            .has_permission(team_id, member_id, &AppResource::Project, &AppAction::Delete)
+            .has_permission(
+                team_id,
+                member_id,
+                &AppResource::Project,
+                &AppAction::Delete
+            )
             .await
             .unwrap()
     );
     // But can create them
     assert!(
         permission_repo
-            .has_permission(team_id, member_id, &AppResource::Project, &AppAction::Create)
+            .has_permission(
+                team_id,
+                member_id,
+                &AppResource::Project,
+                &AppAction::Create
+            )
             .await
             .unwrap()
     );
@@ -636,11 +649,17 @@ async fn test_member_removal() {
         .await
         .unwrap();
 
-    assert_eq!(membership_repo.find_by_team(team_id).await.unwrap().len(), 2);
+    assert_eq!(
+        membership_repo.find_by_team(team_id).await.unwrap().len(),
+        2
+    );
 
     // Remove by ID
     membership_repo.delete(member.id).await.unwrap();
-    assert_eq!(membership_repo.find_by_team(team_id).await.unwrap().len(), 1);
+    assert_eq!(
+        membership_repo.find_by_team(team_id).await.unwrap().len(),
+        1
+    );
 
     // Add another and remove by team+user
     membership_repo
@@ -656,7 +675,10 @@ async fn test_member_removal() {
         .delete_by_team_and_user(team_id, 3)
         .await
         .unwrap();
-    assert_eq!(membership_repo.find_by_team(team_id).await.unwrap().len(), 1);
+    assert_eq!(
+        membership_repo.find_by_team(team_id).await.unwrap().len(),
+        1
+    );
 }
 
 #[tokio::test]

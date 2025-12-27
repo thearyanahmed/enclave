@@ -154,14 +154,8 @@ where
     CM: UserTeamContextRepository + Clone + Send + Sync + 'static,
 {
     Router::new()
-        .route(
-            "/",
-            get(handlers::get_current_team::<U, T, TM, MM, IM, CM>),
-        )
-        .route(
-            "/",
-            put(handlers::set_current_team::<U, T, TM, MM, IM, CM>),
-        )
+        .route("/", get(handlers::get_current_team::<U, T, TM, MM, IM, CM>))
+        .route("/", put(handlers::set_current_team::<U, T, TM, MM, IM, CM>))
         .route(
             "/",
             delete(handlers::clear_current_team::<U, T, TM, MM, IM, CM>),

@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::teams::{CreateInvitation, TeamInvitation, TeamInvitationRepository};
 use crate::AuthError;
+use crate::teams::{CreateInvitation, TeamInvitation, TeamInvitationRepository};
 
 /// PostgreSQL-backed team invitation repository.
 #[derive(Clone)]

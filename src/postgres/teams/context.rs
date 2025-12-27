@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::teams::{UserTeamContext, UserTeamContextRepository};
 use crate::AuthError;
+use crate::teams::{UserTeamContext, UserTeamContextRepository};
 
 /// PostgreSQL-backed user team context repository.
 #[derive(Clone)]
