@@ -133,6 +133,7 @@ pub use repository::AuditEventType;
 pub use repository::AuditLog;
 #[cfg(feature = "audit_log")]
 pub use repository::AuditLogRepository;
+pub use repository::AuthUser;
 pub use repository::EmailVerificationRepository;
 pub use repository::EmailVerificationToken;
 pub use repository::LoginAttempt;
@@ -145,7 +146,6 @@ pub use repository::PasswordResetToken;
 pub use repository::RateLimiterRepository;
 pub use repository::StatefulTokenRepository;
 pub use repository::TokenRepository;
-pub use repository::User;
 pub use repository::UserRepository;
 
 #[cfg(all(feature = "audit_log", any(test, feature = "mocks")))]

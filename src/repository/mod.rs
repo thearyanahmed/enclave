@@ -18,7 +18,7 @@
 //!
 //! | Type | Description |
 //! |------|-------------|
-//! | [`User`] | User account data |
+//! | [`AuthUser`] | User account data |
 //! | [`AccessToken`] | Authentication token |
 //! | [`PasswordResetToken`] | Password reset token |
 //! | [`EmailVerificationToken`] | Email verification token |
@@ -78,7 +78,7 @@ pub use token::AccessToken;
 pub use token::CreateTokenOptions;
 pub use token::StatefulTokenRepository;
 pub use token::TokenRepository;
-pub use user::User;
+pub use user::AuthUser;
 pub use user::UserRepository;
 
 #[cfg(all(feature = "audit_log", any(test, feature = "mocks")))]
