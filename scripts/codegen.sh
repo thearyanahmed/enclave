@@ -82,7 +82,7 @@ cargo run -q -p enclave-codegen -- \
 
 cargo run -q -p enclave-codegen -- \
     --source ./src \
-    --output "$TS_BASE/teams/api/requests" \
+    --output "$TS_BASE/teams/requests" \
     --format typescript \
     --types "CreateTeamRequest:api/types.rs" \
     --types "UpdateTeamRequest:api/types.rs" \
@@ -95,7 +95,7 @@ cargo run -q -p enclave-codegen -- \
 
 cargo run -q -p enclave-codegen -- \
     --source ./src \
-    --output "$TS_BASE/teams/api/responses" \
+    --output "$TS_BASE/teams/responses" \
     --format typescript \
     --types "TeamResponse:api/types.rs" \
     --types "TeamMembershipResponse:api/types.rs" \
@@ -174,7 +174,7 @@ cargo run -q -p enclave-codegen -- \
 
 cargo run -q -p enclave-codegen -- \
     --source ./src \
-    --output "$JS_BASE/teams/api/requests" \
+    --output "$JS_BASE/teams/requests" \
     --format jsdoc \
     --types "CreateTeamRequest:api/types.rs" \
     --types "UpdateTeamRequest:api/types.rs" \
@@ -187,7 +187,7 @@ cargo run -q -p enclave-codegen -- \
 
 cargo run -q -p enclave-codegen -- \
     --source ./src \
-    --output "$JS_BASE/teams/api/responses" \
+    --output "$JS_BASE/teams/responses" \
     --format jsdoc \
     --types "TeamResponse:api/types.rs" \
     --types "TeamMembershipResponse:api/types.rs" \

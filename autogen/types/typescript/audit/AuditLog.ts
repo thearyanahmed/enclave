@@ -1,3 +1,5 @@
+import type { AuditEventType } from './AuditEventType';
+
 export interface AuditLog {
   id: number;
   user_id?: number | null;

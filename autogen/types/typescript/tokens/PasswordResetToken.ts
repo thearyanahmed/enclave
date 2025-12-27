@@ -1,3 +1,5 @@
+import type { SecretString } from './SecretString';
+
 export interface PasswordResetToken {
   token: SecretString;
   user_id: number;

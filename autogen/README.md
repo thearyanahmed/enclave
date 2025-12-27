@@ -15,9 +15,8 @@ types/
 │   │   ├── requests/     # API request DTOs
 │   │   └── responses/    # API response DTOs
 │   └── teams/
-│       ├── api/
-│       │   ├── requests/ # Teams API request DTOs
-│       │   └── responses/# Teams API response DTOs
+│       ├── requests/     # Teams API request DTOs
+│       ├── responses/    # Teams API response DTOs
 │       └── (core team types)
 └── javascript/           # JavaScript with JSDoc annotations
     ├── core/
@@ -28,9 +27,8 @@ types/
     │   ├── requests/
     │   └── responses/
     └── teams/
-        ├── api/
-        │   ├── requests/
-        │   └── responses/
+        ├── requests/
+        ├── responses/
         └── (core team types)
 ```
 

@@ -1,3 +1,5 @@
+import type { TokenType } from './TokenType';
+
 export interface JwtClaims {
   sub: string;
   exp: number;

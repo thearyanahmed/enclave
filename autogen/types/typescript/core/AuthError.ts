@@ -1,3 +1,5 @@
+import type { ValidationError } from './ValidationError';
+
 export type AuthError =
   | { type: "UserNotFound" }
   | { type: "UserAlreadyExists" }

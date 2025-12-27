@@ -3,13 +3,114 @@
 //! Converts parsed Rust types to TypeScript interfaces and type aliases.
 
 use crate::parser::{Field, RustType, TypeDefinition, TypeKind, Variant, VariantFields};
+use std::collections::BTreeSet;
 use std::fmt::Write;
+
+/// Primitive types that don't need imports.
+const PRIMITIVE_TYPES: &[&str] = &[
+    "string", "number", "boolean", "void", "null", "undefined",
+    "i8", "i16", "i32", "i64", "i128", "isize",
+    "u8", "u16", "u32", "u64", "u128", "usize",
+    "f32", "f64", "String", "str", "&str", "bool", "()",
+];
 
 /// Generate TypeScript code for a type definition.
 pub fn generate_typescript(def: &TypeDefinition) -> String {
+    let mut imports = BTreeSet::new();
+    let mut uses_secret_string = false;
+
+    // Collect imports based on type kind
     match &def.kind {
-        TypeKind::Struct { fields } => generate_interface(&def.name, fields),
-        TypeKind::Enum { variants } => generate_union(&def.name, variants),
+        TypeKind::Struct { fields } => {
+            for field in fields {
+                collect_imports(&field.ty, &mut imports, &mut uses_secret_string);
+            }
+        }
+        TypeKind::Enum { variants } => {
+            for variant in variants {
+                match &variant.fields {
+                    VariantFields::Unit => {}
+                    VariantFields::Tuple(types) => {
+                        for ty in types {
+                            collect_imports(ty, &mut imports, &mut uses_secret_string);
+                        }
+                    }
+                    VariantFields::Struct(fields) => {
+                        for field in fields {
+                            collect_imports(&field.ty, &mut imports, &mut uses_secret_string);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Remove self-reference
+    imports.remove(&def.name);
+
+    let mut output = String::new();
+
+    // Generate imports
+    for import in &imports {
+        let _ = writeln!(output, "import type {{ {import} }} from './{import}';");
+    }
+
+    // Add SecretString branded type if used
+    if uses_secret_string {
+        if !imports.is_empty() {
+            output.push('\n');
+        }
+        output.push_str("/** Branded type for sensitive string data. Handle securely - do not log or expose. */\n");
+        output.push_str("export type SecretString = string & { readonly __brand: 'SecretString' };\n");
+    }
+
+    if !imports.is_empty() || uses_secret_string {
+        output.push('\n');
+    }
+
+    // Generate the type definition
+    match &def.kind {
+        TypeKind::Struct { fields } => {
+            output.push_str(&generate_interface(&def.name, fields));
+        }
+        TypeKind::Enum { variants } => {
+            output.push_str(&generate_union(&def.name, variants));
+        }
+    }
+
+    output
+}
+
+/// Collect custom type imports from a Rust type.
+fn collect_imports(ty: &RustType, imports: &mut BTreeSet<String>, uses_secret_string: &mut bool) {
+    match ty {
+        RustType::Simple(name) => {
+            if !PRIMITIVE_TYPES.contains(&name.as_str()) {
+                imports.insert(name.clone());
+            }
+        }
+        RustType::Option(inner) | RustType::Vec(inner) => {
+            collect_imports(inner, imports, uses_secret_string);
+        }
+        RustType::HashMap(key, value) => {
+            collect_imports(key, imports, uses_secret_string);
+            collect_imports(value, imports, uses_secret_string);
+        }
+        RustType::Generic(name, args) => {
+            if name == "SecretString" {
+                *uses_secret_string = true;
+                // Don't recurse into SecretString args
+            } else if name == "DateTime" {
+                // DateTime<Utc> maps to string, don't import type args
+            } else {
+                if !PRIMITIVE_TYPES.contains(&name.as_str()) {
+                    imports.insert(name.clone());
+                }
+                for arg in args {
+                    collect_imports(arg, imports, uses_secret_string);
+                }
+            }
+        }
     }
 }
 
@@ -116,8 +217,11 @@ fn rust_type_to_typescript(ty: &RustType) -> (String, bool) {
         RustType::Generic(name, args) => {
             // Handle well-known generic types
             match name.as_str() {
-                // DateTime<Utc> -> string (ISO 8601), SecretString -> string
-                "DateTime" | "SecretString" => ("string".to_owned(), false),
+                // `DateTime<Utc>` -> string (ISO 8601)
+                "DateTime" => ("string".to_owned(), false),
+
+                // `SecretString` -> branded type for security awareness
+                "SecretString" => ("SecretString".to_owned(), false),
 
                 // For other generics, include type parameters
                 _ => {
