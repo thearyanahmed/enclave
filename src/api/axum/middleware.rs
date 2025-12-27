@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 
 use super::error::AppError;
 use super::routes::AppState;
-use crate::{AuthError, TokenRepository, User, UserRepository};
+use crate::{AuthError, AuthUser, TokenRepository, UserRepository};
 
 /// Authenticated user extractor for Axum handlers.
 ///
@@ -37,7 +37,7 @@ where
     U: UserRepository,
     T: TokenRepository,
 {
-    user: User,
+    user: AuthUser,
     _marker: PhantomData<(U, T)>,
 }
 
@@ -47,12 +47,12 @@ where
     T: TokenRepository,
 {
     /// Returns the inner user, consuming the wrapper.
-    pub fn into_inner(self) -> User {
+    pub fn into_inner(self) -> AuthUser {
         self.user
     }
 
     /// Returns a reference to the authenticated user.
-    pub fn user(&self) -> &User {
+    pub fn user(&self) -> &AuthUser {
         &self.user
     }
 }

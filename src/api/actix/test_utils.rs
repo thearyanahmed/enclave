@@ -23,7 +23,7 @@ use actix_web::test::TestRequest;
 use chrono::{Duration, Utc};
 
 use crate::{
-    AccessToken, Argon2Hasher, AuthError, PasswordHasher, StatefulTokenRepository, User,
+    AccessToken, Argon2Hasher, AuthError, AuthUser, PasswordHasher, StatefulTokenRepository,
     UserRepository,
 };
 
@@ -90,7 +90,7 @@ where
     /// # Errors
     ///
     /// Returns an error if user creation or token generation fails.
-    pub async fn build(self) -> Result<(User, AccessToken), AuthError> {
+    pub async fn build(self) -> Result<(AuthUser, AccessToken), AuthError> {
         let hasher = Argon2Hasher::default();
         let hashed_password = hasher.hash(&self.password)?;
 

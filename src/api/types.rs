@@ -115,8 +115,8 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
-impl From<crate::User> for UserResponse {
-    fn from(user: crate::User) -> Self {
+impl From<crate::AuthUser> for UserResponse {
+    fn from(user: crate::AuthUser) -> Self {
         UserResponse {
             id: user.id,
             email: user.email,
