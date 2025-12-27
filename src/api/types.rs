@@ -142,6 +142,160 @@ impl From<crate::AuthError> for ErrorResponse {
     }
 }
 
+// =============================================================================
+// Teams DTOs
+// =============================================================================
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct CreateTeamRequest {
+    pub name: String,
+    pub slug: String,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct UpdateTeamRequest {
+    pub name: Option<String>,
+    pub slug: Option<String>,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct TransferOwnershipRequest {
+    pub new_owner_id: i32,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct AddMemberRequest {
+    pub user_id: i32,
+    pub role: String,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct InviteMemberRequest {
+    pub email: String,
+    pub role: String,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct UpdateMemberRoleRequest {
+    pub role: String,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct AcceptInvitationRequest {
+    pub token: String,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Deserialize)]
+pub struct SetCurrentTeamRequest {
+    pub team_id: i32,
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Serialize)]
+pub struct TeamResponse {
+    pub id: i32,
+    pub name: String,
+    pub slug: String,
+    pub owner_id: i32,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[cfg(feature = "teams")]
+impl From<crate::teams::Team> for TeamResponse {
+    fn from(team: crate::teams::Team) -> Self {
+        TeamResponse {
+            id: team.id,
+            name: team.name,
+            slug: team.slug,
+            owner_id: team.owner_id,
+            created_at: team.created_at,
+            updated_at: team.updated_at,
+        }
+    }
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Serialize)]
+pub struct TeamMembershipResponse {
+    pub id: i32,
+    pub team_id: i32,
+    pub user_id: i32,
+    pub role: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[cfg(feature = "teams")]
+impl From<crate::teams::TeamMembership> for TeamMembershipResponse {
+    fn from(m: crate::teams::TeamMembership) -> Self {
+        TeamMembershipResponse {
+            id: m.id,
+            team_id: m.team_id,
+            user_id: m.user_id,
+            role: m.role,
+            created_at: m.created_at,
+            updated_at: m.updated_at,
+        }
+    }
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Serialize)]
+pub struct TeamInvitationResponse {
+    pub id: i32,
+    pub team_id: i32,
+    pub email: String,
+    pub role: String,
+    pub invited_by: i32,
+    pub expires_at: DateTime<Utc>,
+    pub accepted_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[cfg(feature = "teams")]
+impl From<crate::teams::TeamInvitation> for TeamInvitationResponse {
+    fn from(inv: crate::teams::TeamInvitation) -> Self {
+        TeamInvitationResponse {
+            id: inv.id,
+            team_id: inv.team_id,
+            email: inv.email,
+            role: inv.role,
+            invited_by: inv.invited_by,
+            expires_at: inv.expires_at,
+            accepted_at: inv.accepted_at,
+            created_at: inv.created_at,
+        }
+    }
+}
+
+#[cfg(feature = "teams")]
+#[derive(Debug, Serialize)]
+pub struct UserTeamContextResponse {
+    pub user_id: i32,
+    pub current_team_id: i32,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[cfg(feature = "teams")]
+impl From<crate::teams::UserTeamContext> for UserTeamContextResponse {
+    fn from(ctx: crate::teams::UserTeamContext) -> Self {
+        UserTeamContextResponse {
+            user_id: ctx.user_id,
+            current_team_id: ctx.current_team_id,
+            updated_at: ctx.updated_at,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

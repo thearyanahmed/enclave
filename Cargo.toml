@@ -43,6 +43,7 @@ audit_log = []
 sessions = ["actix", "hmac"]
 magic_link = []
 axum_api = ["axum", "tower", "tower-http"]
+teams = []
 
 [dev-dependencies]
 actix-rt = "2"

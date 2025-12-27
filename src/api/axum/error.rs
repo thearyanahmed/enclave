@@ -33,10 +33,12 @@ impl IntoResponse for AppError {
             AuthError::InvalidCredentials | AuthError::UserNotFound | AuthError::TokenExpired => {
                 StatusCode::UNAUTHORIZED
             }
+            AuthError::NotFound => StatusCode::NOT_FOUND,
             #[allow(deprecated)]
             AuthError::DatabaseError(_)
             | AuthError::ConfigurationError(_)
             | AuthError::PasswordHashError
+            | AuthError::Internal(_)
             | AuthError::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 

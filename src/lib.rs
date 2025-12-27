@@ -112,6 +112,8 @@ pub mod repository;
 pub mod secret;
 #[cfg(feature = "sessions")]
 pub mod session;
+#[cfg(feature = "teams")]
+pub mod teams;
 pub mod validators;
 
 pub use config::AuthConfig;
@@ -177,9 +179,11 @@ pub enum AuthError {
     TokenInvalid,
     EmailAlreadyVerified,
     TooManyAttempts,
+    NotFound,
     Validation(validators::ValidationError),
     ConfigurationError(String),
     DatabaseError(String),
+    Internal(String),
     #[deprecated(note = "Use specific error variants instead")]
     Other(String),
 }
@@ -208,9 +212,11 @@ impl fmt::Display for AuthError {
             AuthError::TooManyAttempts => {
                 write!(f, "Too many failed attempts, please try again later")
             }
+            AuthError::NotFound => write!(f, "Resource not found"),
             AuthError::Validation(err) => write!(f, "Validation error: {err}"),
             AuthError::ConfigurationError(msg) => write!(f, "Configuration error: {msg}"),
             AuthError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
+            AuthError::Internal(msg) => write!(f, "Internal error: {msg}"),
             AuthError::Other(msg) => write!(f, "{msg}"),
         }
     }

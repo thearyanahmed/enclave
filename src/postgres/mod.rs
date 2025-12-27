@@ -5,6 +5,8 @@ mod email_verification;
 mod magic_link;
 mod password_reset;
 mod rate_limiter;
+#[cfg(feature = "teams")]
+mod teams;
 mod token;
 mod user;
 
@@ -15,6 +17,11 @@ pub use email_verification::PostgresEmailVerificationRepository;
 pub use magic_link::PostgresMagicLinkRepository;
 pub use password_reset::PostgresPasswordResetRepository;
 pub use rate_limiter::PostgresRateLimiterRepository;
+#[cfg(feature = "teams")]
+pub use teams::{
+    PostgresTeamInvitationRepository, PostgresTeamMemberPermissionRepository,
+    PostgresTeamMembershipRepository, PostgresTeamRepository, PostgresUserTeamContextRepository,
+};
 pub use token::PostgresTokenRepository;
 pub use user::PostgresUserRepository;
 
