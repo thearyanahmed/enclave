@@ -32,7 +32,7 @@
 pub mod parser;
 pub mod typescript;
 
-pub use parser::{parse_type, parse_type_from_source, ParseError, TypeDefinition};
+pub use parser::{ParseError, TypeDefinition, parse_type, parse_type_from_source};
 pub use typescript::{generate_index, generate_typescript};
 
 /// Define types to export to TypeScript.

@@ -41,10 +41,13 @@ fn generate_union(name: &str, variants: &[Variant]) -> String {
                     let (ts_type, _) = rust_type_to_typescript(&types[0]);
                     format!("  | {{ type: \"{}\"; value: {} }}", variant.name, ts_type)
                 } else {
-                    let ts_types: Vec<String> = types.iter()
-                        .map(|t| rust_type_to_typescript(t).0)
-                        .collect();
-                    format!("  | {{ type: \"{}\"; value: [{}] }}", variant.name, ts_types.join(", "))
+                    let ts_types: Vec<String> =
+                        types.iter().map(|t| rust_type_to_typescript(t).0).collect();
+                    format!(
+                        "  | {{ type: \"{}\"; value: [{}] }}",
+                        variant.name,
+                        ts_types.join(", ")
+                    )
                 }
             }
             VariantFields::Struct(fields) => {
@@ -54,7 +57,11 @@ fn generate_union(name: &str, variants: &[Variant]) -> String {
                     let opt_marker = if optional { "?" } else { "" };
                     field_strs.push(format!("{}{}: {}", field.name, opt_marker, ts_type));
                 }
-                format!("  | {{ type: \"{}\"; {} }}", variant.name, field_strs.join("; "))
+                format!(
+                    "  | {{ type: \"{}\"; {} }}",
+                    variant.name,
+                    field_strs.join("; ")
+                )
             }
         };
 
@@ -76,9 +83,8 @@ fn rust_type_to_typescript(ty: &RustType) -> (String, bool) {
         RustType::Simple(name) => {
             let ts_type = match name.as_str() {
                 // Numeric types (all map to number)
-                "i8" | "i16" | "i32" | "i64" | "i128" | "isize"
-                | "u8" | "u16" | "u32" | "u64" | "u128" | "usize"
-                | "f32" | "f64" => "number",
+                "i8" | "i16" | "i32" | "i64" | "i128" | "isize" | "u8" | "u16" | "u32" | "u64"
+                | "u128" | "usize" | "f32" | "f64" => "number",
 
                 // String types
                 "String" | "str" | "&str" => "string",
@@ -115,9 +121,8 @@ fn rust_type_to_typescript(ty: &RustType) -> (String, bool) {
 
                 // For other generics, include type parameters
                 _ => {
-                    let ts_args: Vec<String> = args.iter()
-                        .map(|a| rust_type_to_typescript(a).0)
-                        .collect();
+                    let ts_args: Vec<String> =
+                        args.iter().map(|a| rust_type_to_typescript(a).0).collect();
                     if ts_args.is_empty() {
                         (name.clone(), false)
                     } else {
@@ -173,12 +178,10 @@ mod tests {
         let def = TypeDefinition {
             name: "User".to_owned(),
             kind: TypeKind::Struct {
-                fields: vec![
-                    Field {
-                        name: "email".to_owned(),
-                        ty: RustType::Option(Box::new(RustType::Simple("String".to_owned()))),
-                    },
-                ],
+                fields: vec![Field {
+                    name: "email".to_owned(),
+                    ty: RustType::Option(Box::new(RustType::Simple("String".to_owned()))),
+                }],
             },
         };
 
@@ -191,12 +194,10 @@ mod tests {
         let def = TypeDefinition {
             name: "Team".to_owned(),
             kind: TypeKind::Struct {
-                fields: vec![
-                    Field {
-                        name: "members".to_owned(),
-                        ty: RustType::Vec(Box::new(RustType::Simple("i32".to_owned()))),
-                    },
-                ],
+                fields: vec![Field {
+                    name: "members".to_owned(),
+                    ty: RustType::Vec(Box::new(RustType::Simple("i32".to_owned()))),
+                }],
             },
         };
 
@@ -209,15 +210,13 @@ mod tests {
         let def = TypeDefinition {
             name: "Event".to_owned(),
             kind: TypeKind::Struct {
-                fields: vec![
-                    Field {
-                        name: "created_at".to_owned(),
-                        ty: RustType::Generic(
-                            "DateTime".to_owned(),
-                            vec![RustType::Simple("Utc".to_owned())],
-                        ),
-                    },
-                ],
+                fields: vec![Field {
+                    name: "created_at".to_owned(),
+                    ty: RustType::Generic(
+                        "DateTime".to_owned(),
+                        vec![RustType::Simple("Utc".to_owned())],
+                    ),
+                }],
             },
         };
 

@@ -73,19 +73,28 @@ fn main() -> ExitCode {
     // Change to working directory if specified
     if let Some(dir) = &cli.dir {
         if let Err(e) = std::env::set_current_dir(dir) {
-            eprintln!("Error: failed to change to directory '{}': {e}", dir.display());
+            eprintln!(
+                "Error: failed to change to directory '{}': {e}",
+                dir.display()
+            );
             return ExitCode::FAILURE;
         }
     }
 
     // Validate source directory
     if !cli.source.exists() {
-        eprintln!("Error: source directory does not exist: {}", cli.source.display());
+        eprintln!(
+            "Error: source directory does not exist: {}",
+            cli.source.display()
+        );
         return ExitCode::FAILURE;
     }
 
     if !cli.source.is_dir() {
-        eprintln!("Error: source path is not a directory: {}", cli.source.display());
+        eprintln!(
+            "Error: source path is not a directory: {}",
+            cli.source.display()
+        );
         return ExitCode::FAILURE;
     }
 
@@ -162,7 +171,11 @@ fn main() -> ExitCode {
 
     // Summary
     println!();
-    println!("Generated {} type(s) in {}", generated_types.len(), cli.output.display());
+    println!(
+        "Generated {} type(s) in {}",
+        generated_types.len(),
+        cli.output.display()
+    );
 
     if had_errors {
         ExitCode::FAILURE

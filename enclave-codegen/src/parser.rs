@@ -88,7 +88,11 @@ impl From<std::io::Error> for ParseError {
 }
 
 /// Parse a Rust source file and extract a specific type definition.
-pub fn parse_type(source_dir: &Path, relative_path: &str, type_name: &str) -> Result<TypeDefinition, ParseError> {
+pub fn parse_type(
+    source_dir: &Path,
+    relative_path: &str,
+    type_name: &str,
+) -> Result<TypeDefinition, ParseError> {
     let file_path = source_dir.join(relative_path);
 
     if !file_path.exists() {
@@ -101,8 +105,7 @@ pub fn parse_type(source_dir: &Path, relative_path: &str, type_name: &str) -> Re
 
 /// Parse a type definition from source code string.
 pub fn parse_type_from_source(source: &str, type_name: &str) -> Result<TypeDefinition, ParseError> {
-    let syntax = syn::parse_file(source)
-        .map_err(|e| ParseError::SyntaxError(e.to_string()))?;
+    let syntax = syn::parse_file(source).map_err(|e| ParseError::SyntaxError(e.to_string()))?;
 
     for item in syntax.items {
         if let Some(def) = extract_type_definition(&item, type_name) {
@@ -116,12 +119,8 @@ pub fn parse_type_from_source(source: &str, type_name: &str) -> Result<TypeDefin
 /// Extract a type definition from a syn Item if it matches the target name.
 fn extract_type_definition(item: &syn::Item, target_name: &str) -> Option<TypeDefinition> {
     match item {
-        syn::Item::Struct(s) if s.ident == target_name => {
-            Some(parse_struct(s))
-        }
-        syn::Item::Enum(e) if e.ident == target_name => {
-            Some(parse_enum(e))
-        }
+        syn::Item::Struct(s) if s.ident == target_name => Some(parse_struct(s)),
+        syn::Item::Enum(e) if e.ident == target_name => Some(parse_enum(e)),
         _ => None,
     }
 }
@@ -129,24 +128,27 @@ fn extract_type_definition(item: &syn::Item, target_name: &str) -> Option<TypeDe
 /// Parse a struct definition.
 fn parse_struct(s: &syn::ItemStruct) -> TypeDefinition {
     let fields = match &s.fields {
-        syn::Fields::Named(named) => {
-            named.named.iter()
-                .filter_map(|f| {
-                    let name = f.ident.as_ref()?.to_string();
-                    let ty = parse_rust_type(&f.ty);
-                    Some(Field { name, ty })
-                })
-                .collect()
-        }
-        syn::Fields::Unnamed(unnamed) => {
-            unnamed.unnamed.iter()
-                .enumerate()
-                .map(|(i, f)| {
-                    let ty = parse_rust_type(&f.ty);
-                    Field { name: format!("field{i}"), ty }
-                })
-                .collect()
-        }
+        syn::Fields::Named(named) => named
+            .named
+            .iter()
+            .filter_map(|f| {
+                let name = f.ident.as_ref()?.to_string();
+                let ty = parse_rust_type(&f.ty);
+                Some(Field { name, ty })
+            })
+            .collect(),
+        syn::Fields::Unnamed(unnamed) => unnamed
+            .unnamed
+            .iter()
+            .enumerate()
+            .map(|(i, f)| {
+                let ty = parse_rust_type(&f.ty);
+                Field {
+                    name: format!("field{i}"),
+                    ty,
+                }
+            })
+            .collect(),
         syn::Fields::Unit => Vec::new(),
     };
 
@@ -158,19 +160,25 @@ fn parse_struct(s: &syn::ItemStruct) -> TypeDefinition {
 
 /// Parse an enum definition.
 fn parse_enum(e: &syn::ItemEnum) -> TypeDefinition {
-    let variants = e.variants.iter()
+    let variants = e
+        .variants
+        .iter()
         .map(|v| {
             let name = v.ident.to_string();
             let fields = match &v.fields {
                 syn::Fields::Unit => VariantFields::Unit,
                 syn::Fields::Unnamed(unnamed) => {
-                    let types = unnamed.unnamed.iter()
+                    let types = unnamed
+                        .unnamed
+                        .iter()
                         .map(|f| parse_rust_type(&f.ty))
                         .collect();
                     VariantFields::Tuple(types)
                 }
                 syn::Fields::Named(named) => {
-                    let fields = named.named.iter()
+                    let fields = named
+                        .named
+                        .iter()
                         .filter_map(|f| {
                             let name = f.ident.as_ref()?.to_string();
                             let ty = parse_rust_type(&f.ty);
@@ -193,9 +201,7 @@ fn parse_enum(e: &syn::ItemEnum) -> TypeDefinition {
 /// Parse a `syn::Type` into our `RustType` representation.
 fn parse_rust_type(ty: &syn::Type) -> RustType {
     match ty {
-        syn::Type::Path(type_path) => {
-            parse_type_path(&type_path.path)
-        }
+        syn::Type::Path(type_path) => parse_type_path(&type_path.path),
         syn::Type::Reference(type_ref) => {
             // For references, we just care about the inner type
             parse_rust_type(&type_ref.elem)
@@ -218,11 +224,11 @@ fn parse_type_path(path: &syn::Path) -> RustType {
 
     // Check for generic arguments
     match &segment.arguments {
-        syn::PathArguments::None => {
-            RustType::Simple(ident)
-        }
+        syn::PathArguments::None => RustType::Simple(ident),
         syn::PathArguments::AngleBracketed(args) => {
-            let type_args: Vec<RustType> = args.args.iter()
+            let type_args: Vec<RustType> = args
+                .args
+                .iter()
                 .filter_map(|arg| {
                     if let syn::GenericArgument::Type(ty) = arg {
                         Some(parse_rust_type(ty))
@@ -233,16 +239,26 @@ fn parse_type_path(path: &syn::Path) -> RustType {
                 .collect();
 
             match ident.as_str() {
-                "Option" if type_args.len() == 1 => {
-                    RustType::Option(Box::new(type_args.into_iter().next().unwrap_or(RustType::Simple("unknown".to_owned()))))
-                }
-                "Vec" if type_args.len() == 1 => {
-                    RustType::Vec(Box::new(type_args.into_iter().next().unwrap_or(RustType::Simple("unknown".to_owned()))))
-                }
+                "Option" if type_args.len() == 1 => RustType::Option(Box::new(
+                    type_args
+                        .into_iter()
+                        .next()
+                        .unwrap_or(RustType::Simple("unknown".to_owned())),
+                )),
+                "Vec" if type_args.len() == 1 => RustType::Vec(Box::new(
+                    type_args
+                        .into_iter()
+                        .next()
+                        .unwrap_or(RustType::Simple("unknown".to_owned())),
+                )),
                 "HashMap" | "BTreeMap" if type_args.len() == 2 => {
                     let mut iter = type_args.into_iter();
-                    let key = iter.next().unwrap_or(RustType::Simple("unknown".to_owned()));
-                    let value = iter.next().unwrap_or(RustType::Simple("unknown".to_owned()));
+                    let key = iter
+                        .next()
+                        .unwrap_or(RustType::Simple("unknown".to_owned()));
+                    let value = iter
+                        .next()
+                        .unwrap_or(RustType::Simple("unknown".to_owned()));
                     RustType::HashMap(Box::new(key), Box::new(value))
                 }
                 _ => {
