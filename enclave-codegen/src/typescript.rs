@@ -153,14 +153,17 @@ mod tests {
     fn test_simple_struct() {
         let def = TypeDefinition {
             name: "User".to_owned(),
+            doc: None,
             kind: TypeKind::Struct {
                 fields: vec![
                     Field {
                         name: "id".to_owned(),
+                        doc: None,
                         ty: RustType::Simple("i32".to_owned()),
                     },
                     Field {
                         name: "name".to_owned(),
+                        doc: None,
                         ty: RustType::Simple("String".to_owned()),
                     },
                 ],
@@ -177,9 +180,11 @@ mod tests {
     fn test_optional_field() {
         let def = TypeDefinition {
             name: "User".to_owned(),
+            doc: None,
             kind: TypeKind::Struct {
                 fields: vec![Field {
                     name: "email".to_owned(),
+                    doc: None,
                     ty: RustType::Option(Box::new(RustType::Simple("String".to_owned()))),
                 }],
             },
@@ -193,9 +198,11 @@ mod tests {
     fn test_vec_field() {
         let def = TypeDefinition {
             name: "Team".to_owned(),
+            doc: None,
             kind: TypeKind::Struct {
                 fields: vec![Field {
                     name: "members".to_owned(),
+                    doc: None,
                     ty: RustType::Vec(Box::new(RustType::Simple("i32".to_owned()))),
                 }],
             },
@@ -209,9 +216,11 @@ mod tests {
     fn test_datetime_field() {
         let def = TypeDefinition {
             name: "Event".to_owned(),
+            doc: None,
             kind: TypeKind::Struct {
                 fields: vec![Field {
                     name: "created_at".to_owned(),
+                    doc: None,
                     ty: RustType::Generic(
                         "DateTime".to_owned(),
                         vec![RustType::Simple("Utc".to_owned())],
@@ -228,14 +237,17 @@ mod tests {
     fn test_simple_enum() {
         let def = TypeDefinition {
             name: "Status".to_owned(),
+            doc: None,
             kind: TypeKind::Enum {
                 variants: vec![
                     Variant {
                         name: "Active".to_owned(),
+                        doc: None,
                         fields: VariantFields::Unit,
                     },
                     Variant {
                         name: "Inactive".to_owned(),
+                        doc: None,
                         fields: VariantFields::Unit,
                     },
                 ],
@@ -252,14 +264,17 @@ mod tests {
     fn test_enum_with_data() {
         let def = TypeDefinition {
             name: "Error".to_owned(),
+            doc: None,
             kind: TypeKind::Enum {
                 variants: vec![
                     Variant {
                         name: "NotFound".to_owned(),
+                        doc: None,
                         fields: VariantFields::Unit,
                     },
                     Variant {
                         name: "Message".to_owned(),
+                        doc: None,
                         fields: VariantFields::Tuple(vec![RustType::Simple("String".to_owned())]),
                     },
                 ],

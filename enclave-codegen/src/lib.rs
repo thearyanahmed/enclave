@@ -1,18 +1,27 @@
 //! # Enclave Codegen
 //!
-//! TypeScript code generator for Rust types.
+//! TypeScript and `JSDoc` code generator for Rust types.
 //!
-//! This crate provides tools to generate TypeScript type definitions from Rust
-//! source files without modifying the original types.
+//! This crate provides tools to generate TypeScript type definitions and
+//! JavaScript with `JSDoc` annotations from Rust source files without modifying
+//! the original types.
 //!
 //! ## CLI Usage
 //!
 //! ```bash
+//! # Generate TypeScript
 //! enclave-codegen \
 //!     --source ./src \
-//!     --output ./types \
-//!     --types "AuthUser:repository/user.rs" \
-//!     --types "AuthError:lib.rs"
+//!     --output ./types/typescript \
+//!     --format typescript \
+//!     --types "AuthUser:repository/user.rs"
+//!
+//! # Generate JavaScript with JSDoc
+//! enclave-codegen \
+//!     --source ./src \
+//!     --output ./types/javascript \
+//!     --format jsdoc \
+//!     --types "AuthUser:repository/user.rs"
 //! ```
 //!
 //! ## Macro Usage
@@ -29,9 +38,11 @@
 //!
 //! Then use the generated `TYPES` constant with a build script or the CLI.
 
+pub mod jsdoc;
 pub mod parser;
 pub mod typescript;
 
+pub use jsdoc::generate_jsdoc;
 pub use parser::{ParseError, TypeDefinition, parse_type, parse_type_from_source};
 pub use typescript::{generate_index, generate_typescript};
 
@@ -65,6 +76,7 @@ macro_rules! export_types {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -82,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_parse_auth_user_like_struct() {
-        let source = r#"
+        let source = r"
             use chrono::{DateTime, Utc};
 
             pub struct AuthUser {
@@ -92,7 +104,7 @@ mod tests {
                 pub email_verified_at: Option<DateTime<Utc>>,
                 pub created_at: DateTime<Utc>,
             }
-        "#;
+        ";
 
         let def = parse_type_from_source(source, "AuthUser").unwrap();
         let ts = generate_typescript(&def);
@@ -107,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_parse_auth_error_like_enum() {
-        let source = r#"
+        let source = r"
             pub enum AuthError {
                 UserNotFound,
                 UserAlreadyExists,
@@ -115,7 +127,7 @@ mod tests {
                 DatabaseError(String),
                 Validation(ValidationError),
             }
-        "#;
+        ";
 
         let def = parse_type_from_source(source, "AuthError").unwrap();
         let ts = generate_typescript(&def);
@@ -126,5 +138,26 @@ mod tests {
         assert!(ts.contains("{ type: \"InvalidCredentials\" }"));
         assert!(ts.contains("{ type: \"DatabaseError\"; value: string }"));
         assert!(ts.contains("{ type: \"Validation\"; value: ValidationError }"));
+    }
+
+    #[test]
+    fn test_jsdoc_generation() {
+        let source = r"
+            /// A user in the system.
+            pub struct AuthUser {
+                /// The user's unique ID.
+                pub id: i32,
+                /// The user's email address.
+                pub email: String,
+            }
+        ";
+
+        let def = parse_type_from_source(source, "AuthUser").unwrap();
+        let js = generate_jsdoc(&def);
+
+        assert!(js.contains("@typedef {AuthUser} AuthUser"));
+        assert!(js.contains("@property {number} id - The user's unique ID."));
+        assert!(js.contains("@property {string} email - The user's email address."));
+        assert!(js.contains("A user in the system."));
     }
 }

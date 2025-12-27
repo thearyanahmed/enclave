@@ -1,29 +1,49 @@
-//! Enclave TypeScript code generator CLI.
+//! Enclave TypeScript/`JSDoc` code generator CLI.
 //!
-//! Generates TypeScript type definitions from Rust source files.
+//! Generates TypeScript type definitions or JavaScript with `JSDoc` annotations
+//! from Rust source files.
 //!
 //! # Usage
 //!
 //! ```bash
+//! # Generate TypeScript
 //! enclave-codegen \
 //!     --source ./src \
-//!     --output ./types \
-//!     --types "AuthUser:repository/user.rs" \
-//!     --types "AuthError:lib.rs"
+//!     --output ./types/typescript \
+//!     --format typescript \
+//!     --types "AuthUser:repository/user.rs"
+//!
+//! # Generate JavaScript with JSDoc
+//! enclave-codegen \
+//!     --source ./src \
+//!     --output ./types/javascript \
+//!     --format jsdoc \
+//!     --types "AuthUser:repository/user.rs"
 //! ```
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+mod jsdoc;
 mod parser;
 mod typescript;
 
-/// TypeScript code generator for Rust types.
+/// Output format for generated code.
+#[derive(Debug, Clone, Copy, Default, ValueEnum)]
+enum OutputFormat {
+    /// Generate TypeScript interfaces and type aliases.
+    #[default]
+    Typescript,
+    /// Generate JavaScript with `JSDoc` type annotations.
+    Jsdoc,
+}
+
+/// TypeScript/`JSDoc` code generator for Rust types.
 #[derive(Parser, Debug)]
 #[command(name = "enclave-codegen")]
-#[command(version, about = "Generate TypeScript types from Rust source files")]
+#[command(version, about = "Generate TypeScript/JSDoc types from Rust source files")]
 struct Cli {
     /// Working directory (changes to this directory before running).
     #[arg(short = 'C', long = "dir")]
@@ -33,16 +53,20 @@ struct Cli {
     #[arg(short, long)]
     source: PathBuf,
 
-    /// Output directory for TypeScript files (relative to working directory).
+    /// Output directory for generated files (relative to working directory).
     #[arg(short, long, default_value = "./types")]
     output: PathBuf,
+
+    /// Output format (typescript or jsdoc).
+    #[arg(short, long, value_enum, default_value = "typescript")]
+    format: OutputFormat,
 
     /// Types to export (format: TypeName:path/to/file.rs).
     /// Can be specified multiple times.
     #[arg(short, long = "types")]
     types: Vec<String>,
 
-    /// Generate an index.ts file that re-exports all types.
+    /// Generate an index.ts file that re-exports all types (TypeScript only).
     #[arg(long, default_value = "false")]
     index: bool,
 }
@@ -121,6 +145,12 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
+    // Determine file extension based on format
+    let extension = match cli.format {
+        OutputFormat::Typescript => "ts",
+        OutputFormat::Jsdoc => "js",
+    };
+
     // Process each type
     let mut generated_types = Vec::new();
     let mut had_errors = false;
@@ -130,10 +160,13 @@ fn main() -> ExitCode {
 
         match parser::parse_type(&cli.source, &spec.path, &spec.name) {
             Ok(def) => {
-                let ts_code = typescript::generate_typescript(&def);
-                let output_path = cli.output.join(format!("{}.ts", spec.name));
+                let code = match cli.format {
+                    OutputFormat::Typescript => typescript::generate_typescript(&def),
+                    OutputFormat::Jsdoc => jsdoc::generate_jsdoc(&def),
+                };
+                let output_path = cli.output.join(format!("{}.{extension}", spec.name));
 
-                match fs::write(&output_path, &ts_code) {
+                match fs::write(&output_path, &code) {
                     Ok(()) => {
                         println!("OK");
                         generated_types.push(spec.name.clone());
@@ -153,8 +186,8 @@ fn main() -> ExitCode {
         }
     }
 
-    // Generate index.ts
-    if cli.index && !generated_types.is_empty() {
+    // Generate index.ts (only for TypeScript)
+    if cli.index && !generated_types.is_empty() && matches!(cli.format, OutputFormat::Typescript) {
         let index_content = typescript::generate_index(&generated_types);
         let index_path = cli.output.join("index.ts");
 

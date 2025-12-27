@@ -9,6 +9,7 @@ use std::path::Path;
 #[derive(Debug, Clone)]
 pub struct TypeDefinition {
     pub name: String,
+    pub doc: Option<String>,
     pub kind: TypeKind,
 }
 
@@ -23,6 +24,7 @@ pub enum TypeKind {
 #[derive(Debug, Clone)]
 pub struct Field {
     pub name: String,
+    pub doc: Option<String>,
     pub ty: RustType,
 }
 
@@ -30,6 +32,7 @@ pub struct Field {
 #[derive(Debug, Clone)]
 pub struct Variant {
     pub name: String,
+    pub doc: Option<String>,
     pub fields: VariantFields,
 }
 
@@ -87,6 +90,33 @@ impl From<std::io::Error> for ParseError {
     }
 }
 
+/// Extract doc comments from attributes.
+fn extract_doc_comments(attrs: &[syn::Attribute]) -> Option<String> {
+    let docs: Vec<String> = attrs
+        .iter()
+        .filter_map(|attr| {
+            if attr.path().is_ident("doc") {
+                if let syn::Meta::NameValue(meta) = &attr.meta {
+                    if let syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(s),
+                        ..
+                    }) = &meta.value
+                    {
+                        return Some(s.value().trim().to_owned());
+                    }
+                }
+            }
+            None
+        })
+        .collect();
+
+    if docs.is_empty() {
+        None
+    } else {
+        Some(docs.join("\n"))
+    }
+}
+
 /// Parse a Rust source file and extract a specific type definition.
 pub fn parse_type(
     source_dir: &Path,
@@ -127,14 +157,16 @@ fn extract_type_definition(item: &syn::Item, target_name: &str) -> Option<TypeDe
 
 /// Parse a struct definition.
 fn parse_struct(s: &syn::ItemStruct) -> TypeDefinition {
+    let doc = extract_doc_comments(&s.attrs);
     let fields = match &s.fields {
         syn::Fields::Named(named) => named
             .named
             .iter()
             .filter_map(|f| {
                 let name = f.ident.as_ref()?.to_string();
+                let field_doc = extract_doc_comments(&f.attrs);
                 let ty = parse_rust_type(&f.ty);
-                Some(Field { name, ty })
+                Some(Field { name, doc: field_doc, ty })
             })
             .collect(),
         syn::Fields::Unnamed(unnamed) => unnamed
@@ -142,9 +174,11 @@ fn parse_struct(s: &syn::ItemStruct) -> TypeDefinition {
             .iter()
             .enumerate()
             .map(|(i, f)| {
+                let field_doc = extract_doc_comments(&f.attrs);
                 let ty = parse_rust_type(&f.ty);
                 Field {
                     name: format!("field{i}"),
+                    doc: field_doc,
                     ty,
                 }
             })
@@ -154,17 +188,20 @@ fn parse_struct(s: &syn::ItemStruct) -> TypeDefinition {
 
     TypeDefinition {
         name: s.ident.to_string(),
+        doc,
         kind: TypeKind::Struct { fields },
     }
 }
 
 /// Parse an enum definition.
 fn parse_enum(e: &syn::ItemEnum) -> TypeDefinition {
+    let doc = extract_doc_comments(&e.attrs);
     let variants = e
         .variants
         .iter()
         .map(|v| {
             let name = v.ident.to_string();
+            let variant_doc = extract_doc_comments(&v.attrs);
             let fields = match &v.fields {
                 syn::Fields::Unit => VariantFields::Unit,
                 syn::Fields::Unnamed(unnamed) => {
@@ -181,19 +218,21 @@ fn parse_enum(e: &syn::ItemEnum) -> TypeDefinition {
                         .iter()
                         .filter_map(|f| {
                             let name = f.ident.as_ref()?.to_string();
+                            let field_doc = extract_doc_comments(&f.attrs);
                             let ty = parse_rust_type(&f.ty);
-                            Some(Field { name, ty })
+                            Some(Field { name, doc: field_doc, ty })
                         })
                         .collect();
                     VariantFields::Struct(fields)
                 }
             };
-            Variant { name, fields }
+            Variant { name, doc: variant_doc, fields }
         })
         .collect();
 
     TypeDefinition {
         name: e.ident.to_string(),
+        doc,
         kind: TypeKind::Enum { variants },
     }
 }
@@ -278,17 +317,18 @@ fn parse_type_path(path: &syn::Path) -> RustType {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_parse_simple_struct() {
-        let source = r#"
+        let source = r"
             pub struct User {
                 pub id: i32,
                 pub name: String,
             }
-        "#;
+        ";
 
         let def = parse_type_from_source(source, "User").unwrap();
         assert_eq!(def.name, "User");
@@ -304,11 +344,11 @@ mod tests {
 
     #[test]
     fn test_parse_struct_with_option() {
-        let source = r#"
+        let source = r"
             pub struct User {
                 pub email: Option<String>,
             }
-        "#;
+        ";
 
         let def = parse_type_from_source(source, "User").unwrap();
 
@@ -322,12 +362,12 @@ mod tests {
 
     #[test]
     fn test_parse_simple_enum() {
-        let source = r#"
+        let source = r"
             pub enum Status {
                 Active,
                 Inactive,
             }
-        "#;
+        ";
 
         let def = parse_type_from_source(source, "Status").unwrap();
         assert_eq!(def.name, "Status");
@@ -344,13 +384,13 @@ mod tests {
 
     #[test]
     fn test_parse_enum_with_data() {
-        let source = r#"
+        let source = r"
             pub enum Error {
                 NotFound,
                 Database(String),
                 Validation { field: String, message: String },
             }
-        "#;
+        ";
 
         let def = parse_type_from_source(source, "Error").unwrap();
 
@@ -369,5 +409,51 @@ mod tests {
         let source = "pub struct Foo {}";
         let result = parse_type_from_source(source, "Bar");
         assert!(matches!(result, Err(ParseError::TypeNotFound(_))));
+    }
+
+    #[test]
+    fn test_parse_doc_comments() {
+        let source = r"
+            /// A user in the system.
+            pub struct User {
+                /// The user's unique identifier.
+                pub id: i32,
+                /// The user's display name.
+                pub name: String,
+            }
+        ";
+
+        let def = parse_type_from_source(source, "User").unwrap();
+        assert_eq!(def.doc, Some("A user in the system.".to_owned()));
+
+        if let TypeKind::Struct { fields } = def.kind {
+            assert_eq!(fields[0].doc, Some("The user's unique identifier.".to_owned()));
+            assert_eq!(fields[1].doc, Some("The user's display name.".to_owned()));
+        } else {
+            panic!("Expected struct");
+        }
+    }
+
+    #[test]
+    fn test_parse_enum_doc_comments() {
+        let source = r"
+            /// Authentication errors.
+            pub enum AuthError {
+                /// User was not found.
+                NotFound,
+                /// Invalid credentials provided.
+                InvalidCredentials,
+            }
+        ";
+
+        let def = parse_type_from_source(source, "AuthError").unwrap();
+        assert_eq!(def.doc, Some("Authentication errors.".to_owned()));
+
+        if let TypeKind::Enum { variants } = def.kind {
+            assert_eq!(variants[0].doc, Some("User was not found.".to_owned()));
+            assert_eq!(variants[1].doc, Some("Invalid credentials provided.".to_owned()));
+        } else {
+            panic!("Expected enum");
+        }
     }
 }

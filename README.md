@@ -745,9 +745,12 @@ use enclave::teams::{
 };
 ```
 
-## TypeScript Types
+## TypeScript & JavaScript Types
 
-Pre-generated TypeScript type definitions are available in the [`autogen/`](./autogen) directory. These mirror the Rust structs and enums for use in TypeScript/JavaScript projects.
+Pre-generated type definitions are available in the [`autogen/`](./autogen) directory:
+
+- **TypeScript**: `autogen/types/typescript/` - interfaces and type aliases
+- **JavaScript**: `autogen/types/javascript/` - JSDoc annotated files with documentation from Rust comments
 
 To regenerate after modifying Rust types:
 
@@ -755,7 +758,7 @@ To regenerate after modifying Rust types:
 make codegen
 ```
 
-See [`autogen/README.md`](./autogen/README.md) for details.
+See [`autogen/README.md`](./autogen/README.md) for usage details.
 
 ## License
 
