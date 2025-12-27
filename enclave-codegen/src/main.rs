@@ -43,7 +43,10 @@ enum OutputFormat {
 /// TypeScript/`JSDoc` code generator for Rust types.
 #[derive(Parser, Debug)]
 #[command(name = "enclave-codegen")]
-#[command(version, about = "Generate TypeScript/JSDoc types from Rust source files")]
+#[command(
+    version,
+    about = "Generate TypeScript/JSDoc types from Rust source files"
+)]
 struct Cli {
     /// Working directory (changes to this directory before running).
     #[arg(short = 'C', long = "dir")]

@@ -9,7 +9,9 @@ use std::fmt::Write;
 pub fn generate_jsdoc(def: &TypeDefinition) -> String {
     match &def.kind {
         TypeKind::Struct { fields } => generate_typedef(&def.name, def.doc.as_ref(), fields),
-        TypeKind::Enum { variants } => generate_union_typedef(&def.name, def.doc.as_ref(), variants),
+        TypeKind::Enum { variants } => {
+            generate_union_typedef(&def.name, def.doc.as_ref(), variants)
+        }
     }
 }
 
@@ -112,7 +114,11 @@ fn generate_union_typedef(name: &str, doc: Option<&String>, variants: &[Variant]
         .iter()
         .map(|v| format!("{name}_{}", v.name))
         .collect();
-    let _ = writeln!(output, " * @typedef {{({})}} {name}", variant_names.join(" | "));
+    let _ = writeln!(
+        output,
+        " * @typedef {{({})}} {name}",
+        variant_names.join(" | ")
+    );
     output.push_str(" */\n");
 
     output

@@ -8,10 +8,31 @@ use std::fmt::Write;
 
 /// Primitive types that don't need imports.
 const PRIMITIVE_TYPES: &[&str] = &[
-    "string", "number", "boolean", "void", "null", "undefined",
-    "i8", "i16", "i32", "i64", "i128", "isize",
-    "u8", "u16", "u32", "u64", "u128", "usize",
-    "f32", "f64", "String", "str", "&str", "bool", "()",
+    "string",
+    "number",
+    "boolean",
+    "void",
+    "null",
+    "undefined",
+    "i8",
+    "i16",
+    "i32",
+    "i64",
+    "i128",
+    "isize",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+    "u128",
+    "usize",
+    "f32",
+    "f64",
+    "String",
+    "str",
+    "&str",
+    "bool",
+    "()",
 ];
 
 /// Generate TypeScript code for a type definition.
@@ -61,7 +82,9 @@ pub fn generate_typescript(def: &TypeDefinition) -> String {
             output.push('\n');
         }
         output.push_str("/** Branded type for sensitive string data. Handle securely - do not log or expose. */\n");
-        output.push_str("export type SecretString = string & { readonly __brand: 'SecretString' };\n");
+        output.push_str(
+            "export type SecretString = string & { readonly __brand: 'SecretString' };\n",
+        );
     }
 
     if !imports.is_empty() || uses_secret_string {

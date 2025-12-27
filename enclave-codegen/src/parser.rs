@@ -166,7 +166,11 @@ fn parse_struct(s: &syn::ItemStruct) -> TypeDefinition {
                 let name = f.ident.as_ref()?.to_string();
                 let field_doc = extract_doc_comments(&f.attrs);
                 let ty = parse_rust_type(&f.ty);
-                Some(Field { name, doc: field_doc, ty })
+                Some(Field {
+                    name,
+                    doc: field_doc,
+                    ty,
+                })
             })
             .collect(),
         syn::Fields::Unnamed(unnamed) => unnamed
@@ -220,13 +224,21 @@ fn parse_enum(e: &syn::ItemEnum) -> TypeDefinition {
                             let name = f.ident.as_ref()?.to_string();
                             let field_doc = extract_doc_comments(&f.attrs);
                             let ty = parse_rust_type(&f.ty);
-                            Some(Field { name, doc: field_doc, ty })
+                            Some(Field {
+                                name,
+                                doc: field_doc,
+                                ty,
+                            })
                         })
                         .collect();
                     VariantFields::Struct(fields)
                 }
             };
-            Variant { name, doc: variant_doc, fields }
+            Variant {
+                name,
+                doc: variant_doc,
+                fields,
+            }
         })
         .collect();
 
@@ -427,7 +439,10 @@ mod tests {
         assert_eq!(def.doc, Some("A user in the system.".to_owned()));
 
         if let TypeKind::Struct { fields } = def.kind {
-            assert_eq!(fields[0].doc, Some("The user's unique identifier.".to_owned()));
+            assert_eq!(
+                fields[0].doc,
+                Some("The user's unique identifier.".to_owned())
+            );
             assert_eq!(fields[1].doc, Some("The user's display name.".to_owned()));
         } else {
             panic!("Expected struct");
@@ -451,7 +466,10 @@ mod tests {
 
         if let TypeKind::Enum { variants } = def.kind {
             assert_eq!(variants[0].doc, Some("User was not found.".to_owned()));
-            assert_eq!(variants[1].doc, Some("Invalid credentials provided.".to_owned()));
+            assert_eq!(
+                variants[1].doc,
+                Some("Invalid credentials provided.".to_owned())
+            );
         } else {
             panic!("Expected enum");
         }
