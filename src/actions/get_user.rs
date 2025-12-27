@@ -1,4 +1,4 @@
-use crate::{AuthError, User, UserRepository};
+use crate::{AuthError, AuthUser, UserRepository};
 
 pub struct GetUserAction<U: UserRepository> {
     user_repository: U,
@@ -13,7 +13,7 @@ impl<U: UserRepository> GetUserAction<U> {
         feature = "tracing",
         tracing::instrument(name = "get_user", skip_all, err)
     )]
-    pub async fn execute(&self, user_id: i32) -> Result<User, AuthError> {
+    pub async fn execute(&self, user_id: i32) -> Result<AuthUser, AuthError> {
         self.user_repository
             .find_user_by_id(user_id)
             .await?
@@ -24,13 +24,13 @@ impl<U: UserRepository> GetUserAction<U> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, User};
+    use crate::{AuthUser, MockUserRepository};
 
     #[tokio::test]
     async fn test_get_user_success() {
         let user_repo = MockUserRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
 

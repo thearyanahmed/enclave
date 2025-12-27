@@ -1,5 +1,5 @@
 use crate::validators::{validate_email, validate_name};
-use crate::{AuthError, User, UserRepository};
+use crate::{AuthError, AuthUser, UserRepository};
 
 pub struct UpdateUserAction<U: UserRepository> {
     user_repository: U,
@@ -14,7 +14,12 @@ impl<U: UserRepository> UpdateUserAction<U> {
         feature = "tracing",
         tracing::instrument(name = "update_user", skip_all, err)
     )]
-    pub async fn execute(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError> {
+    pub async fn execute(
+        &self,
+        user_id: i32,
+        name: &str,
+        email: &str,
+    ) -> Result<AuthUser, AuthError> {
         validate_name(name)?;
         validate_email(email)?;
 
@@ -26,13 +31,13 @@ impl<U: UserRepository> UpdateUserAction<U> {
 mod tests {
     use super::*;
     use crate::validators::ValidationError;
-    use crate::{MockUserRepository, User};
+    use crate::{AuthUser, MockUserRepository};
 
     #[tokio::test]
     async fn test_update_user_success() {
         let user_repo = MockUserRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
 

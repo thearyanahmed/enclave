@@ -1,7 +1,9 @@
 use crate::SecretString;
 use crate::config::{RateLimitConfig, TokenConfig};
 use crate::crypto::{Argon2Hasher, PasswordHasher};
-use crate::{AccessToken, AuthError, RateLimiterRepository, TokenRepository, User, UserRepository};
+use crate::{
+    AccessToken, AuthError, AuthUser, RateLimiterRepository, TokenRepository, UserRepository,
+};
 use chrono::{Duration, Utc};
 
 /// Configuration for login behavior including rate limiting and token expiry.
@@ -148,7 +150,7 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
         &self,
         email: &str,
         password: &SecretString,
-    ) -> Result<(User, AccessToken), AuthError> {
+    ) -> Result<(AuthUser, AccessToken), AuthError> {
         // Check if account is locked out
         let since = Utc::now() - self.config.lockout_duration;
         let failed_attempts = self
@@ -200,7 +202,7 @@ mod tests {
     use super::*;
     use crate::SecretString;
     use crate::crypto::Argon2Hasher;
-    use crate::{MockRateLimiterRepository, MockTokenRepository, MockUserRepository, User};
+    use crate::{AuthUser, MockRateLimiterRepository, MockTokenRepository, MockUserRepository};
 
     fn hash_password(password: &str) -> String {
         Argon2Hasher::default().hash(password).unwrap()
@@ -212,7 +214,8 @@ mod tests {
         let token_repo = MockTokenRepository::new();
         let rate_limiter = MockRateLimiterRepository::new();
 
-        let user = User::mock_from_credentials("user@email.com", &hash_password("securepassword"));
+        let user =
+            AuthUser::mock_from_credentials("user@email.com", &hash_password("securepassword"));
         user_repo.users.lock().unwrap().push(user);
 
         let login = LoginAction::new(user_repo, token_repo, rate_limiter);
@@ -232,7 +235,8 @@ mod tests {
         let token_repo = MockTokenRepository::new();
         let rate_limiter = MockRateLimiterRepository::new();
 
-        let user = User::mock_from_credentials("user@email.com", &hash_password("securepassword"));
+        let user =
+            AuthUser::mock_from_credentials("user@email.com", &hash_password("securepassword"));
         user_repo.users.lock().unwrap().push(user);
 
         let login = LoginAction::new(user_repo, token_repo, rate_limiter);
@@ -249,7 +253,8 @@ mod tests {
         let token_repo = MockTokenRepository::new();
         let rate_limiter = MockRateLimiterRepository::new();
 
-        let user = User::mock_from_credentials("user@email.com", &hash_password("securepassword"));
+        let user =
+            AuthUser::mock_from_credentials("user@email.com", &hash_password("securepassword"));
         user_repo.users.lock().unwrap().push(user);
 
         let login = LoginAction::new(user_repo, token_repo, rate_limiter);

@@ -247,11 +247,11 @@ mod tests {
     use crate::SecretString;
     use crate::crypto::Argon2Hasher;
     use crate::validators::ValidationError;
-    use crate::{MockTokenRepository, MockUserRepository, TokenRepository, User};
+    use crate::{AuthUser, MockTokenRepository, MockUserRepository, TokenRepository};
 
-    fn create_user_with_password(email: &str, password: &str) -> User {
+    fn create_user_with_password(email: &str, password: &str) -> AuthUser {
         let hashed = Argon2Hasher::default().hash(password).unwrap();
-        User::mock_from_credentials(email, &hashed)
+        AuthUser::mock_from_credentials(email, &hashed)
     }
 
     #[tokio::test]

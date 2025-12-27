@@ -54,7 +54,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockEmailVerificationRepository, MockUserRepository, User};
+    use crate::{AuthUser, MockEmailVerificationRepository, MockUserRepository};
     use chrono::Duration;
 
     #[tokio::test]
@@ -62,7 +62,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let verification_repo = MockEmailVerificationRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
 
@@ -112,7 +112,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let verification_repo = MockEmailVerificationRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
 

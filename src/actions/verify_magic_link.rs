@@ -1,5 +1,7 @@
 use crate::config::TokenConfig;
-use crate::{AccessToken, AuthError, MagicLinkRepository, TokenRepository, User, UserRepository};
+use crate::{
+    AccessToken, AuthError, AuthUser, MagicLinkRepository, TokenRepository, UserRepository,
+};
 use chrono::{Duration, Utc};
 
 /// Configuration for magic link verification.
@@ -81,7 +83,7 @@ impl<U: UserRepository, T: TokenRepository, M: MagicLinkRepository> VerifyMagicL
         feature = "tracing",
         tracing::instrument(name = "verify_magic_link", skip_all, err)
     )]
-    pub async fn execute(&self, token: &str) -> Result<(User, AccessToken), AuthError> {
+    pub async fn execute(&self, token: &str) -> Result<(AuthUser, AccessToken), AuthError> {
         // Find the magic link token
         let magic_link_token = self
             .magic_link_repository
@@ -130,7 +132,7 @@ impl<U: UserRepository, T: TokenRepository, M: MagicLinkRepository> VerifyMagicL
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockMagicLinkRepository, MockTokenRepository, MockUserRepository, User};
+    use crate::{AuthUser, MockMagicLinkRepository, MockTokenRepository, MockUserRepository};
     use chrono::Duration;
 
     #[tokio::test]
@@ -139,7 +141,7 @@ mod tests {
         let token_repo = MockTokenRepository::new();
         let magic_link_repo = MockMagicLinkRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         user_repo.users.lock().unwrap().push(user.clone());
 
         // Create a magic link token
@@ -186,7 +188,7 @@ mod tests {
         let token_repo = MockTokenRepository::new();
         let magic_link_repo = MockMagicLinkRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         user_repo.users.lock().unwrap().push(user.clone());
 
         // Create an expired magic link token
@@ -236,7 +238,7 @@ mod tests {
         let token_repo = MockTokenRepository::new();
         let magic_link_repo = MockMagicLinkRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         user_repo.users.lock().unwrap().push(user.clone());
 
         // Create a magic link token

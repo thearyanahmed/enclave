@@ -1,7 +1,7 @@
 use crate::SecretString;
 use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::{PasswordPolicy, validate_email};
-use crate::{AuthError, User, UserRepository};
+use crate::{AuthError, AuthUser, UserRepository};
 
 pub struct SignupAction<R, H = Argon2Hasher> {
     repository: R,
@@ -43,7 +43,11 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         feature = "tracing",
         tracing::instrument(name = "signup", skip_all, err)
     )]
-    pub async fn execute(&self, email: &str, password: &SecretString) -> Result<User, AuthError> {
+    pub async fn execute(
+        &self,
+        email: &str,
+        password: &SecretString,
+    ) -> Result<AuthUser, AuthError> {
         validate_email(email)?;
         self.password_policy.validate(password.expose_secret())?;
 
@@ -85,7 +89,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_signup_user_already_exists() {
-        let existing_user = User::mock();
+        let existing_user = AuthUser::mock();
 
         let repo = MockUserRepository::new();
         repo.users.lock().unwrap().push(existing_user);

@@ -251,7 +251,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockPasswordResetRepository, MockUserRepository, User};
+    use crate::{AuthUser, MockPasswordResetRepository, MockUserRepository};
 
     #[cfg(not(feature = "rate_limit"))]
     #[tokio::test]
@@ -259,7 +259,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let reset_repo = MockPasswordResetRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         user_repo.users.lock().unwrap().push(user.clone());
 
         let action = ForgotPasswordAction::new(user_repo, reset_repo);
@@ -297,7 +297,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let reset_repo = MockPasswordResetRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user.clone());
 
             let action = ForgotPasswordAction::new(user_repo, reset_repo);
@@ -328,7 +328,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let reset_repo = MockPasswordResetRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user);
 
             let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()))
@@ -356,7 +356,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let reset_repo = MockPasswordResetRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user);
 
             let rate_limit = RateLimitConfig::new(Arc::new(InMemoryStore::new()))

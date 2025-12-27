@@ -28,13 +28,13 @@ impl<U: UserRepository> DeleteUserAction<U> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockUserRepository, User};
+    use crate::{AuthUser, MockUserRepository};
 
     #[tokio::test]
     async fn test_delete_user_success() {
         let user_repo = MockUserRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
 

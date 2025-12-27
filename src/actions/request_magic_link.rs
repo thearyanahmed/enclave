@@ -212,7 +212,7 @@ impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockMagicLinkRepository, MockUserRepository, User};
+    use crate::{AuthUser, MockMagicLinkRepository, MockUserRepository};
 
     #[cfg(not(feature = "rate_limit"))]
     #[tokio::test]
@@ -220,7 +220,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let magic_link_repo = MockMagicLinkRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         user_repo.users.lock().unwrap().push(user.clone());
 
         let action = RequestMagicLinkAction::new(user_repo, magic_link_repo);
@@ -253,7 +253,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let magic_link_repo = MockMagicLinkRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         user_repo.users.lock().unwrap().push(user);
 
         let action = RequestMagicLinkAction::new(user_repo, magic_link_repo);
@@ -278,7 +278,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let magic_link_repo = MockMagicLinkRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user.clone());
 
             let action = RequestMagicLinkAction::new(user_repo, magic_link_repo);
@@ -297,7 +297,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let magic_link_repo = MockMagicLinkRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             user_repo.users.lock().unwrap().push(user);
 
             let rate_limit = MagicLinkRateLimitConfig::new(Arc::new(InMemoryStore::new()))

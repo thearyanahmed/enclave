@@ -147,7 +147,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MockEmailVerificationRepository, MockUserRepository, User};
+    use crate::{AuthUser, MockEmailVerificationRepository, MockUserRepository};
 
     #[cfg(not(feature = "rate_limit"))]
     #[tokio::test]
@@ -155,7 +155,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let verification_repo = MockEmailVerificationRepository::new();
 
-        let user = User::mock_from_email("user@example.com");
+        let user = AuthUser::mock_from_email("user@example.com");
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
 
@@ -187,7 +187,7 @@ mod tests {
         let user_repo = MockUserRepository::new();
         let verification_repo = MockEmailVerificationRepository::new();
 
-        let mut user = User::mock_from_email("user@example.com");
+        let mut user = AuthUser::mock_from_email("user@example.com");
         user.email_verified_at = Some(Utc::now());
         let user_id = user.id;
         user_repo.users.lock().unwrap().push(user);
@@ -210,7 +210,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let verification_repo = MockEmailVerificationRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             let user_id = user.id;
             user_repo.users.lock().unwrap().push(user);
 
@@ -240,7 +240,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let verification_repo = MockEmailVerificationRepository::new();
 
-            let mut user = User::mock_from_email("user@example.com");
+            let mut user = AuthUser::mock_from_email("user@example.com");
             user.email_verified_at = Some(Utc::now());
             let user_id = user.id;
             user_repo.users.lock().unwrap().push(user);
@@ -257,7 +257,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let verification_repo = MockEmailVerificationRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             let user_id = user.id;
             user_repo.users.lock().unwrap().push(user);
 
@@ -286,7 +286,7 @@ mod tests {
             let user_repo = MockUserRepository::new();
             let verification_repo = MockEmailVerificationRepository::new();
 
-            let user = User::mock_from_email("user@example.com");
+            let user = AuthUser::mock_from_email("user@example.com");
             let user_id = user.id;
             user_repo.users.lock().unwrap().push(user);
 
