@@ -89,25 +89,25 @@ All storage and crypto operations are trait-based. Implement these traits to use
 ### UserRepository
 
 ```rust
-use enclave::{UserRepository, User, AuthError};
+use enclave::{UserRepository, AuthUser, AuthError};
 use async_trait::async_trait;
 
 #[async_trait]
 impl UserRepository for MyUserStore {
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<User>, AuthError>;
-    async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError>;
-    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<User, AuthError>;
+    async fn find_user_by_id(&self, id: i32) -> Result<Option<AuthUser>, AuthError>;
+    async fn find_user_by_email(&self, email: &str) -> Result<Option<AuthUser>, AuthError>;
+    async fn create_user(&self, email: &str, hashed_password: &str) -> Result<AuthUser, AuthError>;
     async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError>;
     async fn verify_email(&self, user_id: i32) -> Result<(), AuthError>;
-    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<User, AuthError>;
+    async fn update_user(&self, user_id: i32, name: &str, email: &str) -> Result<AuthUser, AuthError>;
     async fn delete_user(&self, user_id: i32) -> Result<(), AuthError>;
 }
 ```
 
-The `User` struct:
+The `AuthUser` struct:
 
 ```rust
-pub struct User {
+pub struct AuthUser {
     pub id: i32,
     pub email: String,
     pub name: String,
@@ -115,6 +115,16 @@ pub struct User {
     pub email_verified_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+```
+
+`AuthUser` contains the core authentication fields. To add custom fields (avatar, roles, etc.), use composition:
+
+```rust
+pub struct AppUser {
+    pub auth: enclave::AuthUser,
+    pub avatar_url: Option<String>,
+    pub role: String,
 }
 ```
 
