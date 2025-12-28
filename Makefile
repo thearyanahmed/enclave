@@ -32,10 +32,10 @@ clippy:
 	cargo clippy --all-targets --all-features -- -D warnings
 
 fmt:
-	cargo fmt
+	docker run --rm -v "$(PWD)":/app -w /app rustlang/rust:nightly sh -c "rustup component add rustfmt && cargo fmt"
 
 fmt-check:
-	cargo fmt -- --check
+	docker run --rm -v "$(PWD)":/app -w /app rustlang/rust:nightly sh -c "rustup component add rustfmt && cargo fmt -- --check"
 
 md-fmt:
 	npx prettier --write --no-error-on-unmatched-pattern "README.md" "SECURITY.md" "DEPLOYMENT.md" "src/**/*.md" "examples/**/*.md"
