@@ -1,0 +1,78 @@
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use sqlx::SqlitePool;
+
+use crate::{AuthError, RateLimiterRepository};
+
+#[derive(Clone)]
+pub struct SqliteRateLimiterRepository {
+    pool: SqlitePool,
+}
+
+impl SqliteRateLimiterRepository {
+    pub fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl RateLimiterRepository for SqliteRateLimiterRepository {
+    #[cfg_attr(
+        feature = "tracing",
+        tracing::instrument(skip(self, email, ip_address), err)
+    )]
+    async fn record_attempt(
+        &self,
+        email: &str,
+        success: bool,
+        ip_address: Option<&str>,
+    ) -> Result<(), AuthError> {
+        sqlx::query("INSERT INTO login_attempts (email, success, ip_address) VALUES (?, ?, ?)")
+            .bind(email)
+            .bind(success)
+            .bind(ip_address)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"record_attempt\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
+
+        Ok(())
+    }
+
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email), err))]
+    async fn get_recent_failed_attempts(
+        &self,
+        email: &str,
+        since: DateTime<Utc>,
+    ) -> Result<u32, AuthError> {
+        let row: (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM login_attempts WHERE email = ? AND success = false AND attempted_at >= ?",
+        )
+        .bind(email)
+        .bind(since)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| {
+            log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"get_recent_failed_attempts\", error=\"{e}\"");
+            AuthError::DatabaseError(e.to_string())
+        })?;
+
+        Ok(u32::try_from(row.0).unwrap_or(u32::MAX))
+    }
+
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, email), err))]
+    async fn clear_attempts(&self, email: &str) -> Result<(), AuthError> {
+        sqlx::query("DELETE FROM login_attempts WHERE email = ?")
+            .bind(email)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| {
+                log::error!(target: "enclave_auth", "msg=\"database error\", operation=\"clear_attempts\", error=\"{e}\"");
+                AuthError::DatabaseError(e.to_string())
+            })?;
+
+        Ok(())
+    }
+}
