@@ -9,7 +9,7 @@
 //! # Password Hashing
 //!
 //! ```rust
-//! use enclave::crypto::{PasswordHasher, Argon2Hasher};
+//! use enclave::crypto::{Argon2Hasher, PasswordHasher};
 //!
 //! let hasher = Argon2Hasher::default();
 //! let hash = hasher.hash("password123").unwrap();
@@ -21,15 +21,16 @@
 //! ```rust
 //! use enclave::crypto::{generate_token, hash_token};
 //!
-//! let token = generate_token(32);  // 32-character token
+//! let token = generate_token(32); // 32-character token
 //! let hashed = hash_token(&token); // SHA-256 hash for storage
 //! ```
 
-use crate::AuthError;
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
 use password_hash::rand_core::{OsRng, RngCore};
 use password_hash::{PasswordHash, PasswordHasher as ArgonPasswordHasher, SaltString};
 use sha2::{Digest, Sha256};
+
+use crate::AuthError;
 
 /// Default token length in characters.
 pub const DEFAULT_TOKEN_LENGTH: usize = 32;
@@ -42,7 +43,7 @@ pub const DEFAULT_TOKEN_LENGTH: usize = 32;
 /// # Example
 ///
 /// ```rust
-/// use enclave::crypto::{PasswordHasher, Argon2Hasher};
+/// use enclave::crypto::{Argon2Hasher, PasswordHasher};
 ///
 /// let hasher = Argon2Hasher::default();
 /// let hash = hasher.hash("mypassword").unwrap();

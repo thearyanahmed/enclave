@@ -1,8 +1,8 @@
-use crate::SecretString;
+use chrono::Utc;
+
 use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::PasswordPolicy;
-use crate::{AuthError, PasswordResetRepository, UserRepository};
-use chrono::Utc;
+use crate::{AuthError, PasswordResetRepository, SecretString, UserRepository};
 
 pub struct ResetPasswordAction<U, P, H = Argon2Hasher>
 where
@@ -97,11 +97,11 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::SecretString;
-    use crate::validators::ValidationError;
-    use crate::{AuthUser, MockPasswordResetRepository, MockUserRepository};
     use chrono::Duration;
+
+    use super::*;
+    use crate::validators::ValidationError;
+    use crate::{AuthUser, MockPasswordResetRepository, MockUserRepository, SecretString};
 
     #[tokio::test]
     async fn test_reset_password_success() {

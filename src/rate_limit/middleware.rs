@@ -1,12 +1,11 @@
-use actix_web::{
-    HttpMessage, HttpRequest, HttpResponse,
-    body::EitherBody,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::header,
-};
-use futures::future::{LocalBoxFuture, Ready, ok};
 use std::sync::Arc;
 use std::task::{Context, Poll};
+
+use actix_web::body::EitherBody;
+use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
+use actix_web::http::header;
+use actix_web::{HttpMessage, HttpRequest, HttpResponse};
+use futures::future::{LocalBoxFuture, Ready, ok};
 
 use super::limit::{KeyStrategy, Limit};
 use super::store::RateLimitStore;

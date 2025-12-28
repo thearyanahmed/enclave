@@ -2,9 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
-use crate::AuthError;
-
 use super::store::{RateLimitInfo, RateLimitStore};
+use crate::AuthError;
 
 /// `PostgreSQL`-backed rate limit store.
 ///

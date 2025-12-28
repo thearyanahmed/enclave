@@ -3,14 +3,13 @@
 use axum::Router;
 use axum::routing::{get, post, put};
 
+use super::handlers;
 #[cfg(feature = "magic_link")]
 use crate::MagicLinkRepository;
 use crate::{
     EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     StatefulTokenRepository, TokenRepository, UserRepository,
 };
-
-use super::handlers;
 
 /// Application state containing all repository dependencies.
 ///

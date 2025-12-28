@@ -2,9 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
 
-use crate::SecretString;
 use crate::crypto::{generate_token_default, hash_token};
-use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken};
+use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, SecretString};
 
 #[derive(Clone)]
 pub struct PostgresEmailVerificationRepository {

@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
+use super::JwtService;
 use crate::repository::CreateTokenOptions;
 use crate::{AccessToken, AuthError, SecretString, TokenRepository};
-
-use super::JwtService;
 
 /// JWT-based token provider that implements [`TokenRepository`].
 ///

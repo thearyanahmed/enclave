@@ -3,8 +3,9 @@
 //! This module provides types for handling sensitive data that should not be
 //! accidentally logged or printed.
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
+
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// A wrapper for sensitive string data that prevents accidental logging.
 ///

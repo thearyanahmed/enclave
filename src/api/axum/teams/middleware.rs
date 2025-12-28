@@ -1,8 +1,9 @@
 //! Authentication middleware for teams routes.
 
+use std::marker::PhantomData;
+
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
-use std::marker::PhantomData;
 
 use super::routes::TeamsState;
 use crate::api::axum::error::AppError;

@@ -27,6 +27,7 @@ pub use password_reset::SqlitePasswordResetRepository;
 #[cfg(feature = "rate_limit")]
 pub use rate_limit_store::SqliteRateLimitStore;
 pub use rate_limiter::SqliteRateLimiterRepository;
+use sqlx::SqlitePool;
 #[cfg(feature = "teams")]
 pub use teams::{
     SqliteTeamInvitationRepository, SqliteTeamMemberPermissionRepository,
@@ -34,8 +35,6 @@ pub use teams::{
 };
 pub use token::SqliteTokenRepository;
 pub use user::SqliteUserRepository;
-
-use sqlx::SqlitePool;
 
 /// Creates all `SQLite` repository instances from a connection pool.
 ///

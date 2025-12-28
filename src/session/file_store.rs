@@ -7,11 +7,10 @@ use std::path::PathBuf;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
-use crate::AuthError;
-use crate::crypto::generate_token;
-
 use super::repository::SessionRepository;
 use super::{Session, SessionData};
+use crate::AuthError;
+use crate::crypto::generate_token;
 
 /// File-based session storage.
 ///
@@ -185,9 +184,11 @@ impl SessionRepository for FileSessionRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use chrono::Duration;
     use std::env;
+
+    use chrono::Duration;
+
+    use super::*;
 
     fn create_test_session_data(user_id: i32) -> SessionData {
         SessionData {

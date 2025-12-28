@@ -3,12 +3,11 @@
 use axum::Router;
 use axum::routing::{delete, get, post, put};
 
+use super::handlers;
 use crate::teams::{
     TeamInvitationRepository, TeamMembershipRepository, TeamRepository, UserTeamContextRepository,
 };
 use crate::{TokenRepository, UserRepository};
-
-use super::handlers;
 
 /// Application state for teams routes.
 ///

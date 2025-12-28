@@ -1,7 +1,8 @@
 //! Session configuration.
 
-use crate::SecretString;
 use chrono::Duration;
+
+use crate::SecretString;
 
 /// `SameSite` cookie attribute.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

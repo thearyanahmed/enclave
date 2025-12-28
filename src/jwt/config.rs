@@ -1,5 +1,6 @@
-use chrono::Duration;
 use std::fmt;
+
+use chrono::Duration;
 
 use crate::AuthError;
 

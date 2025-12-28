@@ -1,14 +1,13 @@
 #![allow(clippy::unwrap_used)]
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::AuthError;
-use crate::SecretString;
-use crate::crypto::{generate_token_default, hash_token};
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 
 use super::token::{AccessToken, CreateTokenOptions, StatefulTokenRepository, TokenRepository};
+use crate::crypto::{generate_token_default, hash_token};
+use crate::{AuthError, SecretString};
 
 #[derive(Clone)]
 pub struct MockTokenRepository {

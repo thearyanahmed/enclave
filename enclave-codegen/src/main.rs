@@ -21,10 +21,11 @@
 //!     --types "AuthUser:repository/user.rs"
 //! ```
 
-use clap::{Parser, ValueEnum};
 use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
+
+use clap::{Parser, ValueEnum};
 
 mod jsdoc;
 mod parser;

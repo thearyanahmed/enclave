@@ -1,6 +1,9 @@
-use actix_web::{FromRequest, HttpRequest, HttpResponse, dev::Payload, http::header, web};
 use std::future::Future;
 use std::pin::Pin;
+
+use actix_web::dev::Payload;
+use actix_web::http::header;
+use actix_web::{FromRequest, HttpRequest, HttpResponse, web};
 
 use crate::{AuthError, AuthUser, TokenRepository, UserRepository};
 

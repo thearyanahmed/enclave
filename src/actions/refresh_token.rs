@@ -1,5 +1,6 @@
-use crate::{AccessToken, AuthError, StatefulTokenRepository};
 use chrono::{Duration, Utc};
+
+use crate::{AccessToken, AuthError, StatefulTokenRepository};
 
 /// Configuration for token refresh behavior.
 #[derive(Debug, Clone)]
@@ -90,9 +91,10 @@ impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
 
 #[cfg(test)]
 mod tests {
+    use chrono::Duration;
+
     use super::*;
     use crate::{MockTokenRepository, TokenRepository};
-    use chrono::Duration;
 
     #[tokio::test]
     async fn test_refresh_token_success() {

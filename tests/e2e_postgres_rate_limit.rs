@@ -11,13 +11,14 @@
 #![cfg(all(feature = "sqlx_postgres", feature = "rate_limit"))]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
+use std::sync::Arc;
+
 use chrono::Utc;
 use enclave::postgres::migrations;
 use enclave::rate_limit::{Limit, PostgresRateLimitStore, RateLimitStore, RateLimiter};
 use serial_test::serial;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
 
 async fn setup_db() -> PgPool {
     let database_url = std::env::var("DATABASE_URL")

@@ -95,12 +95,13 @@ where
 
 #[cfg(test)]
 mod tests {
+    use chrono::{Duration, Utc};
+
     use super::*;
     use crate::{
         EmailVerificationRepository, MockEmailVerificationRepository, MockPasswordResetRepository,
         MockTokenRepository, PasswordResetRepository, TokenRepository,
     };
-    use chrono::{Duration, Utc};
 
     #[tokio::test]
     async fn test_prune_expired_tokens() {

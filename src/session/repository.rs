@@ -1,10 +1,10 @@
 //! Session repository trait.
 
-use crate::AuthError;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
 use super::{Session, SessionData};
+use crate::AuthError;
 
 /// Repository for session storage.
 ///

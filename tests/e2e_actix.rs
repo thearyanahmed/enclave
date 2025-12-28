@@ -6,8 +6,8 @@
 #![cfg(all(feature = "actix", feature = "mocks"))]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
-use actix_web::{App, http::StatusCode, test, web};
-
+use actix_web::http::StatusCode;
+use actix_web::{App, test, web};
 use enclave::api::actix::auth_routes;
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,

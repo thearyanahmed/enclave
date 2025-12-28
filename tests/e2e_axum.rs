@@ -9,14 +9,13 @@
 use axum::Router;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use http_body_util::BodyExt;
-use tower::ServiceExt;
-
 use enclave::api::axum::{AppState, auth_routes};
 use enclave::{
     MockEmailVerificationRepository, MockPasswordResetRepository, MockRateLimiterRepository,
     MockTokenRepository, MockUserRepository,
 };
+use http_body_util::BodyExt;
+use tower::ServiceExt;
 
 fn create_app() -> Router {
     let state = AppState {

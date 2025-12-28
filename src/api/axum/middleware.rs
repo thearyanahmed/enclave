@@ -1,10 +1,11 @@
 //! Authentication middleware for Axum handlers.
 
+use std::marker::PhantomData;
+
 use axum::extract::FromRequestParts;
 use axum::http::HeaderMap;
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
-use std::marker::PhantomData;
 
 use super::error::AppError;
 use super::routes::AppState;

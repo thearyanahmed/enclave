@@ -1,7 +1,6 @@
-use crate::SecretString;
 use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::PasswordPolicy;
-use crate::{AuthError, StatefulTokenRepository, UserRepository};
+use crate::{AuthError, SecretString, StatefulTokenRepository, UserRepository};
 
 /// Configuration for password change behavior.
 ///
@@ -244,10 +243,9 @@ impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::SecretString;
     use crate::crypto::Argon2Hasher;
     use crate::validators::ValidationError;
-    use crate::{AuthUser, MockTokenRepository, MockUserRepository, TokenRepository};
+    use crate::{AuthUser, MockTokenRepository, MockUserRepository, SecretString, TokenRepository};
 
     fn create_user_with_password(email: &str, password: &str) -> AuthUser {
         let hashed = Argon2Hasher::default().hash(password).unwrap();

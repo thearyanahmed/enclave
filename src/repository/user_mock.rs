@@ -1,12 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use async_trait::async_trait;
-use chrono::Utc;
 use std::sync::{Arc, Mutex};
 
-use crate::AuthError;
+use async_trait::async_trait;
+use chrono::Utc;
 
 use super::user::{AuthUser, UserRepository};
+use crate::AuthError;
 
 #[derive(Clone)]
 pub struct MockUserRepository {

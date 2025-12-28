@@ -1,9 +1,9 @@
-use chrono::Duration;
+#[cfg(feature = "actix")]
+use std::sync::Arc;
 
 #[cfg(feature = "actix")]
 use actix_web::HttpRequest;
-#[cfg(feature = "actix")]
-use std::sync::Arc;
+use chrono::Duration;
 
 /// Type alias for custom key extraction functions.
 #[cfg(feature = "actix")]

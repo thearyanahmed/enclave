@@ -1,10 +1,11 @@
-use crate::SecretString;
+use chrono::{Duration, Utc};
+
 use crate::config::{RateLimitConfig, TokenConfig};
 use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::{
-    AccessToken, AuthError, AuthUser, RateLimiterRepository, TokenRepository, UserRepository,
+    AccessToken, AuthError, AuthUser, RateLimiterRepository, SecretString, TokenRepository,
+    UserRepository,
 };
-use chrono::{Duration, Utc};
 
 /// Configuration for login behavior including rate limiting and token expiry.
 ///
@@ -20,8 +21,8 @@ use chrono::{Duration, Utc};
 /// # Example
 ///
 /// ```rust
-/// use enclave::actions::LoginConfig;
 /// use chrono::Duration;
+/// use enclave::actions::LoginConfig;
 ///
 /// // Use stricter settings for sensitive applications
 /// let config = LoginConfig {
@@ -200,9 +201,10 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::SecretString;
     use crate::crypto::Argon2Hasher;
-    use crate::{AuthUser, MockRateLimiterRepository, MockTokenRepository, MockUserRepository};
+    use crate::{
+        AuthUser, MockRateLimiterRepository, MockTokenRepository, MockUserRepository, SecretString,
+    };
 
     fn hash_password(password: &str) -> String {
         Argon2Hasher::default().hash(password).unwrap()

@@ -16,10 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
+          components: clippy
 
       - name: Cache cargo
         uses: actions/cache@v5

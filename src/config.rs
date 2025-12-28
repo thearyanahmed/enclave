@@ -6,8 +6,8 @@
 //! # Example
 //!
 //! ```rust
-//! use enclave::config::{AuthConfig, TokenConfig, RateLimitConfig};
 //! use chrono::Duration;
+//! use enclave::config::{AuthConfig, RateLimitConfig, TokenConfig};
 //!
 //! // Use defaults
 //! let config = AuthConfig::default();

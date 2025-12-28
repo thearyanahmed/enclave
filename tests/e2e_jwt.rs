@@ -6,8 +6,8 @@
 #![cfg(all(feature = "actix", feature = "jwt", feature = "mocks"))]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
-use actix_web::{App, http::StatusCode, test, web};
-
+use actix_web::http::StatusCode;
+use actix_web::{App, test, web};
 use enclave::api::actix::stateless_auth_routes;
 use enclave::jwt::{JwtConfig, JwtService, JwtTokenProvider};
 use enclave::{

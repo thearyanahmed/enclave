@@ -1,13 +1,12 @@
 use actix_web::web;
 
+use super::handlers;
 #[cfg(feature = "magic_link")]
 use crate::MagicLinkRepository;
 use crate::{
     EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
     StatefulTokenRepository, TokenRepository, UserRepository,
 };
-
-use super::handlers;
 
 /// Configures all authentication routes under `/auth` scope.
 ///

@@ -34,7 +34,6 @@ pub mod password;
 pub use email::validate_email;
 pub use name::validate_name;
 pub use password::{PasswordPolicy, validate_password};
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

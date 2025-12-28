@@ -2,9 +2,10 @@
 //!
 //! Uses HMAC-SHA256 to sign session IDs, making cookies tamper-proof.
 
-use crate::SecretString;
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
+
+use crate::SecretString;
 
 type HmacSha256 = Hmac<Sha256>;
 

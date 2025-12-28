@@ -2,8 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::AuthError;
-use crate::SecretString;
+use crate::{AuthError, SecretString};
 
 /// A one-time token sent to users to verify their email address.
 ///

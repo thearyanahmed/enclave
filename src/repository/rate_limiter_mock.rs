@@ -1,12 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::AuthError;
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 
 use super::rate_limiter::{LoginAttempt, RateLimiterRepository};
+use crate::AuthError;
 
 #[derive(Clone)]
 pub struct MockRateLimiterRepository {
