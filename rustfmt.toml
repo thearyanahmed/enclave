@@ -1,0 +1,8 @@
+# requires nightly: cargo +nightly fmt
+edition = "2024"
+
+# group imports: std -> external crates -> crate-local
+group_imports = "StdExternalCrate"
+
+# one use statement per module
+imports_granularity = "Module"
