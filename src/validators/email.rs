@@ -1,6 +1,8 @@
-use super::ValidationError;
-use regex::Regex;
 use std::sync::LazyLock;
+
+use regex::Regex;
+
+use super::ValidationError;
 
 // Panic is intentional: regex compilation failure is a programmer error
 #[allow(clippy::expect_used)]

@@ -1,10 +1,11 @@
-use crate::{AuthError, PasswordResetRepository, PasswordResetToken, UserRepository};
+#[cfg(feature = "rate_limit")]
+use std::sync::Arc;
+
 use chrono::{Duration, Utc};
 
 #[cfg(feature = "rate_limit")]
 use crate::rate_limit::RateLimitStore;
-#[cfg(feature = "rate_limit")]
-use std::sync::Arc;
+use crate::{AuthError, PasswordResetRepository, PasswordResetToken, UserRepository};
 
 /// Configuration for password reset behavior.
 #[derive(Debug, Clone)]
@@ -288,9 +289,10 @@ mod tests {
 
     #[cfg(feature = "rate_limit")]
     mod rate_limit_tests {
+        use std::sync::Arc;
+
         use super::*;
         use crate::rate_limit::InMemoryStore;
-        use std::sync::Arc;
 
         #[tokio::test]
         async fn test_forgot_password_creates_token() {

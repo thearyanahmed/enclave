@@ -2,9 +2,10 @@
 //!
 //! Converts parsed Rust types to TypeScript interfaces and type aliases.
 
-use crate::parser::{Field, RustType, TypeDefinition, TypeKind, Variant, VariantFields};
 use std::collections::BTreeSet;
 use std::fmt::Write;
+
+use crate::parser::{Field, RustType, TypeDefinition, TypeKind, Variant, VariantFields};
 
 /// Primitive types that don't need imports.
 const PRIMITIVE_TYPES: &[&str] = &[

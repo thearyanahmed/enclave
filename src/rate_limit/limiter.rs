@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::AuthError;
-
 use super::limit::Limit;
 use super::store::RateLimitStore;
+use crate::AuthError;
 
 /// Result of a rate limit check.
 #[derive(Debug, Clone)]

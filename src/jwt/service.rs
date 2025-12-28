@@ -1,10 +1,9 @@
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
+use super::{JwtClaims, JwtConfig, TokenType};
 use crate::AuthError;
 use crate::crypto::generate_token;
-
-use super::{JwtClaims, JwtConfig, TokenType};
 
 /// Length of the JWT ID (jti) in bytes.
 const JTI_LENGTH: usize = 16;
@@ -185,8 +184,9 @@ impl JwtService {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use jsonwebtoken::Header;
+
+    use super::*;
 
     #[test]
     fn test_encode_decode() {

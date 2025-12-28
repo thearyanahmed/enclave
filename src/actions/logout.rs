@@ -42,9 +42,10 @@ impl<T: StatefulTokenRepository> LogoutAction<T> {
 
 #[cfg(test)]
 mod tests {
+    use chrono::{Duration, Utc};
+
     use super::*;
     use crate::{MockTokenRepository, TokenRepository};
-    use chrono::{Duration, Utc};
 
     #[tokio::test]
     async fn test_logout_revokes_token() {

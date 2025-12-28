@@ -1,8 +1,9 @@
+use chrono::{Duration, Utc};
+
 use crate::config::TokenConfig;
 use crate::{
     AccessToken, AuthError, AuthUser, MagicLinkRepository, TokenRepository, UserRepository,
 };
-use chrono::{Duration, Utc};
 
 /// Configuration for magic link verification.
 #[derive(Debug, Clone)]
@@ -131,9 +132,10 @@ impl<U: UserRepository, T: TokenRepository, M: MagicLinkRepository> VerifyMagicL
 
 #[cfg(test)]
 mod tests {
+    use chrono::Duration;
+
     use super::*;
     use crate::{AuthUser, MockMagicLinkRepository, MockTokenRepository, MockUserRepository};
-    use chrono::Duration;
 
     #[tokio::test]
     async fn test_verify_magic_link_success() {

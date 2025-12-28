@@ -1,7 +1,6 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 
 use super::middleware::{AuthenticatedUser, extract_bearer_token};
-use crate::SecretString;
 use crate::actions::{
     ChangePasswordAction, ForgotPasswordAction, LoginAction, LogoutAction, RefreshTokenAction,
     ResetPasswordAction, SignupAction, UpdateUserAction, VerifyEmailAction,
@@ -13,7 +12,7 @@ use crate::api::{
 };
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
-    StatefulTokenRepository, TokenRepository, UserRepository,
+    SecretString, StatefulTokenRepository, TokenRepository, UserRepository,
 };
 
 pub async fn register<U>(body: web::Json<RegisterRequest>, user_repo: web::Data<U>) -> HttpResponse

@@ -25,11 +25,12 @@
 //! let hashed = hash_token(&token); // SHA-256 hash for storage
 //! ```
 
-use crate::AuthError;
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
 use password_hash::rand_core::{OsRng, RngCore};
 use password_hash::{PasswordHash, PasswordHasher as ArgonPasswordHasher, SaltString};
 use sha2::{Digest, Sha256};
+
+use crate::AuthError;
 
 /// Default token length in characters.
 pub const DEFAULT_TOKEN_LENGTH: usize = 32;

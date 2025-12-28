@@ -17,7 +17,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
-use enclave::SecretString;
 use enclave::actions::{LoginAction, SignupAction};
 #[cfg(feature = "audit_log")]
 use enclave::postgres::PostgresAuditLogRepository;
@@ -28,7 +27,7 @@ use enclave::postgres::{
 #[cfg(feature = "audit_log")]
 use enclave::{AuditEventType, AuditLogRepository};
 use enclave::{
-    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository,
+    EmailVerificationRepository, PasswordResetRepository, RateLimiterRepository, SecretString,
     StatefulTokenRepository, TokenRepository, UserRepository,
 };
 use serial_test::serial;

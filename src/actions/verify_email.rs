@@ -1,5 +1,6 @@
-use crate::{AuthError, EmailVerificationRepository, UserRepository};
 use chrono::Utc;
+
+use crate::{AuthError, EmailVerificationRepository, UserRepository};
 
 pub struct VerifyEmailAction<U: UserRepository, E: EmailVerificationRepository> {
     user_repository: U,
@@ -53,9 +54,10 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
 
 #[cfg(test)]
 mod tests {
+    use chrono::Duration;
+
     use super::*;
     use crate::{AuthUser, MockEmailVerificationRepository, MockUserRepository};
-    use chrono::Duration;
 
     #[tokio::test]
     async fn test_verify_email_success() {

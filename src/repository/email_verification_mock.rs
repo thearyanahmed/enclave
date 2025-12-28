@@ -1,13 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use std::sync::{Arc, Mutex};
 
-use crate::AuthError;
-use crate::SecretString;
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 
 use super::email_verification::{EmailVerificationRepository, EmailVerificationToken};
+use crate::{AuthError, SecretString};
 
 fn generate_token() -> SecretString {
     SecretString::new(crate::crypto::generate_token(32))

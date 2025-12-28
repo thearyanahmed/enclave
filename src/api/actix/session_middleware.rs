@@ -1,15 +1,16 @@
 //! Session authentication middleware.
 
-use actix_web::{FromRequest, HttpRequest, dev::Payload, web};
-use chrono::Utc;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-use crate::AuthError;
-use crate::session::{Session, SessionConfig, SessionRepository, verify_signed_cookie};
+use actix_web::dev::Payload;
+use actix_web::{FromRequest, HttpRequest, web};
+use chrono::Utc;
 
 use super::middleware::AuthenticationError;
+use crate::AuthError;
+use crate::session::{Session, SessionConfig, SessionRepository, verify_signed_cookie};
 
 /// Authenticated user extractor for session-based authentication.
 ///
@@ -137,8 +138,9 @@ mod tests {
 
     #[test]
     fn test_session_authenticated_user_accessors() {
-        use crate::session::SessionData;
         use chrono::Duration;
+
+        use crate::session::SessionData;
 
         let data = SessionData {
             user_id: 42,

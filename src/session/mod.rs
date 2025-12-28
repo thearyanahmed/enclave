@@ -28,14 +28,12 @@ mod file_store;
 mod memory_store;
 mod repository;
 
-pub use config::SameSite;
-pub use config::SessionConfig;
+use chrono::{DateTime, Utc};
+pub use config::{SameSite, SessionConfig};
 pub use cookie::{sign_session_id, verify_signed_cookie};
 pub use file_store::FileSessionRepository;
 pub use memory_store::InMemorySessionRepository;
 pub use repository::SessionRepository;
-
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Data stored in the session (server-side).
@@ -76,8 +74,9 @@ impl Session {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use chrono::Duration;
+
+    use super::*;
 
     #[test]
     fn test_session_not_expired() {

@@ -1,8 +1,8 @@
-use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
 use chrono::{Duration, Utc};
 
 #[cfg(feature = "rate_limit")]
 use super::forgot_password::RateLimitConfig;
+use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
 
 /// Configuration for email verification behavior.
 #[derive(Debug, Clone)]
@@ -201,9 +201,10 @@ mod tests {
 
     #[cfg(feature = "rate_limit")]
     mod rate_limit_tests {
+        use std::sync::Arc;
+
         use super::*;
         use crate::rate_limit::InMemoryStore;
-        use std::sync::Arc;
 
         #[tokio::test]
         async fn test_send_verification_creates_token() {

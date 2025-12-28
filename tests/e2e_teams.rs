@@ -7,7 +7,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
-
 use enclave::teams::{
     Action, CreateInvitation, CreateMembership, CreateTeam, MockTeamInvitationRepository,
     MockTeamMemberPermissionRepository, MockTeamMembershipRepository, MockTeamRepository,

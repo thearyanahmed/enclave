@@ -120,40 +120,23 @@ pub mod sqlite;
 pub mod teams;
 pub mod validators;
 
-pub use config::AuthConfig;
-pub use config::RateLimitConfig;
-pub use config::TokenConfig;
-pub use crypto::Argon2Hasher;
-pub use crypto::DEFAULT_TOKEN_LENGTH;
-pub use crypto::PasswordHasher;
-pub use crypto::generate_token;
-pub use crypto::generate_token_default;
-pub use crypto::hash_token;
-pub use secret::SecretString;
-pub use validators::PasswordPolicy;
+use std::fmt;
 
-pub use repository::AccessToken;
+pub use config::{AuthConfig, RateLimitConfig, TokenConfig};
+pub use crypto::{
+    Argon2Hasher, DEFAULT_TOKEN_LENGTH, PasswordHasher, generate_token, generate_token_default,
+    hash_token,
+};
 #[cfg(feature = "audit_log")]
 pub use repository::AuditEventType;
 #[cfg(feature = "audit_log")]
 pub use repository::AuditLog;
 #[cfg(feature = "audit_log")]
 pub use repository::AuditLogRepository;
-pub use repository::AuthUser;
-pub use repository::EmailVerificationRepository;
-pub use repository::EmailVerificationToken;
-pub use repository::LoginAttempt;
 #[cfg(feature = "magic_link")]
 pub use repository::MagicLinkRepository;
 #[cfg(feature = "magic_link")]
 pub use repository::MagicLinkToken;
-pub use repository::PasswordResetRepository;
-pub use repository::PasswordResetToken;
-pub use repository::RateLimiterRepository;
-pub use repository::StatefulTokenRepository;
-pub use repository::TokenRepository;
-pub use repository::UserRepository;
-
 #[cfg(all(feature = "audit_log", any(test, feature = "mocks")))]
 pub use repository::MockAuditLogRepository;
 #[cfg(any(test, feature = "mocks"))]
@@ -168,8 +151,14 @@ pub use repository::MockRateLimiterRepository;
 pub use repository::MockTokenRepository;
 #[cfg(any(test, feature = "mocks"))]
 pub use repository::MockUserRepository;
+pub use repository::{
+    AccessToken, AuthUser, EmailVerificationRepository, EmailVerificationToken, LoginAttempt,
+    PasswordResetRepository, PasswordResetToken, RateLimiterRepository, StatefulTokenRepository,
+    TokenRepository, UserRepository,
+};
+pub use secret::SecretString;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+pub use validators::PasswordPolicy;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuthError {

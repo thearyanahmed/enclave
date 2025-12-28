@@ -2,9 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool};
 
-use crate::SecretString;
 use crate::crypto::{generate_token_default, hash_token};
-use crate::{AuthError, PasswordResetRepository, PasswordResetToken};
+use crate::{AuthError, PasswordResetRepository, PasswordResetToken, SecretString};
 
 #[derive(Clone)]
 pub struct SqlitePasswordResetRepository {

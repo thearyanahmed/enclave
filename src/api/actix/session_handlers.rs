@@ -1,10 +1,8 @@
 //! Session-based authentication handlers.
 
-use actix_web::{
-    HttpRequest, HttpResponse,
-    cookie::{Cookie, SameSite as ActixSameSite, time::Duration as CookieDuration},
-    web,
-};
+use actix_web::cookie::time::Duration as CookieDuration;
+use actix_web::cookie::{Cookie, SameSite as ActixSameSite};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::Utc;
 
 use super::session_middleware::SessionAuthenticatedUser;

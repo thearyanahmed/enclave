@@ -2,8 +2,9 @@
 //!
 //! Converts parsed Rust types to JavaScript with `JSDoc` type annotations.
 
-use crate::parser::{Field, RustType, TypeDefinition, TypeKind, Variant, VariantFields};
 use std::fmt::Write;
+
+use crate::parser::{Field, RustType, TypeDefinition, TypeKind, Variant, VariantFields};
 
 /// Generate `JSDoc` code for a type definition.
 pub fn generate_jsdoc(def: &TypeDefinition) -> String {
