@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool};
 
-use crate::teams::{UserTeamContext, UserTeamContextRepository};
 use crate::AuthError;
+use crate::teams::{UserTeamContext, UserTeamContextRepository};
 
 /// `SQLite`-backed user team context repository.
 #[derive(Clone)]

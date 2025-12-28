@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool};
 
-use crate::teams::{CreateInvitation, TeamInvitation, TeamInvitationRepository};
 use crate::AuthError;
+use crate::teams::{CreateInvitation, TeamInvitation, TeamInvitationRepository};
 
 /// `SQLite`-backed team invitation repository.
 #[derive(Clone)]

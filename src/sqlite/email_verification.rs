@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, SqlitePool};
 
-use crate::crypto::{generate_token_default, hash_token};
 use crate::SecretString;
+use crate::crypto::{generate_token_default, hash_token};
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken};
 
 #[derive(Clone)]

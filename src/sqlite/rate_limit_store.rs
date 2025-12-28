@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use sqlx::SqlitePool;
 
-use crate::rate_limit::{RateLimitInfo, RateLimitStore};
 use crate::AuthError;
+use crate::rate_limit::{RateLimitInfo, RateLimitStore};
 
 /// `SQLite`-backed rate limit store.
 ///

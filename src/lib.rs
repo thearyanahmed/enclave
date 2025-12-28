@@ -110,12 +110,12 @@ pub mod jwt;
 pub mod postgres;
 #[cfg(feature = "rate_limit")]
 pub mod rate_limit;
-#[cfg(feature = "sqlx_sqlite")]
-pub mod sqlite;
 pub mod repository;
 pub mod secret;
 #[cfg(feature = "sessions")]
 pub mod session;
+#[cfg(feature = "sqlx_sqlite")]
+pub mod sqlite;
 #[cfg(feature = "teams")]
 pub mod teams;
 pub mod validators;

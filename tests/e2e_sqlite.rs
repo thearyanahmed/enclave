@@ -12,14 +12,14 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::{Duration, Utc};
-use enclave::actions::{LoginAction, SignupAction};
-use enclave::sqlite::{
-    migrations, SqliteEmailVerificationRepository, SqlitePasswordResetRepository,
-    SqliteRateLimiterRepository, SqliteTokenRepository, SqliteUserRepository,
-};
 use enclave::SecretString;
+use enclave::actions::{LoginAction, SignupAction};
 #[cfg(feature = "audit_log")]
 use enclave::sqlite::SqliteAuditLogRepository;
+use enclave::sqlite::{
+    SqliteEmailVerificationRepository, SqlitePasswordResetRepository, SqliteRateLimiterRepository,
+    SqliteTokenRepository, SqliteUserRepository, migrations,
+};
 #[cfg(feature = "audit_log")]
 use enclave::{AuditEventType, AuditLogRepository};
 use enclave::{
@@ -27,8 +27,8 @@ use enclave::{
     StatefulTokenRepository, TokenRepository, UserRepository,
 };
 use serial_test::serial;
-use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::SqlitePool;
+use sqlx::sqlite::SqlitePoolOptions;
 
 async fn setup_db() -> SqlitePool {
     // Use in-memory database for testing

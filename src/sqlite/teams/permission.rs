@@ -6,8 +6,8 @@ use async_trait::async_trait;
 use chrono::Utc;
 use sqlx::{FromRow, SqlitePool};
 
-use crate::teams::{Action, PermissionSet, Resource, TeamMemberPermissionRepository};
 use crate::AuthError;
+use crate::teams::{Action, PermissionSet, Resource, TeamMemberPermissionRepository};
 
 /// `SQLite`-backed team member permission repository.
 ///
