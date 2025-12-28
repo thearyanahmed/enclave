@@ -113,7 +113,7 @@ mod tests {
         assert!(ts.contains("id: number"));
         assert!(ts.contains("email: string"));
         assert!(ts.contains("name: string"));
-        assert!(ts.contains("email_verified_at?: string | null"));
+        assert!(ts.contains("email_verified_at: string | null"));
         assert!(ts.contains("created_at: string"));
     }
 
