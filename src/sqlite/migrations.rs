@@ -142,6 +142,14 @@ pub async fn run(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
+/// Runs a set of migrations against the database.
+///
+/// # Limitations
+///
+/// SQL statements are split by semicolons (`;`). This means migrations containing
+/// semicolons within string literals will not work correctly. The bundled migrations
+/// are designed to avoid this issue, but custom migrations should be aware of this
+/// limitation.
 async fn run_migrations(pool: &SqlitePool, migrations: &[(&str, &str)]) -> Result<(), sqlx::Error> {
     for (name, sql) in migrations {
         // Check if already applied
@@ -153,7 +161,10 @@ async fn run_migrations(pool: &SqlitePool, migrations: &[(&str, &str)]) -> Resul
 
         if !applied {
             // Run migration - SQLite doesn't support multiple statements in one execute,
-            // so we split by semicolons and run each statement
+            // so we split by semicolons and run each statement.
+            //
+            // NOTE: This naive splitting will fail if semicolons appear within string
+            // literals. The bundled migrations are designed to avoid this issue.
             for statement in sql.split(';') {
                 let trimmed = statement.trim();
                 if !trimmed.is_empty() {
