@@ -1,4 +1,4 @@
 export interface UpdateTeamRequest {
-  name?: string | null;
-  slug?: string | null;
+  name: string | null;
+  slug: string | null;
 }

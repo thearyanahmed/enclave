@@ -144,9 +144,8 @@ fn generate_interface(name: &str, fields: &[Field]) -> String {
     let mut output = format!("export interface {name} {{\n");
 
     for field in fields {
-        let (ts_type, optional) = rust_type_to_typescript(&field.ty);
-        let opt_marker = if optional { "?" } else { "" };
-        let _ = writeln!(output, "  {}{}: {};", field.name, opt_marker, ts_type);
+        let (ts_type, _) = rust_type_to_typescript(&field.ty);
+        let _ = writeln!(output, "  {}: {};", field.name, ts_type);
     }
 
     output.push_str("}\n");
@@ -179,9 +178,8 @@ fn generate_union(name: &str, variants: &[Variant]) -> String {
             VariantFields::Struct(fields) => {
                 let mut field_strs = Vec::new();
                 for field in fields {
-                    let (ts_type, optional) = rust_type_to_typescript(&field.ty);
-                    let opt_marker = if optional { "?" } else { "" };
-                    field_strs.push(format!("{}{}: {}", field.name, opt_marker, ts_type));
+                    let (ts_type, _) = rust_type_to_typescript(&field.ty);
+                    field_strs.push(format!("{}: {}", field.name, ts_type));
                 }
                 format!(
                     "  | {{ type: \"{}\"; {} }}",
@@ -320,7 +318,7 @@ mod tests {
         };
 
         let ts = generate_typescript(&def);
-        assert!(ts.contains("email?: string | null"));
+        assert!(ts.contains("email: string | null"));
     }
 
     #[test]
