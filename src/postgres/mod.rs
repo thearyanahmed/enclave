@@ -3,6 +3,7 @@ mod audit_log;
 mod email_verification;
 #[cfg(feature = "magic_link")]
 mod magic_link;
+pub mod migrations;
 mod password_reset;
 mod rate_limiter;
 #[cfg(feature = "teams")]

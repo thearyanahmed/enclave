@@ -31,7 +31,7 @@ use enclave::api::axum::{AppState, auth_routes};
 use enclave::postgres::{
     PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
     PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,
-    create_repositories,
+    create_repositories, migrations,
 };
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
@@ -49,8 +49,7 @@ async fn main() {
         .expect("Failed to create pool");
 
     // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
+    migrations::run(&pool)
         .await
         .expect("Failed to run migrations");
 

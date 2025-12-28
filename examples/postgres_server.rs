@@ -31,7 +31,7 @@ use enclave::api::actix::auth_routes;
 use enclave::postgres::{
     PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
     PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,
-    create_repositories,
+    create_repositories, migrations,
 };
 use sqlx::postgres::PgPoolOptions;
 
@@ -48,8 +48,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool");
 
     // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
+    migrations::run(&pool)
         .await
         .expect("Failed to run migrations");
 

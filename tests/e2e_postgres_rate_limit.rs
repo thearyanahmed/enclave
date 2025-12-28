@@ -12,6 +12,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::Utc;
+use enclave::postgres::migrations;
 use enclave::rate_limit::{Limit, PostgresRateLimitStore, RateLimitStore, RateLimiter};
 use serial_test::serial;
 use sqlx::PgPool;
@@ -28,9 +29,35 @@ async fn setup_db() -> PgPool {
         .await
         .expect("Failed to connect to database");
 
+    // Drop all existing tables to ensure clean state
+    // This handles migration from old sqlx-based system to new custom system
+    sqlx::query(
+        r"
+        DROP TABLE IF EXISTS
+            _sqlx_migrations,
+            _enclave_migrations,
+            team_member_permissions,
+            user_team_contexts,
+            team_invitations,
+            team_memberships,
+            teams,
+            magic_link_tokens,
+            audit_logs,
+            rate_limits,
+            login_attempts,
+            email_verification_tokens,
+            password_reset_tokens,
+            access_tokens,
+            users
+        CASCADE
+        ",
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to drop tables");
+
     // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
+    migrations::run(&pool)
         .await
         .expect("Failed to run migrations");
 
