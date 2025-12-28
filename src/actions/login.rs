@@ -21,8 +21,8 @@ use crate::{
 /// # Example
 ///
 /// ```rust
-/// use enclave::actions::LoginConfig;
 /// use chrono::Duration;
+/// use enclave::actions::LoginConfig;
 ///
 /// // Use stricter settings for sensitive applications
 /// let config = LoginConfig {

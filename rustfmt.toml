@@ -6,3 +6,13 @@ group_imports = "StdExternalCrate"
 
 # one use statement per module
 imports_granularity = "Module"
+
+# line width
+max_width = 100
+comment_width = 100
+
+# format code blocks in doc comments
+format_code_in_doc_comments = true
+
+# wrap long comments
+wrap_comments = true

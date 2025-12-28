@@ -44,8 +44,9 @@ impl RateLimitResult {
 /// # Example
 ///
 /// ```rust
-/// use enclave::rate_limit::{RateLimiter, Limit, InMemoryStore};
 /// use std::sync::Arc;
+///
+/// use enclave::rate_limit::{InMemoryStore, Limit, RateLimiter};
 ///
 /// let store = Arc::new(InMemoryStore::new());
 /// let limiter = RateLimiter::new(store)
@@ -73,8 +74,9 @@ impl RateLimiter {
     /// # Example
     ///
     /// ```rust
-    /// use enclave::rate_limit::{RateLimiter, Limit, InMemoryStore};
     /// use std::sync::Arc;
+    ///
+    /// use enclave::rate_limit::{InMemoryStore, Limit, RateLimiter};
     ///
     /// let store = Arc::new(InMemoryStore::new());
     /// let limiter = RateLimiter::new(store)
