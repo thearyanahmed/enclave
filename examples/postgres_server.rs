@@ -48,7 +48,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool");
 
     // Run migrations
-    migrations::run_all(&pool)
+    migrations::run(&pool)
         .await
         .expect("Failed to run migrations");
 
