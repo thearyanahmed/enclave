@@ -21,25 +21,25 @@ use sqlx::{Executor, PgPool};
 const CORE_MIGRATIONS: &[(&str, &str)] = &[
     (
         "20241220000001_create_users_table",
-        include_str!("../../migrations/core/20241220000001_create_users_table.sql"),
+        include_str!("../../migrations/postgres/core/20241220000001_create_users_table.sql"),
     ),
     (
         "20241220000002_create_access_tokens_table",
-        include_str!("../../migrations/core/20241220000002_create_access_tokens_table.sql"),
+        include_str!("../../migrations/postgres/core/20241220000002_create_access_tokens_table.sql"),
     ),
     (
         "20241220000003_create_password_reset_tokens_table",
-        include_str!("../../migrations/core/20241220000003_create_password_reset_tokens_table.sql"),
+        include_str!("../../migrations/postgres/core/20241220000003_create_password_reset_tokens_table.sql"),
     ),
     (
         "20241220000004_create_email_verification_tokens_table",
         include_str!(
-            "../../migrations/core/20241220000004_create_email_verification_tokens_table.sql"
+            "../../migrations/postgres/core/20241220000004_create_email_verification_tokens_table.sql"
         ),
     ),
     (
         "20241222000001_add_token_metadata_fields",
-        include_str!("../../migrations/core/20241222000001_add_token_metadata_fields.sql"),
+        include_str!("../../migrations/postgres/core/20241222000001_add_token_metadata_fields.sql"),
     ),
 ];
 
@@ -48,11 +48,11 @@ const CORE_MIGRATIONS: &[(&str, &str)] = &[
 const RATE_LIMIT_MIGRATIONS: &[(&str, &str)] = &[
     (
         "20241220000005_create_login_attempts_table",
-        include_str!("../../migrations/rate_limit/20241220000005_create_login_attempts_table.sql"),
+        include_str!("../../migrations/postgres/rate_limit/20241220000005_create_login_attempts_table.sql"),
     ),
     (
         "20241223000001_create_rate_limits_table",
-        include_str!("../../migrations/rate_limit/20241223000001_create_rate_limits_table.sql"),
+        include_str!("../../migrations/postgres/rate_limit/20241223000001_create_rate_limits_table.sql"),
     ),
 ];
 
@@ -60,14 +60,14 @@ const RATE_LIMIT_MIGRATIONS: &[(&str, &str)] = &[
 #[cfg(feature = "audit_log")]
 const AUDIT_LOG_MIGRATIONS: &[(&str, &str)] = &[(
     "20241220000006_create_audit_logs_table",
-    include_str!("../../migrations/audit_log/20241220000006_create_audit_logs_table.sql"),
+    include_str!("../../migrations/postgres/audit_log/20241220000006_create_audit_logs_table.sql"),
 )];
 
 /// Magic link migrations.
 #[cfg(feature = "magic_link")]
 const MAGIC_LINK_MIGRATIONS: &[(&str, &str)] = &[(
     "20241227000001_create_magic_link_tokens_table",
-    include_str!("../../migrations/magic_link/20241227000001_create_magic_link_tokens_table.sql"),
+    include_str!("../../migrations/postgres/magic_link/20241227000001_create_magic_link_tokens_table.sql"),
 )];
 
 /// Teams migrations.
@@ -75,25 +75,25 @@ const MAGIC_LINK_MIGRATIONS: &[(&str, &str)] = &[(
 const TEAMS_MIGRATIONS: &[(&str, &str)] = &[
     (
         "20241227000002_create_teams_table",
-        include_str!("../../migrations/teams/20241227000002_create_teams_table.sql"),
+        include_str!("../../migrations/postgres/teams/20241227000002_create_teams_table.sql"),
     ),
     (
         "20241227000003_create_team_memberships_table",
-        include_str!("../../migrations/teams/20241227000003_create_team_memberships_table.sql"),
+        include_str!("../../migrations/postgres/teams/20241227000003_create_team_memberships_table.sql"),
     ),
     (
         "20241227000004_create_team_invitations_table",
-        include_str!("../../migrations/teams/20241227000004_create_team_invitations_table.sql"),
+        include_str!("../../migrations/postgres/teams/20241227000004_create_team_invitations_table.sql"),
     ),
     (
         "20241227000005_create_team_member_permissions_table",
         include_str!(
-            "../../migrations/teams/20241227000005_create_team_member_permissions_table.sql"
+            "../../migrations/postgres/teams/20241227000005_create_team_member_permissions_table.sql"
         ),
     ),
     (
         "20241227000006_create_user_team_contexts_table",
-        include_str!("../../migrations/teams/20241227000006_create_user_team_contexts_table.sql"),
+        include_str!("../../migrations/postgres/teams/20241227000006_create_user_team_contexts_table.sql"),
     ),
 ];
 

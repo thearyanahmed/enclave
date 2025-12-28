@@ -41,8 +41,9 @@ Store this securely. Never commit to version control.
 # Using sqlx-cli
 sqlx migrate run
 
-# Or execute migration files directly
-psql $DATABASE_URL -f migrations/*.sql
+# Or execute migration files directly (for PostgreSQL)
+psql $DATABASE_URL -f migrations/postgres/core/*.sql
+psql $DATABASE_URL -f migrations/postgres/rate_limit/*.sql  # if using rate_limit feature
 ```
 
 ### 2. Verify Tables
