@@ -12,6 +12,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use chrono::Utc;
+use enclave::postgres::migrations;
 use enclave::rate_limit::{Limit, PostgresRateLimitStore, RateLimitStore, RateLimiter};
 use serial_test::serial;
 use sqlx::PgPool;
@@ -29,8 +30,7 @@ async fn setup_db() -> PgPool {
         .expect("Failed to connect to database");
 
     // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
+    migrations::run_all(&pool)
         .await
         .expect("Failed to run migrations");
 

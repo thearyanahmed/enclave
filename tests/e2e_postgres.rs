@@ -23,7 +23,7 @@ use enclave::actions::{LoginAction, SignupAction};
 use enclave::postgres::PostgresAuditLogRepository;
 use enclave::postgres::{
     PostgresEmailVerificationRepository, PostgresPasswordResetRepository,
-    PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository,
+    PostgresRateLimiterRepository, PostgresTokenRepository, PostgresUserRepository, migrations,
 };
 #[cfg(feature = "audit_log")]
 use enclave::{AuditEventType, AuditLogRepository};
@@ -46,8 +46,7 @@ async fn setup_db() -> PgPool {
         .expect("Failed to connect to database");
 
     // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
+    migrations::run_all(&pool)
         .await
         .expect("Failed to run migrations");
 
