@@ -25,9 +25,8 @@
 use actix_web::{App, HttpServer, web};
 use enclave::api::actix::auth_routes;
 use enclave::sqlite::{
-    SqliteEmailVerificationRepository, SqlitePasswordResetRepository,
-    SqliteRateLimiterRepository, SqliteTokenRepository, SqliteUserRepository,
-    create_repositories, migrations,
+    SqliteEmailVerificationRepository, SqlitePasswordResetRepository, SqliteRateLimiterRepository,
+    SqliteTokenRepository, SqliteUserRepository, create_repositories, migrations,
 };
 use sqlx::sqlite::SqlitePoolOptions;
 

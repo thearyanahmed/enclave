@@ -25,9 +25,8 @@
 use axum::Router;
 use enclave::api::axum::{AppState, auth_routes};
 use enclave::sqlite::{
-    SqliteEmailVerificationRepository, SqlitePasswordResetRepository,
-    SqliteRateLimiterRepository, SqliteTokenRepository, SqliteUserRepository,
-    create_repositories, migrations,
+    SqliteEmailVerificationRepository, SqlitePasswordResetRepository, SqliteRateLimiterRepository,
+    SqliteTokenRepository, SqliteUserRepository, create_repositories, migrations,
 };
 use sqlx::sqlite::SqlitePoolOptions;
 use tokio::net::TcpListener;
