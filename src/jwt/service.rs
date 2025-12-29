@@ -34,11 +34,11 @@ impl JwtService {
         }
     }
 
-    pub fn encode(&self, user_id: i32) -> Result<String, AuthError> {
+    pub fn encode(&self, user_id: u64) -> Result<String, AuthError> {
         self.encode_access_token(user_id)
     }
 
-    pub fn encode_access_token(&self, user_id: i32) -> Result<String, AuthError> {
+    pub fn encode_access_token(&self, user_id: u64) -> Result<String, AuthError> {
         let now = Utc::now();
         let exp = now + self.config.access_expiry();
         let jti = generate_token(JTI_LENGTH);
@@ -57,7 +57,7 @@ impl JwtService {
             .map_err(|_| AuthError::TokenInvalid)
     }
 
-    pub fn encode_refresh_token(&self, user_id: i32) -> Result<String, AuthError> {
+    pub fn encode_refresh_token(&self, user_id: u64) -> Result<String, AuthError> {
         let now = Utc::now();
         let exp = now + self.config.refresh_expiry();
         let jti = generate_token(JTI_LENGTH);
@@ -76,7 +76,7 @@ impl JwtService {
             .map_err(|_| AuthError::TokenInvalid)
     }
 
-    pub fn create_token_pair(&self, user_id: i32) -> Result<TokenPair, AuthError> {
+    pub fn create_token_pair(&self, user_id: u64) -> Result<TokenPair, AuthError> {
         let access_token = self.encode_access_token(user_id)?;
         let refresh_token = self.encode_refresh_token(user_id)?;
 
@@ -132,7 +132,7 @@ impl JwtService {
     }
 
     /// rejects refresh tokens - use `validate_any` to accept both
-    pub fn validate(&self, token: &str) -> Result<i32, AuthError> {
+    pub fn validate(&self, token: &str) -> Result<u64, AuthError> {
         let claims = self.decode(token)?;
 
         if !claims.is_access_token() {
@@ -143,7 +143,7 @@ impl JwtService {
     }
 
     /// accepts both access and refresh tokens
-    pub fn validate_any(&self, token: &str) -> Result<i32, AuthError> {
+    pub fn validate_any(&self, token: &str) -> Result<u64, AuthError> {
         let claims = self.decode(token)?;
         claims.user_id()
     }
