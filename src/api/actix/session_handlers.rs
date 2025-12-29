@@ -1,5 +1,3 @@
-//! Session-based authentication handlers.
-
 use actix_web::cookie::time::Duration as CookieDuration;
 use actix_web::cookie::{Cookie, SameSite as ActixSameSite};
 use actix_web::{HttpRequest, HttpResponse, web};
@@ -12,7 +10,6 @@ use crate::crypto::Argon2Hasher;
 use crate::session::{SameSite, SessionConfig, SessionData, SessionRepository, sign_session_id};
 use crate::{AuthError, RateLimiterRepository, SecretString, UserRepository};
 
-/// Response for session-based user info.
 #[derive(Debug, serde::Serialize)]
 pub struct SessionUserResponse {
     pub user_id: i32,
@@ -20,7 +17,6 @@ pub struct SessionUserResponse {
     pub name: String,
 }
 
-/// Builds a session cookie with the given signed value.
 fn build_session_cookie(signed_value: String, config: &SessionConfig) -> Cookie<'static> {
     let same_site = match config.cookie_same_site {
         SameSite::None => ActixSameSite::None,
@@ -45,7 +41,6 @@ fn build_session_cookie(signed_value: String, config: &SessionConfig) -> Cookie<
     cookie
 }
 
-/// Builds a cookie to remove the session cookie.
 fn build_removal_cookie(config: &SessionConfig) -> Cookie<'static> {
     Cookie::build(config.cookie_name.clone(), String::new())
         .path(config.cookie_path.clone())
@@ -53,13 +48,11 @@ fn build_removal_cookie(config: &SessionConfig) -> Cookie<'static> {
         .finish()
 }
 
-/// Extracts the session ID from a signed cookie.
 fn extract_session_id(req: &HttpRequest, config: &SessionConfig) -> Option<String> {
     req.cookie(&config.cookie_name)
         .and_then(|c| crate::session::verify_signed_cookie(c.value(), &config.secret_key))
 }
 
-/// Session login handler - creates session and sets signed cookie.
 pub async fn session_login<U, S, R>(
     body: web::Json<LoginRequest>,
     user_repo: web::Data<U>,
@@ -123,7 +116,6 @@ where
     }
 }
 
-/// Session logout handler - destroys session and clears cookie.
 pub async fn session_logout<S>(
     req: HttpRequest,
     session_repo: web::Data<S>,
@@ -143,7 +135,6 @@ where
         })
 }
 
-/// Get current user from session.
 pub async fn session_get_user<S>(session: SessionAuthenticatedUser<S>) -> HttpResponse
 where
     S: SessionRepository + Clone + 'static,
@@ -155,10 +146,7 @@ where
     })
 }
 
-/// Mock token repository for session login.
-///
-/// The `LoginAction` requires a `TokenRepository`, but for sessions we don't
-/// need to create tokens - we create sessions instead.
+/// `LoginAction` requires a `TokenRepository`, but for sessions we create sessions instead
 #[derive(Clone)]
 struct MockTokenRepo;
 

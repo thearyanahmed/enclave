@@ -30,28 +30,21 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 pub struct SecretString(String);
 
 impl SecretString {
-    /// Creates a new `SecretString` from any type that can be converted to a `String`.
     #[must_use]
     pub fn new(secret: impl Into<String>) -> Self {
         Self(secret.into())
     }
 
-    /// Exposes the secret value.
-    ///
-    /// Use this method only when you need to access the actual secret,
-    /// such as when passing it to a hashing function.
     #[must_use]
     pub fn expose_secret(&self) -> &str {
         &self.0
     }
 
-    /// Returns true if the secret is empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    /// Returns the length of the secret in bytes.
     #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()

@@ -6,40 +6,29 @@ use chrono::{DateTime, Utc};
 
 use crate::AuthError;
 
-/// Information about the current rate limit state for a key.
 #[derive(Debug, Clone)]
 pub struct RateLimitInfo {
-    /// Number of attempts made in the current window.
     pub attempts: u32,
-    /// When the current window resets.
     pub reset_at: DateTime<Utc>,
 }
 
 impl RateLimitInfo {
-    /// Returns the number of seconds until the rate limit resets.
     pub fn available_in(&self) -> i64 {
         (self.reset_at - Utc::now()).num_seconds().max(0)
     }
 }
 
-/// Storage backend for rate limit data.
-///
-/// Implement this trait to provide custom storage (Redis, `PostgreSQL`, etc.).
+/// implement this trait for custom storage (redis, postgres, etc.)
 #[async_trait]
 pub trait RateLimitStore: Send + Sync {
-    /// Increment the attempt count for a key and return the updated info.
-    ///
-    /// If the key doesn't exist, it should be created with 1 attempt.
-    /// The `window_secs` parameter defines how long until the window resets.
+    /// creates key with 1 attempt if it doesn't exist
     async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError>;
 
-    /// Get the current rate limit info for a key, if it exists.
     async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError>;
 
-    /// Reset (clear) the rate limit for a key.
     async fn reset(&self, key: &str) -> Result<(), AuthError>;
 
-    /// Check remaining attempts without incrementing.
+    /// does not increment the counter
     async fn remaining(&self, key: &str, max_attempts: u32) -> Result<u32, AuthError> {
         Ok(self.get(key).await?.map_or(max_attempts, |info| {
             if info.reset_at < Utc::now() {
@@ -51,17 +40,13 @@ pub trait RateLimitStore: Send + Sync {
     }
 }
 
-/// In-memory rate limit store.
-///
-/// Suitable for single-instance deployments or development.
-/// For distributed systems, use a shared store like Redis or `PostgreSQL`.
+/// for distributed systems, use a shared store like redis or postgres
 #[derive(Debug, Default)]
 pub struct InMemoryStore {
     entries: Arc<RwLock<HashMap<String, RateLimitInfo>>>,
 }
 
 impl InMemoryStore {
-    /// Creates a new in-memory store.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -69,9 +54,7 @@ impl InMemoryStore {
         }
     }
 
-    /// Cleans up expired entries to prevent memory growth.
-    ///
-    /// Call this periodically in long-running applications.
+    /// call periodically in long-running applications to prevent memory growth
     pub fn cleanup_expired(&self) {
         let now = Utc::now();
         if let Ok(mut entries) = self.entries.write() {

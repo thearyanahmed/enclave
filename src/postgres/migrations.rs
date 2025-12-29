@@ -1,23 +1,5 @@
-//! Feature-gated database migrations.
-//!
-//! Migrations are organized by feature and only executed when the feature is enabled.
-//! Each feature's migrations are embedded at compile time and run programmatically.
-//!
-//! # Example
-//!
-//! ```rust,ignore
-//! use enclave::postgres::migrations;
-//! use sqlx::PgPool;
-//!
-//! async fn setup_database(pool: &PgPool) -> Result<(), sqlx::Error> {
-//!     migrations::run(pool).await?;
-//!     Ok(())
-//! }
-//! ```
-
 use sqlx::{Executor, PgPool};
 
-/// Core migrations - always required.
 const CORE_MIGRATIONS: &[(&str, &str)] = &[
     (
         "20241220000001_create_users_table",
@@ -47,7 +29,6 @@ const CORE_MIGRATIONS: &[(&str, &str)] = &[
     ),
 ];
 
-/// Rate limit migrations.
 #[cfg(feature = "rate_limit")]
 const RATE_LIMIT_MIGRATIONS: &[(&str, &str)] = &[
     (
@@ -64,14 +45,12 @@ const RATE_LIMIT_MIGRATIONS: &[(&str, &str)] = &[
     ),
 ];
 
-/// Audit log migrations.
 #[cfg(feature = "audit_log")]
 const AUDIT_LOG_MIGRATIONS: &[(&str, &str)] = &[(
     "20241220000006_create_audit_logs_table",
     include_str!("../../migrations/postgres/audit_log/20241220000006_create_audit_logs_table.sql"),
 )];
 
-/// Magic link migrations.
 #[cfg(feature = "magic_link")]
 const MAGIC_LINK_MIGRATIONS: &[(&str, &str)] = &[(
     "20241227000001_create_magic_link_tokens_table",
@@ -80,7 +59,6 @@ const MAGIC_LINK_MIGRATIONS: &[(&str, &str)] = &[(
     ),
 )];
 
-/// Teams migrations.
 #[cfg(feature = "teams")]
 const TEAMS_MIGRATIONS: &[(&str, &str)] = &[
     (
@@ -113,10 +91,6 @@ const TEAMS_MIGRATIONS: &[(&str, &str)] = &[
     ),
 ];
 
-/// Runs all database migrations for enabled features.
-///
-/// Migrations are executed in order and tracked in the `_enclave_migrations` table.
-/// Only migrations for enabled features are compiled and executed.
 pub async fn run(pool: &PgPool) -> Result<(), sqlx::Error> {
     // Create migrations tracking table
     pool.execute(

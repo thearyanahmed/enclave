@@ -20,7 +20,6 @@ pub struct JwtTokenProvider {
 }
 
 impl JwtTokenProvider {
-    /// Creates a new JWT token provider.
     pub fn new(service: JwtService) -> Self {
         Self { service }
     }

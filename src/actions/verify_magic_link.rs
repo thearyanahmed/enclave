@@ -5,12 +5,8 @@ use crate::{
     AccessToken, AuthError, AuthUser, MagicLinkRepository, TokenRepository, UserRepository,
 };
 
-/// Configuration for magic link verification.
 #[derive(Debug, Clone)]
 pub struct VerifyMagicLinkConfig {
-    /// How long access tokens remain valid after magic link login.
-    ///
-    /// Default: 7 days
     pub access_token_expiry: Duration,
 }
 
@@ -23,7 +19,6 @@ impl Default for VerifyMagicLinkConfig {
 }
 
 impl VerifyMagicLinkConfig {
-    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &TokenConfig) -> Self {
         Self {
             access_token_expiry: tokens.access_token_expiry,
@@ -44,6 +39,11 @@ where
 }
 
 impl<U: UserRepository, T: TokenRepository, M: MagicLinkRepository> VerifyMagicLinkAction<U, T, M> {
+    /// Creates a new `VerifyMagicLinkAction` with default configuration.
+    ///
+    /// Default: 7 day access token expiry. For custom settings, use [`with_config`].
+    ///
+    /// [`with_config`]: Self::with_config
     pub fn new(user_repository: U, token_repository: T, magic_link_repository: M) -> Self {
         Self::with_config(
             user_repository,
@@ -53,6 +53,7 @@ impl<U: UserRepository, T: TokenRepository, M: MagicLinkRepository> VerifyMagicL
         )
     }
 
+    /// Creates a new `VerifyMagicLinkAction` with custom configuration.
     pub fn with_config(
         user_repository: U,
         token_repository: T,
@@ -67,53 +68,49 @@ impl<U: UserRepository, T: TokenRepository, M: MagicLinkRepository> VerifyMagicL
         }
     }
 
-    /// Sets the configuration.
     #[must_use]
     pub fn config(mut self, config: VerifyMagicLinkConfig) -> Self {
         self.config = config;
         self
     }
 
-    /// Verifies a magic link token and logs the user in.
+    /// Verifies a magic link token and returns an authenticated session.
     ///
-    /// Returns `Ok((user, access_token))` if the token is valid.
-    /// Returns `Err(AuthError::TokenInvalid)` if the token is invalid or expired.
+    /// Magic link tokens are single-use and deleted after verification.
     ///
-    /// The magic link token is deleted after successful verification (single-use).
+    /// # Returns
+    ///
+    /// - `Ok((user, token))` - valid magic link, returns user and access token
+    /// - `Err(AuthError::TokenInvalid)` - invalid, expired, or already used token
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "verify_magic_link", skip_all, err)
     )]
     pub async fn execute(&self, token: &str) -> Result<(AuthUser, AccessToken), AuthError> {
-        // Find the magic link token
         let magic_link_token = self
             .magic_link_repository
             .find_magic_link_token(token)
             .await?
             .ok_or(AuthError::TokenInvalid)?;
 
-        // Check if token has expired
         if magic_link_token.expires_at < Utc::now() {
-            // Delete expired token
             self.magic_link_repository
                 .delete_magic_link_token(token)
                 .await?;
             return Err(AuthError::TokenInvalid);
         }
 
-        // Find the user
         let user = self
             .user_repository
             .find_user_by_id(magic_link_token.user_id)
             .await?
             .ok_or(AuthError::TokenInvalid)?;
 
-        // Delete the magic link token (single-use)
         self.magic_link_repository
             .delete_magic_link_token(token)
             .await?;
 
-        // Create access token
         let expires_at = Utc::now() + self.config.access_token_expiry;
         let access_token = self
             .token_repository

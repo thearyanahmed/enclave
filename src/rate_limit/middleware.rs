@@ -10,24 +10,6 @@ use futures::future::{LocalBoxFuture, Ready, ok};
 use super::limit::{KeyStrategy, Limit};
 use super::store::RateLimitStore;
 
-/// Throttle middleware for actix-web.
-///
-/// Applies rate limiting to requests based on the configured limit.
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use enclave::rate_limit::{RateLimiter, Limit, InMemoryStore};
-/// use std::sync::Arc;
-///
-/// let store = Arc::new(InMemoryStore::new());
-/// let limiter = RateLimiter::new(store)
-///     .for_("api", Limit::per_minute(60));
-///
-/// App::new()
-///     .wrap(limiter.throttle("api"))
-///     .route("/api/resource", web::get().to(handler))
-/// ```
 #[derive(Clone)]
 pub struct Throttle {
     store: Arc<dyn RateLimitStore>,
@@ -36,7 +18,6 @@ pub struct Throttle {
 }
 
 impl Throttle {
-    /// Creates a new throttle middleware.
     #[must_use]
     pub fn new(store: Arc<dyn RateLimitStore>, limit: Option<Limit>, limit_name: String) -> Self {
         Self {
@@ -69,7 +50,6 @@ where
     }
 }
 
-/// The actual middleware service.
 pub struct ThrottleMiddleware<S> {
     service: S,
     store: Arc<dyn RateLimitStore>,
@@ -185,7 +165,6 @@ where
     }
 }
 
-/// Extracts the rate limit key from the request based on the strategy.
 fn extract_key(req: &ServiceRequest, strategy: &KeyStrategy) -> String {
     match strategy {
         KeyStrategy::Ip => extract_client_ip(req.request()),
@@ -204,13 +183,10 @@ fn extract_key(req: &ServiceRequest, strategy: &KeyStrategy) -> String {
     }
 }
 
-/// User ID extension for user-based rate limiting.
 #[derive(Debug, Clone)]
 pub struct UserId(pub i32);
 
-/// Extracts the client IP from a request.
-///
-/// Checks common proxy headers first, then falls back to peer address.
+/// checks X-Forwarded-For, X-Real-IP, CF-Connecting-IP, then falls back to peer address
 pub fn extract_client_ip(req: &HttpRequest) -> String {
     // Check X-Forwarded-For (may contain multiple IPs)
     if let Some(xff) = req.headers().get("X-Forwarded-For") {

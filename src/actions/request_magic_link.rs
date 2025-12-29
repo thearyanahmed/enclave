@@ -7,12 +7,8 @@ use chrono::{Duration, Utc};
 use crate::rate_limit::RateLimitStore;
 use crate::{AuthError, MagicLinkRepository, MagicLinkToken, UserRepository};
 
-/// Configuration for magic link behavior.
 #[derive(Debug, Clone)]
 pub struct MagicLinkConfig {
-    /// How long magic link tokens remain valid.
-    ///
-    /// Default: 15 minutes
     pub magic_link_expiry: Duration,
 }
 
@@ -25,7 +21,6 @@ impl Default for MagicLinkConfig {
 }
 
 impl MagicLinkConfig {
-    /// Creates config from a `TokenConfig`.
     #[cfg(feature = "magic_link")]
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
@@ -34,27 +29,16 @@ impl MagicLinkConfig {
     }
 }
 
-/// Configuration for rate limiting magic link requests.
 #[cfg(feature = "rate_limit")]
 #[derive(Clone)]
 pub struct MagicLinkRateLimitConfig {
-    /// The store to use for tracking rate limits.
     pub store: Arc<dyn RateLimitStore>,
-
-    /// Maximum number of requests allowed per window.
-    ///
-    /// Default: 5
     pub max_requests: u32,
-
-    /// Time window for rate limiting.
-    ///
-    /// Default: 1 hour
     pub window: Duration,
 }
 
 #[cfg(feature = "rate_limit")]
 impl MagicLinkRateLimitConfig {
-    /// Creates a new rate limit config with default settings (5 requests per hour).
     pub fn new(store: Arc<dyn RateLimitStore>) -> Self {
         Self {
             store,
@@ -63,14 +47,12 @@ impl MagicLinkRateLimitConfig {
         }
     }
 
-    /// Sets the maximum number of requests allowed per window.
     #[must_use]
     pub fn max_requests(mut self, max_requests: u32) -> Self {
         self.max_requests = max_requests;
         self
     }
 
-    /// Sets the time window for rate limiting.
     #[must_use]
     pub fn window(mut self, window: Duration) -> Self {
         self.window = window;
@@ -91,6 +73,11 @@ where
 }
 
 impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
+    /// Creates a new `RequestMagicLinkAction` with default configuration.
+    ///
+    /// Default: 15 minute token expiry. For custom settings, use [`with_config`].
+    ///
+    /// [`with_config`]: Self::with_config
     pub fn new(user_repository: U, magic_link_repository: M) -> Self {
         Self::with_config(
             user_repository,
@@ -99,6 +86,7 @@ impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
         )
     }
 
+    /// Creates a new `RequestMagicLinkAction` with custom configuration.
     pub fn with_config(
         user_repository: U,
         magic_link_repository: M,
@@ -113,7 +101,6 @@ impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
         }
     }
 
-    /// Sets the configuration.
     #[must_use]
     pub fn config(mut self, config: MagicLinkConfig) -> Self {
         self.config = config;
@@ -123,25 +110,28 @@ impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
 
 #[cfg(feature = "rate_limit")]
 impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
-    /// Adds rate limiting to the magic link action.
+    /// Enables rate limiting for magic link requests.
+    ///
+    /// Default: 5 requests per hour. Rate limiting is keyed by the provided
+    /// `rate_limit_key` in [`execute`] (typically the client IP address).
+    ///
+    /// [`execute`]: Self::execute
     #[must_use]
     pub fn with_rate_limit(mut self, config: MagicLinkRateLimitConfig) -> Self {
         self.rate_limit = Some(config);
         self
     }
 
-    /// Requests a magic link for the given email.
+    /// Requests a magic link token for passwordless authentication.
     ///
     /// Rate limiting is applied by the provided key (typically client IP).
     ///
-    /// Returns `Ok(Some(token))` if a user with that email exists and a magic link was created.
-    /// Returns `Ok(None)` if no user exists with that email (prevents user enumeration).
-    /// Returns `Err(AuthError::TooManyAttempts)` if rate limited.
+    /// # Returns
     ///
-    /// # Security
-    ///
-    /// This method intentionally does not reveal whether a user exists.
-    /// The response is the same whether or not the email exists.
+    /// - `Ok(Some(token))` - user exists and magic link was created
+    /// - `Ok(None)` - no user with that email (prevents user enumeration)
+    /// - `Err(AuthError::TooManyAttempts)` - rate limited
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "request_magic_link", skip_all, err)
@@ -167,16 +157,13 @@ impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
 
 #[cfg(not(feature = "rate_limit"))]
 impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
-    /// Requests a magic link for the given email.
+    /// Requests a magic link token for passwordless authentication.
     ///
-    /// Returns `Ok(Some(token))` if a user with that email exists and a magic link was created.
-    /// Returns `Ok(None)` if no user exists with that email (prevents user enumeration).
+    /// # Returns
     ///
-    /// # Security
-    ///
-    /// This method intentionally does not reveal whether a user exists.
-    /// Always show a generic message like "If an account exists, a login link has been sent"
-    /// regardless of the return value.
+    /// - `Ok(Some(token))` - user exists and magic link was created
+    /// - `Ok(None)` - no user with that email (prevents user enumeration)
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "request_magic_link", skip_all, err)

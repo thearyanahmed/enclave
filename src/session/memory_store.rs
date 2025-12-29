@@ -1,7 +1,3 @@
-//! In-memory session storage.
-//!
-//! Suitable for development, testing, and single-instance deployments.
-
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -13,34 +9,22 @@ use super::{Session, SessionData};
 use crate::AuthError;
 use crate::crypto::generate_token;
 
-/// In-memory session storage.
-///
-/// Stores sessions in a `HashMap` protected by a `RwLock`.
-/// Sessions are keyed by their session ID.
-///
-/// # Note
-///
-/// Sessions are lost when the process restarts.
-/// For persistent storage, use [`FileSessionRepository`](super::FileSessionRepository).
 #[derive(Clone)]
 pub struct InMemorySessionRepository {
     sessions: Arc<RwLock<HashMap<String, SessionData>>>,
 }
 
 impl InMemorySessionRepository {
-    /// Creates a new in-memory session repository.
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
-    /// Returns the number of sessions currently stored.
     pub fn len(&self) -> usize {
         self.sessions.read().map(|guard| guard.len()).unwrap_or(0)
     }
 
-    /// Returns true if there are no sessions stored.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }

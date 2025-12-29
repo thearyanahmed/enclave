@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::SecretString;
 
-// Request DTOs
-
 #[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
     pub email: String,
@@ -61,8 +59,6 @@ pub struct MagicLinkRequest {
 pub struct VerifyMagicLinkRequest {
     pub token: String,
 }
-
-// Response DTOs
 
 #[derive(Debug, Serialize)]
 pub struct UserResponse {
@@ -141,10 +137,6 @@ impl From<crate::AuthError> for ErrorResponse {
         ErrorResponse { error }
     }
 }
-
-// =============================================================================
-// Teams DTOs
-// =============================================================================
 
 #[cfg(feature = "teams")]
 #[derive(Debug, Deserialize)]

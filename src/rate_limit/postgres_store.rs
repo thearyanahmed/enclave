@@ -5,14 +5,9 @@ use sqlx::PgPool;
 use super::store::{RateLimitInfo, RateLimitStore};
 use crate::AuthError;
 
-/// `PostgreSQL`-backed rate limit store.
+/// suitable for distributed deployments (multiple instances sharing state)
 ///
-/// Suitable for distributed deployments where multiple instances
-/// need to share rate limit state.
-///
-/// # Table Schema
-///
-/// This store expects a table with the following schema:
+/// # table schema
 ///
 /// ```sql
 /// CREATE TABLE rate_limits (
@@ -31,14 +26,11 @@ pub struct PostgresRateLimitStore {
 }
 
 impl PostgresRateLimitStore {
-    /// Creates a new `PostgreSQL` rate limit store.
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 
-    /// Cleans up expired entries.
-    ///
-    /// Call this periodically to prevent table growth.
+    /// call periodically to prevent table growth
     pub async fn cleanup_expired(&self) -> Result<u64, AuthError> {
         let result = sqlx::query("DELETE FROM rate_limits WHERE reset_at < NOW()")
             .execute(&self.pool)

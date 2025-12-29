@@ -1,5 +1,3 @@
-//! `PostgreSQL` implementation of [`TeamMemberPermissionRepository`].
-
 use std::marker::PhantomData;
 
 use async_trait::async_trait;
@@ -8,10 +6,6 @@ use sqlx::{FromRow, PgPool};
 use crate::AuthError;
 use crate::teams::{Action, PermissionSet, Resource, TeamMemberPermissionRepository};
 
-/// PostgreSQL-backed team member permission repository.
-///
-/// Permissions are stored as JSON in the database for flexibility.
-/// The repository is generic over Resource and Action types.
 #[derive(Clone)]
 pub struct PostgresTeamMemberPermissionRepository<R, A>
 where
@@ -27,7 +21,6 @@ where
     R: Resource,
     A: Action,
 {
-    /// Create a new repository with the given connection pool.
     pub fn new(pool: PgPool) -> Self {
         Self {
             pool,

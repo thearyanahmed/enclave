@@ -29,22 +29,11 @@
 
 use chrono::Duration;
 
-/// Main configuration struct for the enclave authentication library.
-///
-/// Contains all configurable settings that were previously hardcoded.
-/// Use `AuthConfig::default()` for sensible production defaults.
 #[derive(Debug, Clone)]
 pub struct AuthConfig {
-    /// Token expiration settings.
     pub tokens: TokenConfig,
-
-    /// Rate limiting configuration.
     pub rate_limit: RateLimitConfig,
-
-    /// Length of generated tokens (in characters).
-    ///
-    /// Default is 32 alphanumeric characters (~190 bits of entropy).
-    /// Minimum recommended is 32, maximum is 64.
+    /// 32 alphanumeric chars = ~190 bits of entropy. min 32, max 64.
     pub token_length: usize,
 }
 
@@ -59,14 +48,11 @@ impl Default for AuthConfig {
 }
 
 impl AuthConfig {
-    /// Creates a new configuration with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a configuration suitable for development/testing.
-    ///
-    /// Uses shorter expiration times and more lenient rate limits.
+    /// shorter expiration, lenient rate limits
     pub fn development() -> Self {
         Self {
             tokens: TokenConfig {
@@ -85,9 +71,7 @@ impl AuthConfig {
         }
     }
 
-    /// Creates a configuration with stricter security settings.
-    ///
-    /// Uses shorter token lifetimes and stricter rate limits.
+    /// shorter token lifetimes, stricter rate limits
     pub fn strict() -> Self {
         Self {
             tokens: TokenConfig {
@@ -107,36 +91,12 @@ impl AuthConfig {
     }
 }
 
-/// Configuration for token expiration times.
-///
-/// All durations are specified using `chrono::Duration`.
 #[derive(Debug, Clone)]
 pub struct TokenConfig {
-    /// How long access tokens remain valid after creation.
-    ///
-    /// Default: 7 days
     pub access_token_expiry: Duration,
-
-    /// How long refresh tokens remain valid.
-    ///
-    /// Default: 30 days
     pub refresh_token_expiry: Duration,
-
-    /// How long password reset tokens remain valid.
-    ///
-    /// Default: 1 hour
     pub password_reset_expiry: Duration,
-
-    /// How long email verification tokens remain valid.
-    ///
-    /// Default: 24 hours
     pub email_verification_expiry: Duration,
-
-    /// How long magic link tokens remain valid.
-    ///
-    /// Default: 15 minutes
-    ///
-    /// Only used when the `magic_link` feature is enabled.
     #[cfg(feature = "magic_link")]
     pub magic_link_expiry: Duration,
 }
@@ -154,20 +114,9 @@ impl Default for TokenConfig {
     }
 }
 
-/// Configuration for login rate limiting.
-///
-/// Controls how the system handles repeated failed login attempts
-/// to prevent brute-force attacks.
 #[derive(Debug, Clone)]
 pub struct RateLimitConfig {
-    /// Maximum number of failed login attempts before lockout.
-    ///
-    /// Default: 5
     pub max_failed_attempts: u32,
-
-    /// Duration of the lockout period after exceeding max attempts.
-    ///
-    /// Default: 15 minutes
     pub lockout_duration: Duration,
 }
 
@@ -181,9 +130,6 @@ impl Default for RateLimitConfig {
 }
 
 impl RateLimitConfig {
-    /// Returns the lockout duration in minutes.
-    ///
-    /// This is a convenience method for backwards compatibility.
     #[inline]
     pub fn lockout_duration_minutes(&self) -> i64 {
         self.lockout_duration.num_minutes()

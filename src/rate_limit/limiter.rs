@@ -5,30 +5,24 @@ use super::limit::Limit;
 use super::store::RateLimitStore;
 use crate::AuthError;
 
-/// Result of a rate limit check.
 #[derive(Debug, Clone)]
 pub enum RateLimitResult {
-    /// Request is allowed. Contains remaining attempts.
     Allowed {
         remaining: u32,
         reset_at: chrono::DateTime<chrono::Utc>,
     },
-    /// Request is rate limited.
     Limited { retry_after: i64, message: String },
 }
 
 impl RateLimitResult {
-    /// Returns true if the request is allowed.
     pub fn is_allowed(&self) -> bool {
         matches!(self, Self::Allowed { .. })
     }
 
-    /// Returns true if the request is rate limited.
     pub fn is_limited(&self) -> bool {
         matches!(self, Self::Limited { .. })
     }
 
-    /// Returns the retry-after value in seconds if rate limited.
     pub fn retry_after(&self) -> Option<i64> {
         match self {
             Self::Limited { retry_after, .. } => Some(*retry_after),
@@ -37,22 +31,6 @@ impl RateLimitResult {
     }
 }
 
-/// Rate limiter with named limit configurations.
-///
-/// Provides a Laravel-inspired API for defining and checking rate limits.
-///
-/// # Example
-///
-/// ```rust
-/// use std::sync::Arc;
-///
-/// use enclave::rate_limit::{InMemoryStore, Limit, RateLimiter};
-///
-/// let store = Arc::new(InMemoryStore::new());
-/// let limiter = RateLimiter::new(store)
-///     .for_("api", Limit::per_minute(60))
-///     .for_("login", Limit::per_minute(5));
-/// ```
 #[derive(Clone)]
 pub struct RateLimiter {
     store: Arc<dyn RateLimitStore>,
@@ -60,7 +38,6 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
-    /// Creates a new rate limiter with the specified store.
     #[must_use]
     pub fn new(store: Arc<dyn RateLimitStore>) -> Self {
         Self {
@@ -69,41 +46,20 @@ impl RateLimiter {
         }
     }
 
-    /// Registers a named rate limit.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use std::sync::Arc;
-    ///
-    /// use enclave::rate_limit::{InMemoryStore, Limit, RateLimiter};
-    ///
-    /// let store = Arc::new(InMemoryStore::new());
-    /// let limiter = RateLimiter::new(store)
-    ///     .for_("api", Limit::per_minute(60))
-    ///     .for_("login", Limit::per_minute(5).by_ip());
-    /// ```
     #[must_use]
     pub fn for_(mut self, name: impl Into<String>, limit: Limit) -> Self {
         self.limits.insert(name.into(), limit);
         self
     }
 
-    /// Gets a registered limit by name.
     pub fn get_limit(&self, name: &str) -> Option<&Limit> {
         self.limits.get(name)
     }
 
-    /// Returns a reference to the underlying store.
     pub fn store(&self) -> &Arc<dyn RateLimitStore> {
         &self.store
     }
 
-    /// Attempts to execute an action with rate limiting.
-    ///
-    /// Similar to Laravel's `RateLimiter::attempt()`.
-    ///
-    /// Returns `Ok(result)` if allowed, or the rate limit result if blocked.
     pub async fn attempt<T, F, Fut>(
         &self,
         limit_name: &str,
@@ -122,9 +78,6 @@ impl RateLimiter {
         }
     }
 
-    /// Records a hit against a rate limit and checks if allowed.
-    ///
-    /// This increments the counter and returns whether the request should be allowed.
     pub async fn hit(&self, limit_name: &str, key: &str) -> Result<RateLimitResult, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
             AuthError::DatabaseError(format!("Rate limit '{limit_name}' not configured"))
@@ -151,7 +104,7 @@ impl RateLimiter {
         }
     }
 
-    /// Checks if a key has exceeded the rate limit without incrementing.
+    /// does not increment the counter (unlike `hit`)
     pub async fn too_many_attempts(&self, limit_name: &str, key: &str) -> Result<bool, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
             AuthError::DatabaseError(format!("Rate limit '{limit_name}' not configured"))
@@ -163,7 +116,6 @@ impl RateLimiter {
         Ok(remaining == 0)
     }
 
-    /// Returns the remaining attempts for a key.
     pub async fn remaining(&self, limit_name: &str, key: &str) -> Result<u32, AuthError> {
         let limit = self.limits.get(limit_name).ok_or_else(|| {
             AuthError::DatabaseError(format!("Rate limit '{limit_name}' not configured"))
@@ -173,7 +125,6 @@ impl RateLimiter {
         self.store.remaining(&full_key, limit.max_attempts).await
     }
 
-    /// Returns seconds until the rate limit resets for a key.
     pub async fn available_in(&self, limit_name: &str, key: &str) -> Result<i64, AuthError> {
         let full_key = format!("{limit_name}:{key}");
 
@@ -184,13 +135,11 @@ impl RateLimiter {
             .map_or(0, |info| info.available_in()))
     }
 
-    /// Clears the rate limit for a key.
     pub async fn clear(&self, limit_name: &str, key: &str) -> Result<(), AuthError> {
         let full_key = format!("{limit_name}:{key}");
         self.store.reset(&full_key).await
     }
 
-    /// Creates a throttle middleware for actix-web.
     #[cfg(feature = "actix")]
     pub fn throttle(&self, limit_name: &str) -> super::middleware::Throttle {
         super::middleware::Throttle::new(

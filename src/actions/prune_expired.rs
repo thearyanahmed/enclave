@@ -1,52 +1,22 @@
-//! Action for cleaning up expired tokens from all repositories.
-//!
-//! This action removes expired access tokens, password reset tokens, and email verification
-//! tokens from the database. Run it periodically (e.g., via a cron job) to prevent unbounded
-//! table growth.
-//!
-//! # Example
-//!
-//! ```ignore
-//! use enclave::actions::PruneExpiredTokensAction;
-//!
-//! let action = PruneExpiredTokensAction::new(
-//!     token_repo,
-//!     password_reset_repo,
-//!     email_verification_repo,
-//! );
-//!
-//! let result = action.execute().await?;
-//! println!("Pruned {} access tokens", result.access_tokens);
-//! println!("Pruned {} password reset tokens", result.password_reset_tokens);
-//! println!("Pruned {} email verification tokens", result.email_verification_tokens);
-//! ```
+//! run periodically (e.g., via cron) to clean up expired tokens and prevent unbounded table growth.
 
 use crate::{
     AuthError, EmailVerificationRepository, PasswordResetRepository, StatefulTokenRepository,
 };
 
-/// Result of pruning expired tokens.
 #[derive(Debug, Clone, Default)]
 pub struct PruneResult {
-    /// Number of expired access tokens removed.
     pub access_tokens: u64,
-    /// Number of expired password reset tokens removed.
     pub password_reset_tokens: u64,
-    /// Number of expired email verification tokens removed.
     pub email_verification_tokens: u64,
 }
 
 impl PruneResult {
-    /// Returns the total number of tokens pruned across all types.
     pub fn total(&self) -> u64 {
         self.access_tokens + self.password_reset_tokens + self.email_verification_tokens
     }
 }
 
-/// Action for pruning expired tokens from all token repositories.
-///
-/// This is a maintenance action that should be run periodically to clean up
-/// expired tokens and prevent unbounded database growth.
 pub struct PruneExpiredTokensAction<T, P, E> {
     tokens: T,
     password_resets: P,
@@ -59,7 +29,10 @@ where
     P: PasswordResetRepository,
     E: EmailVerificationRepository,
 {
-    /// Creates a new prune action with the given repositories.
+    /// Creates a new `PruneExpiredTokensAction`.
+    ///
+    /// Run periodically (e.g., via cron or background task) to clean up
+    /// expired tokens and prevent unbounded table growth.
     pub fn new(tokens: T, password_resets: P, email_verifications: E) -> Self {
         Self {
             tokens,
@@ -68,9 +41,12 @@ where
         }
     }
 
-    /// Prunes all expired tokens from all repositories.
+    /// Removes all expired tokens from the database.
     ///
-    /// Returns a [`PruneResult`] with the count of tokens removed from each repository.
+    /// # Returns
+    ///
+    /// - `Ok(result)` - counts of pruned tokens by type
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(skip(self), name = "prune_expired")

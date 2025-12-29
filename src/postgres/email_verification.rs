@@ -73,7 +73,6 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
             AuthError::DatabaseError(e.to_string())
         })?;
 
-        // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| EmailVerificationToken {
             token: SecretString::new(token),
             user_id: r.user_id,

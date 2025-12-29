@@ -1,5 +1,3 @@
-//! Authentication middleware for Axum handlers.
-
 use std::marker::PhantomData;
 
 use axum::extract::FromRequestParts;
@@ -11,27 +9,7 @@ use super::error::AppError;
 use super::routes::AppState;
 use crate::{AuthError, AuthUser, TokenRepository, UserRepository};
 
-/// Authenticated user extractor for Axum handlers.
-///
-/// Use this in handler parameters to require authentication.
-/// The extractor validates the bearer token from the `Authorization` header
-/// and retrieves the associated user from the repository.
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use enclave::api::axum::AuthenticatedUser;
-///
-/// async fn protected_handler<U, T>(
-///     user: AuthenticatedUser<U, T>,
-/// ) -> impl IntoResponse
-/// where
-///     U: UserRepository + Clone + Send + Sync + 'static,
-///     T: TokenRepository + Clone + Send + Sync + 'static,
-/// {
-///     Json(UserResponse::from(user.into_inner()))
-/// }
-/// ```
+/// validates bearer token from `Authorization` header and retrieves user
 #[derive(Debug, Clone)]
 pub struct AuthenticatedUser<U, T>
 where
@@ -47,18 +25,15 @@ where
     U: UserRepository,
     T: TokenRepository,
 {
-    /// Returns the inner user, consuming the wrapper.
     pub fn into_inner(self) -> AuthUser {
         self.user
     }
 
-    /// Returns a reference to the authenticated user.
     pub fn user(&self) -> &AuthUser {
         &self.user
     }
 }
 
-/// Extracts the bearer token from the Authorization header.
 pub fn extract_bearer_token(headers: &HeaderMap) -> Option<String> {
     headers
         .get(AUTHORIZATION)?
@@ -88,7 +63,6 @@ where
         let token_repo = &state.token_repo;
         let user_repo = &state.user_repo;
 
-        // find_token handles hashing internally
         let access_token = token_repo
             .find_token(&token)
             .await

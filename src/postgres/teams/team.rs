@@ -1,5 +1,3 @@
-//! `PostgreSQL` implementation of [`TeamRepository`].
-
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
@@ -7,14 +5,12 @@ use sqlx::{FromRow, PgPool};
 use crate::AuthError;
 use crate::teams::{CreateTeam, Team, TeamRepository};
 
-/// PostgreSQL-backed team repository.
 #[derive(Clone)]
 pub struct PostgresTeamRepository {
     pool: PgPool,
 }
 
 impl PostgresTeamRepository {
-    /// Create a new repository with the given connection pool.
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
@@ -106,7 +102,6 @@ impl TeamRepository for PostgresTeamRepository {
         name: Option<&str>,
         slug: Option<&str>,
     ) -> Result<Team, AuthError> {
-        // Build dynamic update query based on provided fields
         let row: TeamRecord = match (name, slug) {
             (Some(n), Some(s)) => {
                 sqlx::query_as(
@@ -149,7 +144,6 @@ impl TeamRepository for PostgresTeamRepository {
                 .await
             }
             (None, None) => {
-                // No updates, just return current record
                 sqlx::query_as(
                     "SELECT id, name, slug, owner_id, created_at, updated_at FROM teams WHERE id = $1",
                 )

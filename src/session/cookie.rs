@@ -1,7 +1,3 @@
-//! Signed cookie helpers for session authentication.
-//!
-//! Uses HMAC-SHA256 to sign session IDs, making cookies tamper-proof.
-
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
@@ -9,17 +5,11 @@ use crate::SecretString;
 
 type HmacSha256 = Hmac<Sha256>;
 
-/// Signs a session ID with HMAC-SHA256.
-///
-/// Returns a string in the format `{session_id}.{signature}`.
 pub fn sign_session_id(session_id: &str, secret: &SecretString) -> String {
     let signature = compute_hmac(session_id.as_bytes(), secret.expose_secret().as_bytes());
     format!("{}.{}", session_id, hex::encode(signature))
 }
 
-/// Verifies a signed cookie value and extracts the session ID.
-///
-/// Returns `None` if the signature is invalid (tampered).
 pub fn verify_signed_cookie(cookie_value: &str, secret: &SecretString) -> Option<String> {
     let (session_id, signature_hex) = cookie_value.rsplit_once('.')?;
 
@@ -34,11 +24,6 @@ pub fn verify_signed_cookie(cookie_value: &str, secret: &SecretString) -> Option
     }
 }
 
-/// Computes HMAC-SHA256.
-///
-/// # Panics
-///
-/// This function cannot panic as HMAC accepts keys of any size.
 fn compute_hmac(message: &[u8], key: &[u8]) -> Vec<u8> {
     // SAFETY: HmacSha256::new_from_slice only fails if the key is invalid,
     // but HMAC-SHA256 accepts keys of any length, so this cannot fail.

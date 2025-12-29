@@ -27,11 +27,6 @@ pub use teams::{
 pub use token::PostgresTokenRepository;
 pub use user::PostgresUserRepository;
 
-/// Creates all Postgres repository instances from a connection pool.
-///
-/// Returns the core repositories needed for authentication.
-/// For audit logging, enable the `audit_log` feature and create
-/// `PostgresAuditLogRepository` manually.
 pub fn create_repositories(
     pool: PgPool,
 ) -> (

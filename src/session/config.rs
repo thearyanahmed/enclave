@@ -1,39 +1,24 @@
-//! Session configuration.
-
 use chrono::Duration;
 
 use crate::SecretString;
 
-/// `SameSite` cookie attribute.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SameSite {
-    /// Cookies are sent with every request (least secure).
     None,
-    /// Cookies are sent with same-site requests and cross-site top-level navigations.
     Lax,
-    /// Cookies are only sent with same-site requests (most secure).
     #[default]
     Strict,
 }
 
-/// Configuration for session-based authentication.
 #[derive(Debug, Clone)]
 pub struct SessionConfig {
-    /// Name of the session cookie.
     pub cookie_name: String,
-    /// Path for the session cookie.
     pub cookie_path: String,
-    /// Domain for the session cookie.
     pub cookie_domain: Option<String>,
-    /// Whether the cookie requires HTTPS.
     pub cookie_secure: bool,
-    /// Whether the cookie is inaccessible to JavaScript.
     pub cookie_http_only: bool,
-    /// `SameSite` attribute for the cookie.
     pub cookie_same_site: SameSite,
-    /// Session lifetime (sliding window).
     pub session_lifetime: Duration,
-    /// Secret key for HMAC signing.
     pub secret_key: SecretString,
 }
 
@@ -53,9 +38,6 @@ impl Default for SessionConfig {
 }
 
 impl SessionConfig {
-    /// Validates the configuration.
-    ///
-    /// Returns an error if the secret key is empty.
     pub fn validate(&self) -> Result<(), &'static str> {
         if self.secret_key.is_empty() {
             return Err("secret_key must not be empty");

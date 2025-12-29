@@ -8,18 +8,13 @@ use crate::crypto::generate_token;
 /// Length of the JWT ID (jti) in bytes.
 const JTI_LENGTH: usize = 16;
 
-/// A pair of access and refresh tokens.
 #[derive(Debug, Clone)]
 pub struct TokenPair {
-    /// Short-lived access token for API requests.
     pub access_token: String,
-    /// Long-lived refresh token for obtaining new access tokens.
     pub refresh_token: String,
-    /// Access token expiry in seconds.
     pub expires_in: i64,
 }
 
-/// Service for encoding and decoding JWT tokens.
 #[derive(Clone)]
 pub struct JwtService {
     config: JwtConfig,
@@ -28,7 +23,6 @@ pub struct JwtService {
 }
 
 impl JwtService {
-    /// Creates a new JWT service with the given configuration.
     pub fn new(config: JwtConfig) -> Self {
         let encoding_key = EncodingKey::from_secret(config.secret.as_bytes());
         let decoding_key = DecodingKey::from_secret(config.secret.as_bytes());
@@ -40,12 +34,10 @@ impl JwtService {
         }
     }
 
-    /// Encodes a user ID into an access token.
     pub fn encode(&self, user_id: i32) -> Result<String, AuthError> {
         self.encode_access_token(user_id)
     }
 
-    /// Encodes a user ID into a short-lived access token.
     pub fn encode_access_token(&self, user_id: i32) -> Result<String, AuthError> {
         let now = Utc::now();
         let exp = now + self.config.access_expiry();
@@ -65,7 +57,6 @@ impl JwtService {
             .map_err(|_| AuthError::TokenInvalid)
     }
 
-    /// Encodes a user ID into a long-lived refresh token.
     pub fn encode_refresh_token(&self, user_id: i32) -> Result<String, AuthError> {
         let now = Utc::now();
         let exp = now + self.config.refresh_expiry();
@@ -85,7 +76,6 @@ impl JwtService {
             .map_err(|_| AuthError::TokenInvalid)
     }
 
-    /// Creates both an access token and a refresh token for a user.
     pub fn create_token_pair(&self, user_id: i32) -> Result<TokenPair, AuthError> {
         let access_token = self.encode_access_token(user_id)?;
         let refresh_token = self.encode_refresh_token(user_id)?;
@@ -97,9 +87,7 @@ impl JwtService {
         })
     }
 
-    /// Exchanges a valid refresh token for a new access token.
-    ///
-    /// Returns an error if the token is invalid, expired, or not a refresh token.
+    /// fails if token is not a refresh token
     pub fn refresh_access_token(&self, refresh_token: &str) -> Result<String, AuthError> {
         let claims = self.decode(refresh_token)?;
 
@@ -111,9 +99,7 @@ impl JwtService {
         self.encode_access_token(user_id)
     }
 
-    /// Exchanges a valid refresh token for a new token pair (access + refresh).
-    ///
-    /// This is useful for implementing refresh token rotation.
+    /// refresh token rotation - issues new access + refresh pair
     pub fn rotate_tokens(&self, refresh_token: &str) -> Result<TokenPair, AuthError> {
         let claims = self.decode(refresh_token)?;
 
@@ -125,7 +111,6 @@ impl JwtService {
         self.create_token_pair(user_id)
     }
 
-    /// Decodes and validates a JWT token, returning the claims.
     pub fn decode(&self, token: &str) -> Result<JwtClaims, AuthError> {
         let mut validation = Validation::new(Algorithm::HS256);
 
@@ -146,13 +131,10 @@ impl JwtService {
         Ok(token_data.claims)
     }
 
-    /// Validates an access token and returns the user ID if valid.
-    ///
-    /// Returns an error if the token is a refresh token.
+    /// rejects refresh tokens - use `validate_any` to accept both
     pub fn validate(&self, token: &str) -> Result<i32, AuthError> {
         let claims = self.decode(token)?;
 
-        // Only accept access tokens for validation
         if !claims.is_access_token() {
             return Err(AuthError::TokenInvalid);
         }
@@ -160,23 +142,20 @@ impl JwtService {
         claims.user_id()
     }
 
-    /// Validates any token (access or refresh) and returns the user ID if valid.
+    /// accepts both access and refresh tokens
     pub fn validate_any(&self, token: &str) -> Result<i32, AuthError> {
         let claims = self.decode(token)?;
         claims.user_id()
     }
 
-    /// Returns the configured access token expiry duration.
     pub fn expiry(&self) -> Duration {
         self.config.expiry()
     }
 
-    /// Returns the configured access token expiry duration.
     pub fn access_expiry(&self) -> Duration {
         self.config.access_expiry()
     }
 
-    /// Returns the configured refresh token expiry duration.
     pub fn refresh_expiry(&self) -> Duration {
         self.config.refresh_expiry()
     }

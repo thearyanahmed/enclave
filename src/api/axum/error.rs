@@ -1,5 +1,3 @@
-//! Error handling for Axum API layer.
-
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -7,9 +5,7 @@ use axum::response::{IntoResponse, Response};
 use crate::AuthError;
 use crate::api::ErrorResponse;
 
-/// Application error wrapper for Axum responses.
-///
-/// Converts [`AuthError`] into appropriate HTTP responses with JSON error bodies.
+/// converts `AuthError` into appropriate HTTP responses
 #[derive(Debug)]
 pub struct AppError(pub AuthError);
 

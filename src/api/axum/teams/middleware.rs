@@ -1,5 +1,3 @@
-//! Authentication middleware for teams routes.
-
 use std::marker::PhantomData;
 
 use axum::extract::FromRequestParts;
@@ -10,10 +8,7 @@ use crate::api::axum::error::AppError;
 use crate::api::axum::middleware::extract_bearer_token;
 use crate::{AuthError, AuthUser, TokenRepository, UserRepository};
 
-/// Authenticated user extractor for teams routes.
-///
-/// This is similar to [`crate::api::axum::AuthenticatedUser`] but works with
-/// [`TeamsState`] instead of `AppState`.
+/// validates bearer token, works with `TeamsState` instead of `AppState`
 #[derive(Debug, Clone)]
 pub struct TeamsAuthenticatedUser<U, T>
 where
@@ -29,12 +24,10 @@ where
     U: UserRepository,
     T: TokenRepository,
 {
-    /// Returns the inner user, consuming the wrapper.
     pub fn into_inner(self) -> AuthUser {
         self.user
     }
 
-    /// Returns a reference to the authenticated user.
     pub fn user(&self) -> &AuthUser {
         &self.user
     }
@@ -62,7 +55,6 @@ where
         let token_repo = &state.token_repo;
         let user_repo = &state.user_repo;
 
-        // find_token handles hashing internally
         let access_token = token_repo
             .find_token(&token)
             .await

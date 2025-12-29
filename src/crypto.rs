@@ -51,18 +51,7 @@ pub const DEFAULT_TOKEN_LENGTH: usize = 32;
 /// assert!(!hasher.verify("wrongpassword", &hash).unwrap());
 /// ```
 pub trait PasswordHasher: Send + Sync {
-    /// Hash a password.
-    ///
-    /// # Errors
-    ///
-    /// Returns `AuthError::PasswordHashError` if hashing fails.
     fn hash(&self, password: &str) -> Result<String, AuthError>;
-
-    /// Verify a password against a hash.
-    ///
-    /// # Errors
-    ///
-    /// Returns `AuthError::PasswordHashError` if the hash is malformed.
     fn verify(&self, password: &str, hash: &str) -> Result<bool, AuthError>;
 }
 
@@ -84,11 +73,8 @@ pub trait PasswordHasher: Send + Sync {
 /// ```
 #[derive(Debug, Clone)]
 pub struct Argon2Hasher {
-    /// Memory cost in KiB
     memory_cost: u32,
-    /// Number of iterations
     time_cost: u32,
-    /// Degree of parallelism
     parallelism: u32,
 }
 
@@ -103,13 +89,7 @@ impl Default for Argon2Hasher {
 }
 
 impl Argon2Hasher {
-    /// Creates a new hasher with custom parameters.
-    ///
-    /// # Arguments
-    ///
-    /// * `memory_cost` - Memory usage in KiB
-    /// * `time_cost` - Number of iterations
-    /// * `parallelism` - Number of threads
+    /// `memory_cost` in KiB, `time_cost` = iterations, parallelism = threads
     #[must_use]
     pub fn new(memory_cost: u32, time_cost: u32, parallelism: u32) -> Self {
         Self {
@@ -119,9 +99,7 @@ impl Argon2Hasher {
         }
     }
 
-    /// Production-recommended settings based on OWASP 2024 guidelines.
-    ///
-    /// Parameters: 64 MiB memory, 3 iterations, 4 threads.
+    /// OWASP 2024: 64 MiB memory, 3 iterations, 4 threads
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -155,23 +133,7 @@ impl PasswordHasher for Argon2Hasher {
     }
 }
 
-/// Generates a cryptographically secure random token.
-///
-/// The token consists of alphanumeric characters (a-z, A-Z, 0-9),
-/// providing approximately 5.95 bits of entropy per character.
-///
-/// # Arguments
-///
-/// * `length` - The number of characters in the token. Default is 32.
-///
-/// # Example
-///
-/// ```rust
-/// use enclave::crypto::generate_token;
-///
-/// let token = generate_token(32);
-/// assert_eq!(token.len(), 32);
-/// ```
+/// alphanumeric (a-z, A-Z, 0-9), ~5.95 bits entropy per char
 pub fn generate_token(length: usize) -> String {
     const ALPHANUMERIC: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let mut rng = OsRng;
@@ -183,16 +145,11 @@ pub fn generate_token(length: usize) -> String {
         .collect()
 }
 
-/// Generates a token with the default length (32 characters).
-///
-/// This is a convenience function that calls `generate_token(DEFAULT_TOKEN_LENGTH)`.
 pub fn generate_token_default() -> String {
     generate_token(DEFAULT_TOKEN_LENGTH)
 }
 
-/// Hashes a token using SHA-256 for secure storage.
-/// Unlike passwords, tokens are high-entropy random strings,
-/// so a fast hash like SHA-256 is appropriate.
+/// SHA-256 is fine for high-entropy tokens (unlike passwords)
 pub fn hash_token(token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());

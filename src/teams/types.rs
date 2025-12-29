@@ -1,103 +1,65 @@
-//! Core types for team management.
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// A team is an organizational unit that groups users together.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Team {
-    /// Unique identifier.
     pub id: i32,
-    /// Human-readable team name.
     pub name: String,
-    /// URL-friendly unique identifier.
     pub slug: String,
-    /// User ID of the team owner.
     pub owner_id: i32,
-    /// When the team was created.
     pub created_at: DateTime<Utc>,
-    /// When the team was last updated.
     pub updated_at: DateTime<Utc>,
 }
 
-/// Links a user to a team with a role.
-///
-/// The role is stored as a string in the database and parsed
-/// using the user-defined `Role` trait implementation.
+/// role is stored as string, parse with `Role::from_str`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamMembership {
-    /// Unique identifier.
     pub id: i32,
-    /// The team this membership belongs to.
     pub team_id: i32,
-    /// The user who is a member.
     pub user_id: i32,
-    /// The role as a string (parsed via `Role::from_str`).
     pub role: String,
-    /// When the user joined the team.
     pub created_at: DateTime<Utc>,
-    /// When the membership was last updated.
     pub updated_at: DateTime<Utc>,
 }
 
 impl TeamMembership {
-    /// Parse the role string into a typed Role.
-    ///
-    /// Returns `None` if the role string is not recognized.
     pub fn parse_role<R: super::Role>(&self) -> Option<R> {
         R::from_str(&self.role)
     }
 }
 
-/// An invitation for a user to join a team.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamInvitation {
-    /// Unique identifier.
     pub id: i32,
-    /// The team being invited to.
     pub team_id: i32,
-    /// Email of the invitee.
     pub email: String,
-    /// Role to assign when accepted (as string).
     pub role: String,
-    /// SHA-256 hash of the invitation token.
     #[serde(skip_serializing)]
     pub token_hash: String,
-    /// User ID of who sent the invitation.
     pub invited_by: i32,
-    /// When the invitation expires.
     pub expires_at: DateTime<Utc>,
-    /// When the invitation was accepted (if accepted).
     pub accepted_at: Option<DateTime<Utc>>,
-    /// When the invitation was created.
     pub created_at: DateTime<Utc>,
 }
 
 impl TeamInvitation {
-    /// Parse the role string into a typed Role.
     pub fn parse_role<R: super::Role>(&self) -> Option<R> {
         R::from_str(&self.role)
     }
 
-    /// Check if the invitation has expired.
     pub fn is_expired(&self) -> bool {
         self.expires_at < Utc::now()
     }
 
-    /// Check if the invitation has been accepted.
     pub fn is_accepted(&self) -> bool {
         self.accepted_at.is_some()
     }
 }
 
-/// Tracks a user's currently selected team.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserTeamContext {
-    /// The user ID.
     pub user_id: i32,
-    /// The currently selected team ID.
     pub current_team_id: i32,
-    /// When this context was last updated.
     pub updated_at: DateTime<Utc>,
 }
 

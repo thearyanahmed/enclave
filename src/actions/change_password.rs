@@ -2,33 +2,13 @@ use crate::crypto::{Argon2Hasher, PasswordHasher};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, SecretString, StatefulTokenRepository, UserRepository};
 
-/// Configuration for password change behavior.
-///
-/// # Example
-///
-/// ```rust
-/// use enclave::actions::ChangePasswordConfig;
-///
-/// // Default: revoke all sessions after password change
-/// let config = ChangePasswordConfig::default();
-/// assert!(config.revoke_all_sessions);
-///
-/// // Disable session revocation
-/// let config = ChangePasswordConfig {
-///     revoke_all_sessions: false,
-/// };
-/// ```
 #[derive(Debug, Clone)]
 pub struct ChangePasswordConfig {
     /// Whether to revoke all user sessions (tokens) after a password change.
     ///
     /// When enabled and a token repository is provided, all existing access tokens
     /// for the user will be invalidated, forcing re-authentication on all devices.
-    ///
-    /// **Security recommendation:** Keep this enabled (default) to prevent
-    /// compromised sessions from remaining active after a password change.
-    ///
-    /// Default: `true`
+    /// Keep enabled (default: true) to prevent compromised sessions from remaining active.
     pub revoke_all_sessions: bool,
 }
 
@@ -40,10 +20,7 @@ impl Default for ChangePasswordConfig {
     }
 }
 
-/// Marker type indicating no token revocation capability.
-///
-/// Used as the default type parameter when `ChangePasswordAction` is created
-/// without a token repository.
+/// marker type for when no token repository is provided
 #[derive(Debug, Clone, Copy)]
 pub struct NoTokenRevocation;
 
@@ -58,7 +35,6 @@ where
     hasher: H,
 }
 
-// Constructors without token repository (backwards compatible)
 impl<U: UserRepository> ChangePasswordAction<U, NoTokenRevocation, Argon2Hasher> {
     /// Creates a new `ChangePasswordAction` with the default password policy and hasher.
     ///
@@ -79,7 +55,7 @@ impl<U: UserRepository> ChangePasswordAction<U, NoTokenRevocation, Argon2Hasher>
     ///
     /// Token revocation is disabled. To enable it, use [`with_token_repository`].
     ///
-    /// [`with_token_repository`]: Self::with_token_repository
+    /// [`with_token_repository`]: ChangePasswordAction::with_token_repository
     pub fn with_policy(user_repository: U, password_policy: PasswordPolicy) -> Self {
         Self {
             user_repository,
@@ -91,22 +67,13 @@ impl<U: UserRepository> ChangePasswordAction<U, NoTokenRevocation, Argon2Hasher>
     }
 }
 
-// Builder methods to add token repository
 impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevocation, H> {
-    /// Adds a token repository to enable session revocation on password change.
+    /// Enables token revocation by providing a `StatefulTokenRepository`.
     ///
-    /// When `config.revoke_all_sessions` is `true` (default), all user tokens
-    /// will be revoked after a successful password change.
+    /// When enabled, all user sessions will be invalidated after a password change
+    /// (controlled by [`revoke_sessions`]). This is the recommended security practice.
     ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// let action = ChangePasswordAction::new(user_repo)
-    ///     .with_token_repository(token_repo);
-    ///
-    /// // After password change, all user sessions are revoked
-    /// action.execute(user_id, &old_password, &new_password).await?;
-    /// ```
+    /// [`revoke_sessions`]: ChangePasswordAction::revoke_sessions
     pub fn with_token_repository<T: StatefulTokenRepository>(
         self,
         token_repository: T,
@@ -121,21 +88,13 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevoca
     }
 }
 
-// Configuration methods (available for all variants)
 impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
-    /// Sets the configuration for password change behavior.
     #[must_use]
     pub fn with_config(mut self, config: ChangePasswordConfig) -> Self {
         self.config = config;
         self
     }
 
-    /// Sets whether to revoke all sessions after password change.
-    ///
-    /// This is a convenience method equivalent to:
-    /// ```rust,ignore
-    /// action.with_config(ChangePasswordConfig { revoke_all_sessions: value })
-    /// ```
     #[must_use]
     pub fn revoke_sessions(mut self, revoke: bool) -> Self {
         self.config.revoke_all_sessions = revoke;
@@ -144,7 +103,9 @@ impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
 }
 
 impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevocation, H> {
-    /// Creates a new `ChangePasswordAction` with a custom password policy and hasher.
+    /// Creates a new `ChangePasswordAction` with a custom password hasher.
+    ///
+    /// Use this for testing with mock hashers or alternative algorithms.
     pub fn with_hasher(user_repository: U, password_policy: PasswordPolicy, hasher: H) -> Self {
         Self {
             user_repository,
@@ -156,8 +117,18 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevoca
     }
 }
 
-// Execute without token revocation
 impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevocation, H> {
+    /// Changes the user's password after verifying the current password.
+    ///
+    /// The new password must pass the configured password policy validation.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` - password changed successfully
+    /// - `Err(AuthError::UserNotFound)` - user does not exist
+    /// - `Err(AuthError::InvalidCredentials)` - current password is incorrect
+    /// - `Err(AuthError::Validation(_))` - new password fails policy validation
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "change_password", skip_all, err)
@@ -173,10 +144,22 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevoca
     }
 }
 
-// Execute with token revocation
 impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
     ChangePasswordAction<U, T, H>
 {
+    /// Changes the user's password after verifying the current password.
+    ///
+    /// The new password must pass the configured password policy validation.
+    /// When `revoke_all_sessions` is enabled (default), all existing tokens
+    /// are invalidated after the password change.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` - password changed successfully (sessions revoked if configured)
+    /// - `Err(AuthError::UserNotFound)` - user does not exist
+    /// - `Err(AuthError::InvalidCredentials)` - current password is incorrect
+    /// - `Err(AuthError::Validation(_))` - new password fails policy validation
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "change_password", skip_all, err)
@@ -190,7 +173,6 @@ impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
         self.execute_password_change(user_id, current_password, new_password)
             .await?;
 
-        // Revoke all sessions if configured
         if self.config.revoke_all_sessions {
             self.token_repository
                 .revoke_all_user_tokens(user_id)
@@ -201,7 +183,6 @@ impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
     }
 }
 
-// Shared password change logic
 impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
     async fn execute_password_change(
         &self,
