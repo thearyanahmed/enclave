@@ -22,16 +22,16 @@ impl SqliteUserTeamContextRepository {
 
 #[derive(FromRow)]
 struct ContextRecord {
-    user_id: i32,
-    current_team_id: i32,
+    user_id: i64,
+    current_team_id: i64,
     updated_at: DateTime<Utc>,
 }
 
 impl From<ContextRecord> for UserTeamContext {
     fn from(row: ContextRecord) -> Self {
         UserTeamContext {
-            user_id: row.user_id,
-            current_team_id: row.current_team_id,
+            user_id: row.user_id as u64,
+            current_team_id: row.current_team_id as u64,
             updated_at: row.updated_at,
         }
     }
@@ -40,11 +40,11 @@ impl From<ContextRecord> for UserTeamContext {
 #[async_trait]
 impl UserTeamContextRepository for SqliteUserTeamContextRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn get_context(&self, user_id: i32) -> Result<Option<UserTeamContext>, AuthError> {
+    async fn get_context(&self, user_id: u64) -> Result<Option<UserTeamContext>, AuthError> {
         let row: Option<ContextRecord> = sqlx::query_as(
             "SELECT user_id, current_team_id, updated_at FROM user_team_contexts WHERE user_id = ?",
         )
-        .bind(user_id)
+        .bind(user_id as i64)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
@@ -58,8 +58,8 @@ impl UserTeamContextRepository for SqliteUserTeamContextRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn set_current_team(
         &self,
-        user_id: i32,
-        team_id: i32,
+        user_id: u64,
+        team_id: u64,
     ) -> Result<UserTeamContext, AuthError> {
         let now = Utc::now();
 
@@ -72,9 +72,9 @@ impl UserTeamContextRepository for SqliteUserTeamContextRepository {
             RETURNING user_id, current_team_id, updated_at
             ",
         )
-        .bind(user_id)
-        .bind(team_id)
-        .bind(team_id)
+        .bind(user_id as i64)
+        .bind(team_id as i64)
+        .bind(team_id as i64)
         .bind(now)
         .fetch_one(&self.pool)
         .await
@@ -87,9 +87,9 @@ impl UserTeamContextRepository for SqliteUserTeamContextRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn clear_context(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn clear_context(&self, user_id: u64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM user_team_contexts WHERE user_id = ?")
-            .bind(user_id)
+            .bind(user_id as i64)
             .execute(&self.pool)
             .await
             .map_err(|e| {
