@@ -24,7 +24,7 @@ impl<S> SessionAuthenticatedUser<S>
 where
     S: SessionRepository,
 {
-    pub fn user_id(&self) -> i32 {
+    pub fn user_id(&self) -> u64 {
         self.session.data.user_id
     }
 
