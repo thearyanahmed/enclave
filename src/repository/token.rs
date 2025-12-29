@@ -7,7 +7,7 @@ use crate::{AuthError, SecretString};
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AccessToken {
     pub token: SecretString,
-    pub user_id: i32,
+    pub user_id: u64,
     pub name: Option<String>,
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
@@ -34,13 +34,13 @@ pub struct CreateTokenOptions {
 pub trait TokenRepository: Send + Sync {
     async fn create_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError>;
 
     async fn create_token_with_options(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError>;
@@ -52,7 +52,7 @@ pub trait TokenRepository: Send + Sync {
 pub trait StatefulTokenRepository: TokenRepository {
     async fn revoke_token(&self, token: &str) -> Result<(), AuthError>;
 
-    async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError>;
+    async fn revoke_all_user_tokens(&self, user_id: u64) -> Result<(), AuthError>;
 
     async fn prune_expired(&self) -> Result<u64, AuthError>;
 }

@@ -22,8 +22,8 @@ pub enum AuditEventType {
 /// `user_id` is `None` for failed login attempts where the user doesn't exist.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditLog {
-    pub id: i64,
-    pub user_id: Option<i32>,
+    pub id: u64,
+    pub user_id: Option<u64>,
     pub event_type: AuditEventType,
     pub ip_address: Option<String>,
     pub user_agent: Option<String>,
@@ -35,12 +35,12 @@ pub struct AuditLog {
 pub trait AuditLogRepository {
     async fn log_event(
         &self,
-        user_id: Option<i32>,
+        user_id: Option<u64>,
         event_type: AuditEventType,
         ip_address: Option<&str>,
         user_agent: Option<&str>,
         metadata: Option<&str>,
     ) -> Result<AuditLog, AuthError>;
-    async fn get_user_events(&self, user_id: i32, limit: usize)
+    async fn get_user_events(&self, user_id: u64, limit: usize)
     -> Result<Vec<AuditLog>, AuthError>;
 }
