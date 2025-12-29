@@ -17,7 +17,7 @@ impl SqliteUserRepository {
 
 #[derive(FromRow)]
 struct UserRecord {
-    id: i32,
+    id: i64,
     email: String,
     name: String,
     hashed_password: String,
@@ -29,7 +29,7 @@ struct UserRecord {
 impl From<UserRecord> for AuthUser {
     fn from(row: UserRecord) -> Self {
         AuthUser {
-            id: row.id,
+            id: row.id as u64,
             email: row.email,
             name: row.name,
             hashed_password: row.hashed_password,
@@ -43,11 +43,11 @@ impl From<UserRecord> for AuthUser {
 #[async_trait]
 impl UserRepository for SqliteUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<AuthUser>, AuthError> {
+    async fn find_user_by_id(&self, id: u64) -> Result<Option<AuthUser>, AuthError> {
         let row: Option<UserRecord> = sqlx::query_as(
             "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE id = ?"
         )
-        .bind(id)
+        .bind(id as i64)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
@@ -101,12 +101,12 @@ impl UserRepository for SqliteUserRepository {
         feature = "tracing",
         tracing::instrument(skip(self, hashed_password), err)
     )]
-    async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
+    async fn update_password(&self, user_id: u64, hashed_password: &str) -> Result<(), AuthError> {
         let now = Utc::now();
         let result = sqlx::query("UPDATE users SET hashed_password = ?, updated_at = ? WHERE id = ?")
             .bind(hashed_password)
             .bind(now)
-            .bind(user_id)
+            .bind(user_id as i64)
             .execute(&self.pool)
             .await
             .map_err(|e| {
@@ -122,12 +122,12 @@ impl UserRepository for SqliteUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn verify_email(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn verify_email(&self, user_id: u64) -> Result<(), AuthError> {
         let now = Utc::now();
         let result = sqlx::query("UPDATE users SET email_verified_at = ?, updated_at = ? WHERE id = ?")
             .bind(now)
             .bind(now)
-            .bind(user_id)
+            .bind(user_id as i64)
             .execute(&self.pool)
             .await
             .map_err(|e| {
@@ -145,7 +145,7 @@ impl UserRepository for SqliteUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, name, email), err))]
     async fn update_user(
         &self,
-        user_id: i32,
+        user_id: u64,
         name: &str,
         email: &str,
     ) -> Result<AuthUser, AuthError> {
@@ -156,7 +156,7 @@ impl UserRepository for SqliteUserRepository {
         .bind(name)
         .bind(email)
         .bind(now)
-        .bind(user_id)
+        .bind(user_id as i64)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| match e {
@@ -171,9 +171,9 @@ impl UserRepository for SqliteUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete_user(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn delete_user(&self, user_id: u64) -> Result<(), AuthError> {
         let result = sqlx::query("DELETE FROM users WHERE id = ?")
-            .bind(user_id)
+            .bind(user_id as i64)
             .execute(&self.pool)
             .await
             .map_err(|e| {
