@@ -61,6 +61,9 @@ let user = signup.execute("user@example.com", &password).await?;
 | `SendVerificationAction` | Create email verification token |
 | `VerifyEmailAction`      | Mark email as verified          |
 | `ChangePasswordAction`   | Change password (authenticated) |
+| `UpdateUserAction`       | Update user profile             |
+| `DeleteUserAction`       | Delete user account             |
+| `GetUserAction`          | Retrieve user by ID             |
 | `RequestMagicLinkAction` | Create magic link token         |
 | `VerifyMagicLinkAction`  | Login via magic link            |
 
