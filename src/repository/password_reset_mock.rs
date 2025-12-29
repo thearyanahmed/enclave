@@ -29,7 +29,7 @@ impl MockPasswordResetRepository {
 impl PasswordResetRepository for MockPasswordResetRepository {
     async fn create_reset_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<PasswordResetToken, AuthError> {
         let token = PasswordResetToken {

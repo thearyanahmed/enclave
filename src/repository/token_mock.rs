@@ -26,7 +26,7 @@ impl MockTokenRepository {
 impl TokenRepository for MockTokenRepository {
     async fn create_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError> {
         self.create_token_with_options(user_id, expires_at, CreateTokenOptions::default())
@@ -35,7 +35,7 @@ impl TokenRepository for MockTokenRepository {
 
     async fn create_token_with_options(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError> {
@@ -84,7 +84,7 @@ impl StatefulTokenRepository for MockTokenRepository {
         Ok(())
     }
 
-    async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn revoke_all_user_tokens(&self, user_id: u64) -> Result<(), AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         tokens.retain(|t| t.user_id != user_id);
         drop(tokens);

@@ -29,7 +29,7 @@ impl MockMagicLinkRepository {
 impl MagicLinkRepository for MockMagicLinkRepository {
     async fn create_magic_link_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<MagicLinkToken, AuthError> {
         let token = MagicLinkToken {

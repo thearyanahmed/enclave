@@ -29,7 +29,7 @@ impl MockEmailVerificationRepository {
 impl EmailVerificationRepository for MockEmailVerificationRepository {
     async fn create_verification_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<EmailVerificationToken, AuthError> {
         let token = EmailVerificationToken {
