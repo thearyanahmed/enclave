@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::sync::RwLock;
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use async_trait::async_trait;
 use chrono::Utc;
@@ -18,15 +18,15 @@ use super::types::{Team, TeamInvitation, TeamMembership, UserTeamContext};
 use crate::AuthError;
 
 pub struct MockTeamRepository {
-    teams: RwLock<HashMap<i32, Team>>,
-    next_id: AtomicI32,
+    teams: RwLock<HashMap<u64, Team>>,
+    next_id: AtomicU64,
 }
 
 impl MockTeamRepository {
     pub fn new() -> Self {
         Self {
             teams: RwLock::new(HashMap::new()),
-            next_id: AtomicI32::new(1),
+            next_id: AtomicU64::new(1),
         }
     }
 }
@@ -60,7 +60,7 @@ impl TeamRepository for MockTeamRepository {
         Ok(team)
     }
 
-    async fn find_by_id(&self, id: i32) -> Result<Option<Team>, AuthError> {
+    async fn find_by_id(&self, id: u64) -> Result<Option<Team>, AuthError> {
         let teams = self
             .teams
             .read()
@@ -78,7 +78,7 @@ impl TeamRepository for MockTeamRepository {
 
     async fn update(
         &self,
-        id: i32,
+        id: u64,
         name: Option<&str>,
         slug: Option<&str>,
     ) -> Result<Team, AuthError> {
@@ -100,7 +100,7 @@ impl TeamRepository for MockTeamRepository {
         Ok(team.clone())
     }
 
-    async fn delete(&self, id: i32) -> Result<(), AuthError> {
+    async fn delete(&self, id: u64) -> Result<(), AuthError> {
         let mut teams = self
             .teams
             .write()
@@ -109,7 +109,7 @@ impl TeamRepository for MockTeamRepository {
         Ok(())
     }
 
-    async fn find_by_owner(&self, owner_id: i32) -> Result<Vec<Team>, AuthError> {
+    async fn find_by_owner(&self, owner_id: u64) -> Result<Vec<Team>, AuthError> {
         let teams = self
             .teams
             .read()
@@ -121,7 +121,7 @@ impl TeamRepository for MockTeamRepository {
             .collect())
     }
 
-    async fn transfer_ownership(&self, team_id: i32, new_owner_id: i32) -> Result<Team, AuthError> {
+    async fn transfer_ownership(&self, team_id: u64, new_owner_id: u64) -> Result<Team, AuthError> {
         let mut teams = self
             .teams
             .write()
@@ -136,15 +136,15 @@ impl TeamRepository for MockTeamRepository {
 }
 
 pub struct MockTeamMembershipRepository {
-    memberships: RwLock<HashMap<i32, TeamMembership>>,
-    next_id: AtomicI32,
+    memberships: RwLock<HashMap<u64, TeamMembership>>,
+    next_id: AtomicU64,
 }
 
 impl MockTeamMembershipRepository {
     pub fn new() -> Self {
         Self {
             memberships: RwLock::new(HashMap::new()),
-            next_id: AtomicI32::new(1),
+            next_id: AtomicU64::new(1),
         }
     }
 }
@@ -178,7 +178,7 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
         Ok(membership)
     }
 
-    async fn find_by_id(&self, id: i32) -> Result<Option<TeamMembership>, AuthError> {
+    async fn find_by_id(&self, id: u64) -> Result<Option<TeamMembership>, AuthError> {
         let memberships = self
             .memberships
             .read()
@@ -188,8 +188,8 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
 
     async fn find_by_team_and_user(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: u64,
+        user_id: u64,
     ) -> Result<Option<TeamMembership>, AuthError> {
         let memberships = self
             .memberships
@@ -201,7 +201,7 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
             .cloned())
     }
 
-    async fn find_by_team(&self, team_id: i32) -> Result<Vec<TeamMembership>, AuthError> {
+    async fn find_by_team(&self, team_id: u64) -> Result<Vec<TeamMembership>, AuthError> {
         let memberships = self
             .memberships
             .read()
@@ -213,7 +213,7 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
             .collect())
     }
 
-    async fn find_by_user(&self, user_id: i32) -> Result<Vec<TeamMembership>, AuthError> {
+    async fn find_by_user(&self, user_id: u64) -> Result<Vec<TeamMembership>, AuthError> {
         let memberships = self
             .memberships
             .read()
@@ -225,7 +225,7 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
             .collect())
     }
 
-    async fn update_role(&self, id: i32, role: &str) -> Result<TeamMembership, AuthError> {
+    async fn update_role(&self, id: u64, role: &str) -> Result<TeamMembership, AuthError> {
         let mut memberships = self
             .memberships
             .write()
@@ -238,7 +238,7 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
         Ok(membership.clone())
     }
 
-    async fn delete(&self, id: i32) -> Result<(), AuthError> {
+    async fn delete(&self, id: u64) -> Result<(), AuthError> {
         let mut memberships = self
             .memberships
             .write()
@@ -247,7 +247,7 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
         Ok(())
     }
 
-    async fn delete_by_team_and_user(&self, team_id: i32, user_id: i32) -> Result<(), AuthError> {
+    async fn delete_by_team_and_user(&self, team_id: u64, user_id: u64) -> Result<(), AuthError> {
         let mut memberships = self
             .memberships
             .write()
@@ -258,15 +258,15 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
 }
 
 pub struct MockTeamInvitationRepository {
-    invitations: RwLock<HashMap<i32, TeamInvitation>>,
-    next_id: AtomicI32,
+    invitations: RwLock<HashMap<u64, TeamInvitation>>,
+    next_id: AtomicU64,
 }
 
 impl MockTeamInvitationRepository {
     pub fn new() -> Self {
         Self {
             invitations: RwLock::new(HashMap::new()),
-            next_id: AtomicI32::new(1),
+            next_id: AtomicU64::new(1),
         }
     }
 }
@@ -302,7 +302,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
         Ok(invitation)
     }
 
-    async fn find_by_id(&self, id: i32) -> Result<Option<TeamInvitation>, AuthError> {
+    async fn find_by_id(&self, id: u64) -> Result<Option<TeamInvitation>, AuthError> {
         let invitations = self
             .invitations
             .read()
@@ -324,7 +324,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
             .cloned())
     }
 
-    async fn find_pending_by_team(&self, team_id: i32) -> Result<Vec<TeamInvitation>, AuthError> {
+    async fn find_pending_by_team(&self, team_id: u64) -> Result<Vec<TeamInvitation>, AuthError> {
         let invitations = self
             .invitations
             .read()
@@ -350,7 +350,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
             .collect())
     }
 
-    async fn mark_accepted(&self, id: i32) -> Result<TeamInvitation, AuthError> {
+    async fn mark_accepted(&self, id: u64) -> Result<TeamInvitation, AuthError> {
         let mut invitations = self
             .invitations
             .write()
@@ -362,7 +362,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
         Ok(invitation.clone())
     }
 
-    async fn delete(&self, id: i32) -> Result<(), AuthError> {
+    async fn delete(&self, id: u64) -> Result<(), AuthError> {
         let mut invitations = self
             .invitations
             .write()
@@ -391,7 +391,7 @@ where
     A: Action,
 {
     /// (`team_id`, `user_id`) -> permissions
-    permissions: RwLock<HashMap<(i32, i32), PermissionSet<R, A>>>,
+    permissions: RwLock<HashMap<(u64, u64), PermissionSet<R, A>>>,
 }
 
 impl<R, A> MockTeamMemberPermissionRepository<R, A>
@@ -424,8 +424,8 @@ where
 {
     async fn get_permissions(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: u64,
+        user_id: u64,
     ) -> Result<PermissionSet<R, A>, AuthError> {
         let permissions = self
             .permissions
@@ -439,8 +439,8 @@ where
 
     async fn set_permissions(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: u64,
+        user_id: u64,
         perm_set: &PermissionSet<R, A>,
     ) -> Result<(), AuthError> {
         let mut permissions = self
@@ -453,8 +453,8 @@ where
 
     async fn grant_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: u64,
+        user_id: u64,
         resource: R,
         action: A,
     ) -> Result<(), AuthError> {
@@ -469,8 +469,8 @@ where
 
     async fn revoke_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: u64,
+        user_id: u64,
         resource: &R,
         action: &A,
     ) -> Result<(), AuthError> {
@@ -486,8 +486,8 @@ where
 
     async fn has_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: u64,
+        user_id: u64,
         resource: &R,
         action: &A,
     ) -> Result<bool, AuthError> {
@@ -502,7 +502,7 @@ where
 }
 
 pub struct MockUserTeamContextRepository {
-    contexts: RwLock<HashMap<i32, UserTeamContext>>,
+    contexts: RwLock<HashMap<u64, UserTeamContext>>,
 }
 
 impl MockUserTeamContextRepository {
@@ -521,7 +521,7 @@ impl Default for MockUserTeamContextRepository {
 
 #[async_trait]
 impl UserTeamContextRepository for MockUserTeamContextRepository {
-    async fn get_context(&self, user_id: i32) -> Result<Option<UserTeamContext>, AuthError> {
+    async fn get_context(&self, user_id: u64) -> Result<Option<UserTeamContext>, AuthError> {
         let contexts = self
             .contexts
             .read()
@@ -531,8 +531,8 @@ impl UserTeamContextRepository for MockUserTeamContextRepository {
 
     async fn set_current_team(
         &self,
-        user_id: i32,
-        team_id: i32,
+        user_id: u64,
+        team_id: u64,
     ) -> Result<UserTeamContext, AuthError> {
         let mut contexts = self
             .contexts
@@ -547,7 +547,7 @@ impl UserTeamContextRepository for MockUserTeamContextRepository {
         Ok(context)
     }
 
-    async fn clear_context(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn clear_context(&self, user_id: u64) -> Result<(), AuthError> {
         let mut contexts = self
             .contexts
             .write()

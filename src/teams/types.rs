@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Team {
-    pub id: i32,
+    pub id: u64,
     pub name: String,
     pub slug: String,
-    pub owner_id: i32,
+    pub owner_id: u64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -14,9 +14,9 @@ pub struct Team {
 /// role is stored as string, parse with `Role::from_str`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamMembership {
-    pub id: i32,
-    pub team_id: i32,
-    pub user_id: i32,
+    pub id: u64,
+    pub team_id: u64,
+    pub user_id: u64,
     pub role: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -30,13 +30,13 @@ impl TeamMembership {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TeamInvitation {
-    pub id: i32,
-    pub team_id: i32,
+    pub id: u64,
+    pub team_id: u64,
     pub email: String,
     pub role: String,
     #[serde(skip_serializing)]
     pub token_hash: String,
-    pub invited_by: i32,
+    pub invited_by: u64,
     pub expires_at: DateTime<Utc>,
     pub accepted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
@@ -58,8 +58,8 @@ impl TeamInvitation {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserTeamContext {
-    pub user_id: i32,
-    pub current_team_id: i32,
+    pub user_id: u64,
+    pub current_team_id: u64,
     pub updated_at: DateTime<Utc>,
 }
 
