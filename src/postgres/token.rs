@@ -19,7 +19,7 @@ impl PostgresTokenRepository {
 
 #[derive(FromRow)]
 struct TokenRecord {
-    user_id: i32,
+    user_id: i64,
     name: Option<String>,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
@@ -29,7 +29,7 @@ impl TokenRecord {
     fn into_access_token(self, plain_token: String) -> AccessToken {
         AccessToken {
             token: SecretString::new(plain_token),
-            user_id: self.user_id,
+            user_id: self.user_id as u64,
             name: self.name,
             expires_at: self.expires_at,
             created_at: self.created_at,
@@ -42,7 +42,7 @@ impl TokenRepository for PostgresTokenRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError> {
         self.create_token_with_options(user_id, expires_at, CreateTokenOptions::default())
@@ -52,7 +52,7 @@ impl TokenRepository for PostgresTokenRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, options), err))]
     async fn create_token_with_options(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError> {
@@ -65,7 +65,7 @@ impl TokenRepository for PostgresTokenRepository {
                RETURNING user_id, name, expires_at, created_at",
         )
         .bind(&token_hash)
-        .bind(user_id)
+        .bind(user_id as i64)
         .bind(&options.name)
         .bind(expires_at)
         .fetch_one(&self.pool)
@@ -117,9 +117,9 @@ impl StatefulTokenRepository for PostgresTokenRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn revoke_all_user_tokens(&self, user_id: u64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM access_tokens WHERE user_id = $1")
-            .bind(user_id)
+            .bind(user_id as i64)
             .execute(&self.pool)
             .await
             .map_err(|e| {

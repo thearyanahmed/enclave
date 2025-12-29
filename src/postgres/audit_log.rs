@@ -50,7 +50,7 @@ fn string_to_event_type(s: &str) -> AuditEventType {
 #[derive(FromRow)]
 struct AuditLogRecord {
     id: i64,
-    user_id: Option<i32>,
+    user_id: Option<i64>,
     event_type: String,
     ip_address: Option<String>,
     user_agent: Option<String>,
@@ -66,7 +66,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
     )]
     async fn log_event(
         &self,
-        user_id: Option<i32>,
+        user_id: Option<u64>,
         event_type: AuditEventType,
         ip_address: Option<&str>,
         user_agent: Option<&str>,
@@ -79,7 +79,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         let row: AuditLogRecord = sqlx::query_as(
             "INSERT INTO audit_logs (user_id, event_type, ip_address, user_agent, metadata) VALUES ($1, $2, $3, $4, $5) RETURNING id, user_id, event_type, ip_address, user_agent, metadata, created_at"
         )
-        .bind(user_id)
+        .bind(user_id.map(|id| id as i64))
         .bind(event_type_str)
         .bind(ip_address)
         .bind(user_agent)
@@ -92,8 +92,8 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         })?;
 
         Ok(AuditLog {
-            id: row.id,
-            user_id: row.user_id,
+            id: row.id as u64,
+            user_id: row.user_id.map(|id| id as u64),
             event_type: string_to_event_type(&row.event_type),
             ip_address: row.ip_address,
             user_agent: row.user_agent,
@@ -105,13 +105,13 @@ impl AuditLogRepository for PostgresAuditLogRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn get_user_events(
         &self,
-        user_id: i32,
+        user_id: u64,
         limit: usize,
     ) -> Result<Vec<AuditLog>, AuthError> {
         let rows: Vec<AuditLogRecord> = sqlx::query_as(
             "SELECT id, user_id, event_type, ip_address, user_agent, metadata, created_at FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2"
         )
-        .bind(user_id)
+        .bind(user_id as i64)
         .bind(i64::try_from(limit).unwrap_or(i64::MAX))
         .fetch_all(&self.pool)
         .await
@@ -123,8 +123,8 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         Ok(rows
             .into_iter()
             .map(|r| AuditLog {
-                id: r.id,
-                user_id: r.user_id,
+                id: r.id as u64,
+                user_id: r.user_id.map(|id| id as u64),
                 event_type: string_to_event_type(&r.event_type),
                 ip_address: r.ip_address,
                 user_agent: r.user_agent,

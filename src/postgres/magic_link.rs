@@ -18,7 +18,7 @@ impl PostgresMagicLinkRepository {
 
 #[derive(FromRow)]
 struct MagicLinkTokenRecord {
-    user_id: i32,
+    user_id: i64,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
 }
@@ -28,7 +28,7 @@ impl MagicLinkRepository for PostgresMagicLinkRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_magic_link_token(
         &self,
-        user_id: i32,
+        user_id: u64,
         expires_at: DateTime<Utc>,
     ) -> Result<MagicLinkToken, AuthError> {
         let plain_token = generate_token_default();
@@ -38,7 +38,7 @@ impl MagicLinkRepository for PostgresMagicLinkRepository {
             "INSERT INTO magic_link_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3) RETURNING user_id, expires_at, created_at"
         )
         .bind(&token_hash)
-        .bind(user_id)
+        .bind(user_id as i64)
         .bind(expires_at)
         .fetch_one(&self.pool)
         .await
@@ -49,7 +49,7 @@ impl MagicLinkRepository for PostgresMagicLinkRepository {
 
         Ok(MagicLinkToken {
             token: SecretString::new(plain_token),
-            user_id: row.user_id,
+            user_id: row.user_id as u64,
             expires_at: row.expires_at,
             created_at: row.created_at,
         })
@@ -75,7 +75,7 @@ impl MagicLinkRepository for PostgresMagicLinkRepository {
 
         Ok(row.map(|r| MagicLinkToken {
             token: SecretString::new(token),
-            user_id: r.user_id,
+            user_id: r.user_id as u64,
             expires_at: r.expires_at,
             created_at: r.created_at,
         }))
