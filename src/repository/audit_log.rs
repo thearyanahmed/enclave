@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::AuthError;
 
-/// Types of authentication events that can be logged.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuditEventType {
     Signup,
@@ -20,10 +19,7 @@ pub enum AuditEventType {
     AccountDeleted,
 }
 
-/// A recorded authentication event for security auditing.
-///
-/// The `user_id` is `None` for failed login attempts where the user doesn't exist.
-/// Use `metadata` for additional context (e.g., reason for failure).
+/// `user_id` is `None` for failed login attempts where the user doesn't exist.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditLog {
     pub id: i64,
@@ -35,7 +31,6 @@ pub struct AuditLog {
     pub created_at: DateTime<Utc>,
 }
 
-/// Storage for authentication audit logs.
 #[async_trait]
 pub trait AuditLogRepository {
     async fn log_event(

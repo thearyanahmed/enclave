@@ -1,8 +1,3 @@
-//! `SQLite` implementations for team repositories.
-//!
-//! This module provides `SQLite`-backed implementations for all team-related
-//! repository traits defined in [`crate::teams`].
-
 mod context;
 mod invitation;
 mod membership;

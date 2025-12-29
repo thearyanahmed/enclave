@@ -8,16 +8,18 @@
 //!
 //! # Quick Start
 //!
-//! ```rust,ignore
+//! ```rust
 //! use enclave::actions::SignupAction;
-//! use enclave::{MockUserRepository, Argon2Hasher, SecretString};
+//! use enclave::{MockUserRepository, SecretString};
 //!
+//! # tokio::runtime::Runtime::new().unwrap().block_on(async {
 //! let user_repo = MockUserRepository::new();
-//! let hasher = Argon2Hasher::default();
+//! let signup = SignupAction::new(user_repo);
 //!
-//! let signup = SignupAction::new(user_repo, hasher);
 //! let password = SecretString::new("secure_password123");
-//! let user = signup.execute("user@example.com", &password).await?;
+//! let user = signup.execute("user@example.com", &password).await.unwrap();
+//! assert_eq!(user.email, "user@example.com");
+//! # });
 //! ```
 //!
 //! # Feature Flags

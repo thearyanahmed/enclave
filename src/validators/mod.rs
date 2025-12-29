@@ -1,32 +1,3 @@
-//! Input validation utilities.
-//!
-//! This module provides validators for user input:
-//!
-//! - [`validate_email`] - Email format validation
-//! - [`validate_name`] - Name length validation
-//! - [`validate_password`] - Password strength validation
-//! - [`PasswordPolicy`] - Configurable password requirements
-//!
-//! # Password Policy
-//!
-//! ```rust
-//! use enclave::PasswordPolicy;
-//!
-//! // Default policy (8-128 chars)
-//! let policy = PasswordPolicy::default();
-//!
-//! // Strict policy with requirements
-//! let policy = PasswordPolicy::strict();
-//!
-//! // Custom policy
-//! let policy = PasswordPolicy::new()
-//!     .min(12)
-//!     .require_uppercase()
-//!     .require_digit();
-//!
-//! assert!(policy.validate("MyPassword123").is_ok());
-//! ```
-
 pub mod email;
 pub mod name;
 pub mod password;

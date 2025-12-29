@@ -1,5 +1,3 @@
-//! Session authentication middleware.
-
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -12,11 +10,7 @@ use super::middleware::AuthenticationError;
 use crate::AuthError;
 use crate::session::{Session, SessionConfig, SessionRepository, verify_signed_cookie};
 
-/// Authenticated user extractor for session-based authentication.
-///
-/// Use this in handler parameters to require session authentication.
-/// The extractor validates the signed session cookie and retrieves
-/// the session data from the repository.
+/// validates signed session cookie and retrieves session data
 #[derive(Debug, Clone)]
 pub struct SessionAuthenticatedUser<S>
 where
@@ -30,33 +24,27 @@ impl<S> SessionAuthenticatedUser<S>
 where
     S: SessionRepository,
 {
-    /// Returns the user ID from the session.
     pub fn user_id(&self) -> i32 {
         self.session.data.user_id
     }
 
-    /// Returns the user's email from the session.
     pub fn email(&self) -> &str {
         &self.session.data.email
     }
 
-    /// Returns the user's name from the session.
     pub fn name(&self) -> &str {
         &self.session.data.name
     }
 
-    /// Returns a reference to the session.
     pub fn session(&self) -> &Session {
         &self.session
     }
 
-    /// Returns the inner session, consuming the wrapper.
     pub fn into_inner(self) -> Session {
         self.session
     }
 }
 
-/// Extracts the session cookie value from the request.
 fn extract_session_cookie(req: &HttpRequest, config: &SessionConfig) -> Option<String> {
     req.cookie(&config.cookie_name)
         .map(|c| c.value().to_owned())

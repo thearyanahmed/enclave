@@ -7,47 +7,10 @@ use crate::{
     UserRepository,
 };
 
-/// Configuration for login behavior including rate limiting and token expiry.
-///
-/// Controls how the login system handles repeated failed attempts to prevent
-/// brute-force attacks while avoiding excessive lockouts for legitimate users.
-///
-/// # Default Values
-///
-/// - `max_failed_attempts`: 5
-/// - `lockout_duration`: 15 minutes
-/// - `access_token_expiry`: 7 days
-///
-/// # Example
-///
-/// ```rust
-/// use chrono::Duration;
-/// use enclave::actions::LoginConfig;
-///
-/// // Use stricter settings for sensitive applications
-/// let config = LoginConfig {
-///     max_failed_attempts: 3,
-///     lockout_duration: Duration::minutes(30),
-///     access_token_expiry: Duration::hours(1),
-/// };
-/// ```
 #[derive(Debug, Clone)]
 pub struct LoginConfig {
-    /// Maximum number of failed login attempts before the account is locked out.
-    ///
-    /// Once this threshold is reached, further login attempts will be rejected
-    /// with `AuthError::TooManyAttempts` until the lockout period expires.
     pub max_failed_attempts: u32,
-
-    /// Duration that an account remains locked after exceeding the maximum failed attempts.
-    ///
-    /// After this period, the failed attempt counter resets and the user
-    /// can attempt to log in again.
     pub lockout_duration: Duration,
-
-    /// How long access tokens remain valid after creation.
-    ///
-    /// Default: 7 days
     pub access_token_expiry: Duration,
 }
 
@@ -62,10 +25,6 @@ impl Default for LoginConfig {
 }
 
 impl LoginConfig {
-    /// Creates a `LoginConfig` from `RateLimitConfig` and `TokenConfig`.
-    ///
-    /// This is useful when you have an `AuthConfig` and want to create
-    /// a `LoginConfig` from its components.
     pub fn from_configs(rate_limit: &RateLimitConfig, tokens: &TokenConfig) -> Self {
         Self {
             max_failed_attempts: rate_limit.max_failed_attempts,
@@ -74,9 +33,6 @@ impl LoginConfig {
         }
     }
 
-    /// Returns the lockout duration in minutes.
-    ///
-    /// Convenience method for backwards compatibility.
     #[deprecated(note = "Use lockout_duration directly")]
     pub fn lockout_duration_minutes(&self) -> i64 {
         self.lockout_duration.num_minutes()
@@ -99,6 +55,12 @@ where
 impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository>
     LoginAction<U, T, R, Argon2Hasher>
 {
+    /// Creates a new `LoginAction` with default configuration and Argon2 hasher.
+    ///
+    /// Default config: 5 failed attempts, 15 minute lockout, 7 day token expiry.
+    /// For custom settings, use [`with_config`].
+    ///
+    /// [`with_config`]: Self::with_config
     pub fn new(user_repository: U, token_repository: T, rate_limiter: R) -> Self {
         Self::with_config(
             user_repository,
@@ -108,6 +70,11 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository>
         )
     }
 
+    /// Creates a new `LoginAction` with custom configuration.
+    ///
+    /// Use [`LoginConfig::from_configs`] to build from `RateLimitConfig` and `TokenConfig`.
+    ///
+    /// [`LoginConfig::from_configs`]: LoginConfig::from_configs
     pub fn with_config(
         user_repository: U,
         token_repository: T,
@@ -127,6 +94,9 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository>
 impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: PasswordHasher>
     LoginAction<U, T, R, H>
 {
+    /// Creates a new `LoginAction` with a custom password hasher.
+    ///
+    /// Use this for testing with mock hashers or alternative algorithms.
     pub fn with_hasher(
         user_repository: U,
         token_repository: T,
@@ -143,6 +113,17 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
         }
     }
 
+    /// Authenticates a user with email and password.
+    ///
+    /// Failed attempts are tracked for rate limiting. After `max_failed_attempts`,
+    /// the account is locked for `lockout_duration`.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok((user, token))` - valid credentials, returns user and access token
+    /// - `Err(AuthError::InvalidCredentials)` - wrong email or password
+    /// - `Err(AuthError::TooManyAttempts)` - account locked due to failed attempts
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "login", skip_all, err)

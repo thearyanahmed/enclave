@@ -87,7 +87,6 @@ where
 
     let action = LogoutAction::new(token_repo.get_ref().clone());
 
-    // revoke_token handles hashing internally
     match action.execute(&token).await {
         Ok(()) => HttpResponse::Ok().json(MessageResponse {
             message: "Successfully logged out".to_owned(),
@@ -177,7 +176,6 @@ where
 {
     let action = RefreshTokenAction::new(token_repo.get_ref().clone());
 
-    // refresh internally handles token hashing
     match action.execute(&body.token).await {
         Ok(new_token) => HttpResponse::Ok().json(TokenResponse {
             token: new_token.token,
@@ -272,8 +270,6 @@ where
         }
     }
 }
-
-// Magic Link handlers
 
 #[cfg(all(feature = "magic_link", feature = "rate_limit"))]
 pub async fn request_magic_link<U, M>(

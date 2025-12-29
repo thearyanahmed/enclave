@@ -22,26 +22,16 @@ use super::ValidationError;
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordPolicy {
-    /// Minimum password length (default: 8)
     pub min_length: usize,
-    /// Maximum password length (default: 128)
     pub max_length: usize,
-    /// Require at least one uppercase letter
     pub require_uppercase: bool,
-    /// Require at least one lowercase letter
     pub require_lowercase: bool,
-    /// Require at least one digit
     pub require_digit: bool,
-    /// Require at least one special character.
-    ///
-    /// Accepted: ! @ # $ % ^ & * ( ) _ + - = \[ \] { } | ; : , . < > ? / \` ~ ' " \\
+    /// accepted: ! @ # $ % ^ & * ( ) _ + - = \[ \] { } | ; : , . < > ? / \` ~ ' " \\
     pub require_special: bool,
-    /// Regex pattern the password must match
     #[serde(skip)]
     regex: Option<Regex>,
-    /// Error message to show when regex fails
     pub regex_message: Option<String>,
-    /// List of disallowed common passwords
     #[serde(default)]
     pub disallowed_passwords: Vec<String>,
 }
@@ -63,20 +53,12 @@ impl Default for PasswordPolicy {
 }
 
 impl PasswordPolicy {
-    /// Creates a new password policy with default settings.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a strict password policy suitable for production.
-    ///
-    /// Requirements:
-    /// - Minimum 12 characters
-    /// - At least one uppercase letter
-    /// - At least one lowercase letter
-    /// - At least one digit
-    /// - At least one special character
+    /// 12+ chars, uppercase, lowercase, digit, special char
     #[must_use]
     pub fn strict() -> Self {
         Self {
@@ -92,49 +74,42 @@ impl PasswordPolicy {
         }
     }
 
-    /// Sets the minimum password length.
     #[must_use]
     pub fn min(mut self, len: usize) -> Self {
         self.min_length = len;
         self
     }
 
-    /// Sets the maximum password length.
     #[must_use]
     pub fn max(mut self, len: usize) -> Self {
         self.max_length = len;
         self
     }
 
-    /// Requires at least one uppercase letter.
     #[must_use]
     pub fn require_uppercase(mut self) -> Self {
         self.require_uppercase = true;
         self
     }
 
-    /// Requires at least one lowercase letter.
     #[must_use]
     pub fn require_lowercase(mut self) -> Self {
         self.require_lowercase = true;
         self
     }
 
-    /// Requires at least one digit.
     #[must_use]
     pub fn require_digit(mut self) -> Self {
         self.require_digit = true;
         self
     }
 
-    /// Requires at least one special character.
     #[must_use]
     pub fn require_special(mut self) -> Self {
         self.require_special = true;
         self
     }
 
-    /// Sets a regex pattern that passwords must match.
     #[must_use]
     pub fn regex(mut self, regex: Regex, message: impl Into<String>) -> Self {
         self.regex = Some(regex);
@@ -142,25 +117,17 @@ impl PasswordPolicy {
         self
     }
 
-    /// Sets a list of disallowed common passwords.
     #[must_use]
     pub fn disallowed_passwords(mut self, passwords: Vec<String>) -> Self {
         self.disallowed_passwords = passwords;
         self
     }
 
-    /// Validates a password against this policy.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ValidationError` if the password doesn't meet the policy requirements.
     pub fn validate(&self, password: &str) -> Result<(), ValidationError> {
-        // Empty check
         if password.is_empty() {
             return Err(ValidationError::PasswordEmpty);
         }
 
-        // Length checks
         if password.len() < self.min_length {
             return Err(ValidationError::PasswordTooShort(self.min_length));
         }
@@ -169,7 +136,6 @@ impl PasswordPolicy {
             return Err(ValidationError::PasswordTooLong(self.max_length));
         }
 
-        // Character requirements
         if self.require_uppercase && !password.chars().any(char::is_uppercase) {
             return Err(ValidationError::PasswordMissingUppercase);
         }
@@ -186,7 +152,6 @@ impl PasswordPolicy {
             return Err(ValidationError::PasswordMissingSpecial);
         }
 
-        // Regex validation
         if let Some(ref regex) = self.regex {
             if !regex.is_match(password) {
                 let msg = self
@@ -197,7 +162,6 @@ impl PasswordPolicy {
             }
         }
 
-        // Blocklist check (case-insensitive)
         if self
             .disallowed_passwords
             .iter()
@@ -210,7 +174,6 @@ impl PasswordPolicy {
     }
 }
 
-/// Checks if a character is a special character.
 fn is_special_char(c: char) -> bool {
     matches!(
         c,

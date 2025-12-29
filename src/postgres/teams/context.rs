@@ -1,5 +1,3 @@
-//! `PostgreSQL` implementation of [`UserTeamContextRepository`].
-
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::{FromRow, PgPool};
@@ -7,14 +5,12 @@ use sqlx::{FromRow, PgPool};
 use crate::AuthError;
 use crate::teams::{UserTeamContext, UserTeamContextRepository};
 
-/// PostgreSQL-backed user team context repository.
 #[derive(Clone)]
 pub struct PostgresUserTeamContextRepository {
     pool: PgPool,
 }
 
 impl PostgresUserTeamContextRepository {
-    /// Create a new repository with the given connection pool.
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }

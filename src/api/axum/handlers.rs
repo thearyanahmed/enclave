@@ -1,5 +1,3 @@
-//! HTTP handlers for Axum authentication endpoints.
-
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -21,9 +19,6 @@ use crate::{
     SecretString, StatefulTokenRepository, TokenRepository, UserRepository,
 };
 
-/// Register a new user.
-///
-/// POST /register
 pub async fn register<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     Json(body): Json<RegisterRequest>,
@@ -47,9 +42,6 @@ where
     }
 }
 
-/// Authenticate a user and return an access token.
-///
-/// POST /login
 pub async fn login<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     Json(body): Json<LoginRequest>,
@@ -89,9 +81,6 @@ where
     }
 }
 
-/// Revoke the current access token.
-///
-/// POST /logout
 pub async fn logout<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     headers: axum::http::HeaderMap,
@@ -133,9 +122,6 @@ where
     }
 }
 
-/// Request a password reset token.
-///
-/// POST /forgot-password
 #[cfg(feature = "rate_limit")]
 pub async fn forgot_password<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
@@ -164,9 +150,6 @@ where
     )
 }
 
-/// Request a password reset token.
-///
-/// POST /forgot-password
 #[cfg(not(feature = "rate_limit"))]
 pub async fn forgot_password<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
@@ -192,9 +175,6 @@ where
     )
 }
 
-/// Reset a password using a reset token.
-///
-/// POST /reset-password
 pub async fn reset_password<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     Json(body): Json<ResetPasswordRequest>,
@@ -224,9 +204,6 @@ where
     }
 }
 
-/// Refresh an access token.
-///
-/// POST /refresh-token
 pub async fn refresh_token<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     Json(body): Json<RefreshTokenRequest>,
@@ -256,9 +233,6 @@ where
     }
 }
 
-/// Verify an email address using a verification token.
-///
-/// POST /verify-email
 pub async fn verify_email<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     Json(body): Json<VerifyEmailRequest>,
@@ -287,9 +261,6 @@ where
     }
 }
 
-/// Get the current authenticated user.
-///
-/// GET /me
 pub async fn get_current_user<U, T, R, P, E>(
     _state: State<AppState<U, T, R, P, E>>,
     user: AuthenticatedUser<U, T>,
@@ -304,9 +275,6 @@ where
     Json(UserResponse::from(user.into_inner()))
 }
 
-/// Update the current authenticated user.
-///
-/// PUT /me
 pub async fn update_user<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     user: AuthenticatedUser<U, T>,
@@ -335,9 +303,6 @@ where
     }
 }
 
-/// Change the current user's password.
-///
-/// POST /change-password
 pub async fn change_password<U, T, R, P, E>(
     State(state): State<AppState<U, T, R, P, E>>,
     user: AuthenticatedUser<U, T>,
@@ -372,13 +337,6 @@ where
     }
 }
 
-// =============================================================================
-// Magic Link handlers
-// =============================================================================
-
-/// Request a magic link for passwordless login.
-///
-/// POST /magic-link
 #[cfg(all(feature = "magic_link", feature = "rate_limit"))]
 pub async fn request_magic_link<U, T, R, P, E, M>(
     State(state): State<AppState<U, T, R, P, E>>,
@@ -410,9 +368,6 @@ where
     )
 }
 
-/// Request a magic link for passwordless login.
-///
-/// POST /magic-link
 #[cfg(all(feature = "magic_link", not(feature = "rate_limit")))]
 pub async fn request_magic_link<U, T, R, P, E, M>(
     State(state): State<AppState<U, T, R, P, E>>,
@@ -442,9 +397,6 @@ where
     )
 }
 
-/// Verify a magic link and log in.
-///
-/// POST /magic-link/verify
 #[cfg(feature = "magic_link")]
 pub async fn verify_magic_link<U, T, R, P, E, M>(
     State(state): State<AppState<U, T, R, P, E>>,
@@ -480,11 +432,6 @@ where
     }
 }
 
-// =============================================================================
-// Helper functions
-// =============================================================================
-
-/// Extract the client IP address from request headers.
 #[cfg(feature = "rate_limit")]
 fn extract_client_ip(headers: &axum::http::HeaderMap) -> String {
     // Try X-Forwarded-For first (for proxied requests)

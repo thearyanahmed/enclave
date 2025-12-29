@@ -9,7 +9,11 @@ pub struct SignupAction<R, H = Argon2Hasher> {
 }
 
 impl<R: UserRepository> SignupAction<R, Argon2Hasher> {
-    /// Creates a new `SignupAction` with the default password policy and hasher.
+    /// Creates a new `SignupAction` with the default password policy and Argon2 hasher.
+    ///
+    /// For custom password requirements, use [`with_policy`].
+    ///
+    /// [`with_policy`]: Self::with_policy
     pub fn new(repository: R) -> Self {
         Self {
             repository,
@@ -19,6 +23,10 @@ impl<R: UserRepository> SignupAction<R, Argon2Hasher> {
     }
 
     /// Creates a new `SignupAction` with a custom password policy.
+    ///
+    /// Use [`PasswordPolicy::strict()`] for stronger password requirements.
+    ///
+    /// [`PasswordPolicy::strict()`]: crate::validators::PasswordPolicy::strict
     pub fn with_policy(repository: R, password_policy: PasswordPolicy) -> Self {
         Self {
             repository,
@@ -29,7 +37,9 @@ impl<R: UserRepository> SignupAction<R, Argon2Hasher> {
 }
 
 impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
-    /// Creates a new `SignupAction` with a custom password policy and hasher.
+    /// Creates a new `SignupAction` with a custom password hasher.
+    ///
+    /// Use this for testing with mock hashers or alternative algorithms.
     pub fn with_hasher(repository: R, password_policy: PasswordPolicy, hasher: H) -> Self {
         Self {
             repository,
@@ -38,6 +48,16 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         }
     }
 
+    /// Registers a new user with the given email and password.
+    ///
+    /// The email must be valid and the password must pass policy validation.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(user)` - user created successfully
+    /// - `Err(AuthError::UserAlreadyExists)` - email already registered
+    /// - `Err(AuthError::Validation(_))` - invalid email or password
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "signup", skip_all, err)

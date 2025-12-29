@@ -2,12 +2,8 @@ use chrono::{Duration, Utc};
 
 use crate::{AccessToken, AuthError, StatefulTokenRepository};
 
-/// Configuration for token refresh behavior.
 #[derive(Debug, Clone)]
 pub struct RefreshTokenConfig {
-    /// How long the new access token remains valid after refresh.
-    ///
-    /// Default: 7 days
     pub access_token_expiry: Duration,
 }
 
@@ -20,7 +16,6 @@ impl Default for RefreshTokenConfig {
 }
 
 impl RefreshTokenConfig {
-    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             access_token_expiry: tokens.access_token_expiry,
@@ -28,25 +23,27 @@ impl RefreshTokenConfig {
     }
 }
 
-/// Refreshes an access token by revoking the old one and issuing a new one.
-///
-/// This action requires a [`StatefulTokenRepository`] because it needs to:
-/// 1. Validate the current token exists
-/// 2. Revoke the old token
-/// 3. Create a new token
-///
-/// For stateless tokens like JWT, token refresh is typically handled differently
-/// (e.g., by issuing a new JWT before the old one expires).
+/// requires `StatefulTokenRepository` - JWT uses a different refresh mechanism
 pub struct RefreshTokenAction<T: StatefulTokenRepository> {
     token_repository: T,
     config: RefreshTokenConfig,
 }
 
 impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
+    /// Creates a new `RefreshTokenAction` with default configuration.
+    ///
+    /// Default: 7 day access token expiry. For custom settings, use [`with_config`].
+    ///
+    /// [`with_config`]: Self::with_config
     pub fn new(token_repository: T) -> Self {
         Self::with_config(token_repository, RefreshTokenConfig::default())
     }
 
+    /// Creates a new `RefreshTokenAction` with custom configuration.
+    ///
+    /// Use [`RefreshTokenConfig::from_token_config`] to build from `TokenConfig`.
+    ///
+    /// [`RefreshTokenConfig::from_token_config`]: RefreshTokenConfig::from_token_config
     pub fn with_config(token_repository: T, config: RefreshTokenConfig) -> Self {
         RefreshTokenAction {
             token_repository,
@@ -54,6 +51,16 @@ impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
         }
     }
 
+    /// Refreshes an access token, returning a new token with extended expiry.
+    ///
+    /// The old token is revoked and a new one is issued.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(token)` - new access token with fresh expiry
+    /// - `Err(AuthError::TokenInvalid)` - token not found or already revoked
+    /// - `Err(AuthError::TokenExpired)` - token has expired
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "refresh_token", skip_all, err)

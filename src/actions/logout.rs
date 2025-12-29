@@ -1,29 +1,24 @@
 use crate::{AuthError, StatefulTokenRepository};
 
-/// Logs out a user by revoking their access token.
-///
-/// This action requires a [`StatefulTokenRepository`] because token revocation
-/// is only possible with stateful (database-backed) tokens. For stateless tokens
-/// like JWT, logout is handled client-side by discarding the token.
-///
-/// # Example
-///
-/// ```rust,ignore
-/// let logout = LogoutAction::new(postgres_token_repo);
-/// logout.execute("user_token_here").await?;
-/// ```
+/// requires `StatefulTokenRepository` - JWT tokens are stateless and cannot be revoked server-side
 pub struct LogoutAction<T: StatefulTokenRepository> {
     token_repository: T,
 }
 
 impl<T: StatefulTokenRepository> LogoutAction<T> {
+    /// Creates a new `LogoutAction`.
+    ///
+    /// Revokes the provided access token, invalidating the user's session.
     pub fn new(token_repository: T) -> Self {
         LogoutAction { token_repository }
     }
 
-    /// Revokes the given access token, effectively logging the user out.
+    /// Logs out a user by revoking their access token.
     ///
-    /// After this call, the token will no longer be valid for authentication.
+    /// # Returns
+    ///
+    /// - `Ok(())` - token revoked successfully
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "logout", skip_all, err)

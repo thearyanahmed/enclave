@@ -7,12 +7,8 @@ use chrono::{Duration, Utc};
 use crate::rate_limit::RateLimitStore;
 use crate::{AuthError, PasswordResetRepository, PasswordResetToken, UserRepository};
 
-/// Configuration for password reset behavior.
 #[derive(Debug, Clone)]
 pub struct ForgotPasswordConfig {
-    /// How long password reset tokens remain valid.
-    ///
-    /// Default: 1 hour
     pub password_reset_expiry: Duration,
 }
 
@@ -25,7 +21,6 @@ impl Default for ForgotPasswordConfig {
 }
 
 impl ForgotPasswordConfig {
-    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             password_reset_expiry: tokens.password_reset_expiry,
@@ -33,44 +28,17 @@ impl ForgotPasswordConfig {
     }
 }
 
-/// Configuration for rate limiting.
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use enclave::actions::RateLimitConfig;
-/// use enclave::rate_limit::InMemoryStore;
-/// use chrono::Duration;
-/// use std::sync::Arc;
-///
-/// // Default: 120 requests per minute
-/// let config = RateLimitConfig::new(Arc::new(InMemoryStore::new()));
-///
-/// // Custom: 60 requests per hour
-/// let config = RateLimitConfig::new(Arc::new(InMemoryStore::new()))
-///     .max_requests(60)
-///     .window(Duration::hours(1));
-/// ```
 #[cfg(feature = "rate_limit")]
 #[derive(Clone)]
 pub struct RateLimitConfig {
-    /// The store to use for tracking rate limits.
     pub store: Arc<dyn RateLimitStore>,
-
-    /// Maximum number of requests allowed per window.
-    ///
-    /// Default: 120
     pub max_requests: u32,
-
-    /// Time window for rate limiting.
-    ///
-    /// Default: 1 minute
     pub window: Duration,
 }
 
 #[cfg(feature = "rate_limit")]
 impl RateLimitConfig {
-    /// Creates a new rate limit config with default settings (120 requests per minute).
+    /// default: 120 requests per minute
     pub fn new(store: Arc<dyn RateLimitStore>) -> Self {
         Self {
             store,
@@ -79,14 +47,12 @@ impl RateLimitConfig {
         }
     }
 
-    /// Sets the maximum number of requests allowed per window.
     #[must_use]
     pub fn max_requests(mut self, max_requests: u32) -> Self {
         self.max_requests = max_requests;
         self
     }
 
-    /// Sets the time window for rate limiting.
     #[must_use]
     pub fn window(mut self, window: Duration) -> Self {
         self.window = window;
@@ -107,6 +73,11 @@ where
 }
 
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
+    /// Creates a new `ForgotPasswordAction` with default configuration.
+    ///
+    /// Default: 1 hour token expiry. For custom settings, use [`with_config`].
+    ///
+    /// [`with_config`]: Self::with_config
     pub fn new(user_repository: U, reset_repository: P) -> Self {
         Self::with_config(
             user_repository,
@@ -115,6 +86,7 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         )
     }
 
+    /// Creates a new `ForgotPasswordAction` with custom configuration.
     pub fn with_config(
         user_repository: U,
         reset_repository: P,
@@ -129,7 +101,6 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
         }
     }
 
-    /// Sets the configuration.
     #[must_use]
     pub fn config(mut self, config: ForgotPasswordConfig) -> Self {
         self.config = config;
@@ -139,47 +110,28 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
 
 #[cfg(feature = "rate_limit")]
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
-    /// Adds rate limiting to the password reset action.
+    /// Enables rate limiting for password reset requests.
     ///
-    /// # Example
+    /// Rate limiting is keyed by the provided `rate_limit_key` in [`execute`]
+    /// (typically the client IP address).
     ///
-    /// ```rust,ignore
-    /// use enclave::actions::{ForgotPasswordAction, RateLimitConfig};
-    /// use enclave::rate_limit::InMemoryStore;
-    /// use chrono::Duration;
-    /// use std::sync::Arc;
-    ///
-    /// // Default: 120 requests per minute
-    /// let action = ForgotPasswordAction::new(user_repo, reset_repo)
-    ///     .with_rate_limit(RateLimitConfig::new(Arc::new(InMemoryStore::new())));
-    ///
-    /// // Custom: 5 requests per hour
-    /// let action = ForgotPasswordAction::new(user_repo, reset_repo)
-    ///     .with_rate_limit(
-    ///         RateLimitConfig::new(Arc::new(InMemoryStore::new()))
-    ///             .max_requests(5)
-    ///             .window(Duration::hours(1))
-    ///     );
-    /// ```
+    /// [`execute`]: Self::execute
     #[must_use]
     pub fn with_rate_limit(mut self, config: RateLimitConfig) -> Self {
         self.rate_limit = Some(config);
         self
     }
 
-    /// Initiates a password reset for the given email.
+    /// Requests a password reset token for the given email.
     ///
     /// Rate limiting is applied by the provided key (typically client IP).
     ///
-    /// Returns `Ok(Some(token))` if a user with that email exists and a reset token was created.
-    /// Returns `Ok(None)` if no user exists with that email (prevents user enumeration).
-    /// Returns `Err(AuthError::TooManyAttempts)` if rate limited.
-    /// Returns `Err` for other errors (database failures, etc.).
+    /// # Returns
     ///
-    /// # Security
-    ///
-    /// This method intentionally does not reveal whether a user exists.
-    /// The rate limit response is the same whether or not the email exists.
+    /// - `Ok(Some(token))` - user exists and reset token was created
+    /// - `Ok(None)` - no user with that email (prevents user enumeration)
+    /// - `Err(AuthError::TooManyAttempts)` - rate limited
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "forgot_password", skip_all, err)
@@ -205,17 +157,13 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
 
 #[cfg(not(feature = "rate_limit"))]
 impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
-    /// Initiates a password reset for the given email.
+    /// Requests a password reset token for the given email.
     ///
-    /// Returns `Ok(Some(token))` if a user with that email exists and a reset token was created.
-    /// Returns `Ok(None)` if no user exists with that email (prevents user enumeration).
-    /// Returns `Err` only for actual errors (database failures, etc.).
+    /// # Returns
     ///
-    /// # Security
-    ///
-    /// This method intentionally does not reveal whether a user exists.
-    /// Always show a generic message like "If an account exists, a reset email has been sent"
-    /// regardless of the return value.
+    /// - `Ok(Some(token))` - user exists and reset token was created
+    /// - `Ok(None)` - no user with that email (prevents user enumeration)
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "forgot_password", skip_all, err)

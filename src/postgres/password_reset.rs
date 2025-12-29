@@ -70,7 +70,6 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
             AuthError::DatabaseError(e.to_string())
         })?;
 
-        // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| PasswordResetToken {
             token: SecretString::new(token),
             user_id: r.user_id,

@@ -16,7 +16,11 @@ where
 }
 
 impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P, Argon2Hasher> {
-    /// Creates a new `ResetPasswordAction` with the default password policy and hasher.
+    /// Creates a new `ResetPasswordAction` with the default password policy and Argon2 hasher.
+    ///
+    /// For custom password requirements, use [`with_policy`].
+    ///
+    /// [`with_policy`]: Self::with_policy
     pub fn new(user_repository: U, reset_repository: P) -> Self {
         Self {
             user_repository,
@@ -27,6 +31,10 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P, Ar
     }
 
     /// Creates a new `ResetPasswordAction` with a custom password policy.
+    ///
+    /// Use [`PasswordPolicy::strict()`] for stronger password requirements.
+    ///
+    /// [`PasswordPolicy::strict()`]: crate::validators::PasswordPolicy::strict
     pub fn with_policy(
         user_repository: U,
         reset_repository: P,
@@ -44,7 +52,9 @@ impl<U: UserRepository, P: PasswordResetRepository> ResetPasswordAction<U, P, Ar
 impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
     ResetPasswordAction<U, P, H>
 {
-    /// Creates a new `ResetPasswordAction` with a custom password policy and hasher.
+    /// Creates a new `ResetPasswordAction` with a custom password hasher.
+    ///
+    /// Use this for testing with mock hashers or alternative algorithms.
     pub fn with_hasher(
         user_repository: U,
         reset_repository: P,
@@ -59,6 +69,17 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
         }
     }
 
+    /// Resets the user's password using a valid reset token.
+    ///
+    /// The token is single-use and deleted after successful password reset.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` - password reset successfully
+    /// - `Err(AuthError::TokenInvalid)` - token not found
+    /// - `Err(AuthError::TokenExpired)` - token has expired
+    /// - `Err(AuthError::Validation(_))` - new password fails policy validation
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "reset_password", skip_all, err)

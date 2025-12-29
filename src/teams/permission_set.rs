@@ -1,37 +1,14 @@
-//! Compact permission storage for team members.
-//!
-//! `PermissionSet` provides a way to store and check multiple permissions
-//! efficiently, with JSON serialization for database storage.
-
 use std::collections::HashMap;
 
 use super::traits::{Action, Permission, Resource};
 
-/// A set of permissions for a team member.
-///
-/// Permissions are stored as a map of resources to their allowed actions.
-/// This enables efficient lookup and compact JSON storage.
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use enclave::teams::PermissionSet;
-///
-/// let mut perms = PermissionSet::new();
-/// perms.grant(AppResource::Project, AppAction::Create);
-/// perms.grant(AppResource::Project, AppAction::Read);
-/// perms.grant(AppResource::Member, AppAction::All);
-///
-/// assert!(perms.can(&AppResource::Project, &AppAction::Create));
-/// assert!(perms.can(&AppResource::Member, &AppAction::Delete)); // All grants everything
-/// ```
+/// resource -> actions map with JSON serialization for database storage
 #[derive(Debug, Clone)]
 pub struct PermissionSet<R, A>
 where
     R: Resource,
     A: Action,
 {
-    /// Map of resource -> list of actions.
     permissions: HashMap<R, Vec<A>>,
 }
 
@@ -50,30 +27,23 @@ where
     R: Resource,
     A: Action,
 {
-    /// Create an empty permission set.
     pub fn new() -> Self {
         Self {
             permissions: HashMap::new(),
         }
     }
 
-    /// Grant a permission for a resource and action.
     pub fn grant(&mut self, resource: R, action: A) {
         self.permissions.entry(resource).or_default().push(action);
     }
 
-    /// Check if the permission set allows an action on a resource.
-    ///
-    /// Returns true if:
-    /// - The exact resource+action is granted, or
-    /// - The resource has an "all" action granted
+    /// returns true if exact match or resource has "all" action
     pub fn can(&self, resource: &R, action: &A) -> bool {
         self.permissions
             .get(resource)
             .is_some_and(|actions| actions.iter().any(|a| a.is_all() || a == action))
     }
 
-    /// Check if any permission in this set grants the requested access.
     pub fn has_permission<P>(&self, permission: &P) -> bool
     where
         P: Permission<Resource = R, Action = A>,
@@ -81,12 +51,10 @@ where
         self.can(permission.resource(), permission.action())
     }
 
-    /// Remove all permissions for a resource.
     pub fn revoke_resource(&mut self, resource: &R) {
         self.permissions.remove(resource);
     }
 
-    /// Remove a specific action from a resource.
     pub fn revoke(&mut self, resource: &R, action: &A) {
         if let Some(actions) = self.permissions.get_mut(resource) {
             actions.retain(|a| a != action);
@@ -96,29 +64,22 @@ where
         }
     }
 
-    /// Get all resources that have permissions.
     pub fn resources(&self) -> impl Iterator<Item = &R> {
         self.permissions.keys()
     }
 
-    /// Get all actions for a resource.
     pub fn actions_for(&self, resource: &R) -> Option<&[A]> {
         self.permissions.get(resource).map(Vec::as_slice)
     }
 
-    /// Check if the permission set is empty.
     pub fn is_empty(&self) -> bool {
         self.permissions.is_empty()
     }
 
-    /// Get the number of resources with permissions.
     pub fn len(&self) -> usize {
         self.permissions.len()
     }
 
-    /// Serialize to JSON for database storage.
-    ///
-    /// Format: `{"resource1": ["action1", "action2"], "resource2": ["all"]}`
     pub fn to_json(&self) -> String {
         let map: HashMap<&str, Vec<&str>> = self
             .permissions
@@ -129,9 +90,7 @@ where
         serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_owned())
     }
 
-    /// Deserialize from JSON.
-    ///
-    /// Returns None if parsing fails or if any resource/action is unrecognized.
+    /// returns None if parsing fails or any resource/action is unrecognized
     pub fn from_json(json: &str) -> Option<Self> {
         let map: HashMap<String, Vec<String>> = serde_json::from_str(json).ok()?;
 
@@ -149,7 +108,6 @@ where
     }
 }
 
-/// Builder for creating permission sets with a fluent API.
 #[must_use]
 pub struct PermissionSetBuilder<R, A>
 where
@@ -164,20 +122,17 @@ where
     R: Resource,
     A: Action,
 {
-    /// Start building a new permission set.
     pub fn new() -> Self {
         Self {
             set: PermissionSet::new(),
         }
     }
 
-    /// Grant a permission.
     pub fn grant(mut self, resource: R, action: A) -> Self {
         self.set.grant(resource, action);
         self
     }
 
-    /// Build the permission set.
     pub fn build(self) -> PermissionSet<R, A> {
         self.set
     }

@@ -1,8 +1,3 @@
-//! `SQLite` database backend implementations.
-//!
-//! This module provides `SQLite`-backed implementations for all repository traits.
-//! Enable the `sqlx_sqlite` feature to use these implementations.
-
 #[cfg(feature = "audit_log")]
 mod audit_log;
 mod email_verification;
@@ -36,11 +31,6 @@ pub use teams::{
 pub use token::SqliteTokenRepository;
 pub use user::SqliteUserRepository;
 
-/// Creates all `SQLite` repository instances from a connection pool.
-///
-/// Returns the core repositories needed for authentication.
-/// For audit logging, enable the `audit_log` feature and create
-/// `SqliteAuditLogRepository` manually.
 pub fn create_repositories(
     pool: SqlitePool,
 ) -> (

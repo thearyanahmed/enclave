@@ -1,5 +1,3 @@
-//! HTTP handlers for Axum teams endpoints.
-
 use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
@@ -20,13 +18,6 @@ use crate::teams::{
 };
 use crate::{TokenRepository, UserRepository, crypto};
 
-// =============================================================================
-// Team CRUD handlers
-// =============================================================================
-
-/// Create a new team.
-///
-/// POST /teams
 pub async fn create_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -66,9 +57,6 @@ where
     }
 }
 
-/// List all teams the user belongs to.
-///
-/// GET /teams
 pub async fn list_user_teams<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -99,9 +87,6 @@ where
     }
 }
 
-/// Get a team by ID.
-///
-/// GET /teams/:id
 pub async fn get_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -156,9 +141,6 @@ where
     }
 }
 
-/// Update a team.
-///
-/// PUT /teams/:id
 pub async fn update_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -217,9 +199,6 @@ where
     }
 }
 
-/// Delete a team.
-///
-/// DELETE /teams/:id
 pub async fn delete_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -279,9 +258,6 @@ where
     }
 }
 
-/// Transfer team ownership to another user.
-///
-/// POST /teams/:id/transfer
 pub async fn transfer_ownership<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -365,13 +341,6 @@ where
     }
 }
 
-// =============================================================================
-// Member handlers
-// =============================================================================
-
-/// List all members of a team.
-///
-/// GET /teams/:id/members
 pub async fn list_members<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -425,9 +394,6 @@ where
     }
 }
 
-/// Add a member to a team directly (by user ID).
-///
-/// POST /teams/:id/members
 pub async fn add_member<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -517,9 +483,6 @@ where
     }
 }
 
-/// Update a member's role.
-///
-/// `PUT /teams/:id/members/:user_id`
 pub async fn update_member_role<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -603,9 +566,6 @@ where
     }
 }
 
-/// Remove a member from a team.
-///
-/// `DELETE /teams/:id/members/:user_id`
 pub async fn remove_member<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -681,13 +641,6 @@ where
     }
 }
 
-// =============================================================================
-// Invitation handlers
-// =============================================================================
-
-/// Create an invitation to join a team.
-///
-/// POST /teams/:id/invitations
 pub async fn create_invitation<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -763,9 +716,6 @@ where
     }
 }
 
-/// List pending invitations for a team.
-///
-/// GET /teams/:id/invitations
 pub async fn list_invitations<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -825,9 +775,6 @@ where
     }
 }
 
-/// Delete (cancel) an invitation.
-///
-/// `DELETE /teams/:id/invitations/:invitation_id`
 pub async fn delete_invitation<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -918,9 +865,6 @@ where
     }
 }
 
-/// Accept an invitation to join a team.
-///
-/// POST /invitations/accept
 pub async fn accept_invitation<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -1045,13 +989,6 @@ where
         .into_response()
 }
 
-// =============================================================================
-// Context handlers
-// =============================================================================
-
-/// Get the current user's team context.
-///
-/// GET /me/team
 pub async fn get_current_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -1105,9 +1042,6 @@ where
     }
 }
 
-/// Set the current user's team context.
-///
-/// PUT /me/team
 pub async fn set_current_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
@@ -1159,9 +1093,6 @@ where
     }
 }
 
-/// Clear the current user's team context.
-///
-/// DELETE /me/team
 pub async fn clear_current_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,

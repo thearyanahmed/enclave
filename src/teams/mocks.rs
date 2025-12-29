@@ -1,7 +1,3 @@
-//! Mock implementations for team repositories.
-//!
-//! These are useful for testing without a database.
-
 #![allow(clippy::significant_drop_tightening)]
 
 use std::collections::HashMap;
@@ -21,14 +17,12 @@ use super::traits::{Action, Resource};
 use super::types::{Team, TeamInvitation, TeamMembership, UserTeamContext};
 use crate::AuthError;
 
-/// Mock team repository.
 pub struct MockTeamRepository {
     teams: RwLock<HashMap<i32, Team>>,
     next_id: AtomicI32,
 }
 
 impl MockTeamRepository {
-    /// Create a new mock repository.
     pub fn new() -> Self {
         Self {
             teams: RwLock::new(HashMap::new()),
@@ -141,14 +135,12 @@ impl TeamRepository for MockTeamRepository {
     }
 }
 
-/// Mock team membership repository.
 pub struct MockTeamMembershipRepository {
     memberships: RwLock<HashMap<i32, TeamMembership>>,
     next_id: AtomicI32,
 }
 
 impl MockTeamMembershipRepository {
-    /// Create a new mock repository.
     pub fn new() -> Self {
         Self {
             memberships: RwLock::new(HashMap::new()),
@@ -265,14 +257,12 @@ impl TeamMembershipRepository for MockTeamMembershipRepository {
     }
 }
 
-/// Mock team invitation repository.
 pub struct MockTeamInvitationRepository {
     invitations: RwLock<HashMap<i32, TeamInvitation>>,
     next_id: AtomicI32,
 }
 
 impl MockTeamInvitationRepository {
-    /// Create a new mock repository.
     pub fn new() -> Self {
         Self {
             invitations: RwLock::new(HashMap::new()),
@@ -395,7 +385,6 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
     }
 }
 
-/// Mock team member permission repository.
 pub struct MockTeamMemberPermissionRepository<R, A>
 where
     R: Resource,
@@ -410,7 +399,6 @@ where
     R: Resource,
     A: Action,
 {
-    /// Create a new mock repository.
     pub fn new() -> Self {
         Self {
             permissions: RwLock::new(HashMap::new()),
@@ -513,13 +501,11 @@ where
     }
 }
 
-/// Mock user team context repository.
 pub struct MockUserTeamContextRepository {
     contexts: RwLock<HashMap<i32, UserTeamContext>>,
 }
 
 impl MockUserTeamContextRepository {
-    /// Create a new mock repository.
     pub fn new() -> Self {
         Self {
             contexts: RwLock::new(HashMap::new()),

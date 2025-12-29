@@ -4,12 +4,8 @@ use chrono::{Duration, Utc};
 use super::forgot_password::RateLimitConfig;
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
 
-/// Configuration for email verification behavior.
 #[derive(Debug, Clone)]
 pub struct SendVerificationConfig {
-    /// How long email verification tokens remain valid.
-    ///
-    /// Default: 24 hours
     pub email_verification_expiry: Duration,
 }
 
@@ -22,7 +18,6 @@ impl Default for SendVerificationConfig {
 }
 
 impl SendVerificationConfig {
-    /// Creates config from a `TokenConfig`.
     pub fn from_token_config(tokens: &crate::config::TokenConfig) -> Self {
         Self {
             email_verification_expiry: tokens.email_verification_expiry,
@@ -39,6 +34,11 @@ pub struct SendVerificationAction<U: UserRepository, E: EmailVerificationReposit
 }
 
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
+    /// Creates a new `SendVerificationAction` with default configuration.
+    ///
+    /// Default: 24 hour token expiry. For custom settings, use [`with_config`].
+    ///
+    /// [`with_config`]: Self::with_config
     pub fn new(user_repository: U, verification_repository: E) -> Self {
         Self::with_config(
             user_repository,
@@ -47,6 +47,7 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
         )
     }
 
+    /// Creates a new `SendVerificationAction` with custom configuration.
     pub fn with_config(
         user_repository: U,
         verification_repository: E,
@@ -61,7 +62,6 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
         }
     }
 
-    /// Sets the configuration.
     #[must_use]
     pub fn config(mut self, config: SendVerificationConfig) -> Self {
         self.config = config;
@@ -71,16 +71,29 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
 
 #[cfg(feature = "rate_limit")]
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
-    /// Adds rate limiting to the send verification action.
+    /// Enables rate limiting for verification email requests.
+    ///
+    /// Rate limiting is keyed by the provided `rate_limit_key` in [`execute`]
+    /// (typically the client IP address).
+    ///
+    /// [`execute`]: Self::execute
     #[must_use]
     pub fn with_rate_limit(mut self, config: RateLimitConfig) -> Self {
         self.rate_limit = Some(config);
         self
     }
 
-    /// Sends a verification email to the user.
+    /// Creates an email verification token for the user.
     ///
     /// Rate limiting is applied by the provided key (typically client IP).
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(token)` - verification token created
+    /// - `Err(AuthError::UserNotFound)` - user does not exist
+    /// - `Err(AuthError::EmailAlreadyVerified)` - email already verified
+    /// - `Err(AuthError::TooManyAttempts)` - rate limited
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "send_verification", skip_all, err)
@@ -106,7 +119,14 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
 
 #[cfg(not(feature = "rate_limit"))]
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
-    /// Sends a verification email to the user.
+    /// Creates an email verification token for the user.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(token)` - verification token created
+    /// - `Err(AuthError::UserNotFound)` - user does not exist
+    /// - `Err(AuthError::EmailAlreadyVerified)` - email already verified
+    /// - `Err(_)` - database or other errors
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(name = "send_verification", skip_all, err)

@@ -73,7 +73,6 @@ impl MagicLinkRepository for PostgresMagicLinkRepository {
             AuthError::DatabaseError(e.to_string())
         })?;
 
-        // Return the original token (not the hash) since caller already has it
         Ok(row.map(|r| MagicLinkToken {
             token: SecretString::new(token),
             user_id: r.user_id,

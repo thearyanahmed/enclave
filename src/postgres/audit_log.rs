@@ -43,7 +43,6 @@ fn string_to_event_type(s: &str) -> AuditEventType {
         "email_verified" => AuditEventType::EmailVerified,
         "token_refreshed" => AuditEventType::TokenRefreshed,
         "account_deleted" => AuditEventType::AccountDeleted,
-        // "login_failed" and any unknown strings default to LoginFailed
         _ => AuditEventType::LoginFailed,
     }
 }

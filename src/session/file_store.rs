@@ -1,7 +1,3 @@
-//! File-based session storage.
-//!
-//! Stores sessions as JSON files in a directory.
-
 use std::path::PathBuf;
 
 use async_trait::async_trait;
@@ -12,30 +8,11 @@ use super::{Session, SessionData};
 use crate::AuthError;
 use crate::crypto::generate_token;
 
-/// File-based session storage.
-///
-/// Each session is stored as a JSON file named `{session_id}.json`
-/// in the configured directory.
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use enclave::session::FileSessionRepository;
-///
-/// let repo = FileSessionRepository::new("/var/lib/myapp/sessions")?;
-/// ```
 pub struct FileSessionRepository {
     directory: PathBuf,
 }
 
 impl FileSessionRepository {
-    /// Creates a new file session repository.
-    ///
-    /// Creates the directory if it doesn't exist.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the directory cannot be created.
     pub fn new(directory: impl Into<PathBuf>) -> Result<Self, AuthError> {
         let dir = directory.into();
         std::fs::create_dir_all(&dir).map_err(|e| {
@@ -44,12 +21,10 @@ impl FileSessionRepository {
         Ok(Self { directory: dir })
     }
 
-    /// Returns the path for a session file.
     fn session_path(&self, session_id: &str) -> PathBuf {
         self.directory.join(format!("{session_id}.json"))
     }
 
-    /// Reads session data from a file.
     fn read_session(&self, session_id: &str) -> Result<Option<SessionData>, AuthError> {
         let path = self.session_path(session_id);
 
@@ -66,7 +41,6 @@ impl FileSessionRepository {
         Ok(Some(data))
     }
 
-    /// Writes session data to a file.
     fn write_session(&self, session_id: &str, data: &SessionData) -> Result<(), AuthError> {
         let path = self.session_path(session_id);
 

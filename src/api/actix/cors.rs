@@ -1,30 +1,11 @@
 use actix_cors::Cors;
 use actix_web::http::{Method, header};
 
-/// Creates a permissive CORS configuration that allows all origins.
-///
-/// **Warning**: This is intended for development only. Do not use in production.
-///
-/// Allows:
-/// - Any origin
-/// - Any method
-/// - Any header
-/// - Credentials
+/// development only - allows all origins
 pub fn permissive() -> Cors {
     Cors::permissive()
 }
 
-/// Creates a default CORS configuration suitable for authentication APIs.
-///
-/// Allows:
-/// - Specified origins only
-/// - Common HTTP methods (GET, POST, PUT, DELETE, OPTIONS)
-/// - Common headers (Authorization, Content-Type, Accept)
-/// - Credentials (cookies, authorization headers)
-/// - Max age of 1 hour for preflight caching
-///
-/// # Arguments
-/// * `allowed_origins` - List of allowed origin URLs (e.g., `["https://example.com"]`)
 pub fn default(allowed_origins: &[&str]) -> Cors {
     let mut cors = Cors::default()
         .allowed_methods(vec![
@@ -49,15 +30,6 @@ pub fn default(allowed_origins: &[&str]) -> Cors {
     cors
 }
 
-/// Creates a restrictive CORS configuration with custom settings.
-///
-/// This is a builder-style function for more control over CORS settings.
-///
-/// # Arguments
-/// * `allowed_origins` - List of allowed origin URLs
-/// * `allowed_methods` - List of allowed HTTP methods
-/// * `allowed_headers` - List of allowed headers
-/// * `supports_credentials` - Whether to allow credentials
 pub fn custom(
     allowed_origins: &[&str],
     allowed_methods: Vec<Method>,

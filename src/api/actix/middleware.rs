@@ -7,11 +7,7 @@ use actix_web::{FromRequest, HttpRequest, HttpResponse, web};
 
 use crate::{AuthError, AuthUser, TokenRepository, UserRepository};
 
-/// Authenticated user extractor for actix-web handlers.
-///
-/// Use this in handler parameters to require authentication.
-/// The extractor validates the bearer token from the `Authorization` header
-/// and retrieves the associated user from the repository.
+/// validates bearer token from `Authorization` header and retrieves user
 #[derive(Debug, Clone)]
 pub struct AuthenticatedUser<U, T>
 where
@@ -27,18 +23,15 @@ where
     U: UserRepository,
     T: TokenRepository,
 {
-    /// Returns the inner user, consuming the wrapper.
     pub fn into_inner(self) -> AuthUser {
         self.user
     }
 
-    /// Returns a reference to the authenticated user.
     pub fn user(&self) -> &AuthUser {
         &self.user
     }
 }
 
-/// Error type for authentication failures.
 #[derive(Debug)]
 pub struct AuthenticationError {
     pub error: AuthError,
@@ -65,7 +58,6 @@ impl actix_web::ResponseError for AuthenticationError {
     }
 }
 
-/// Extracts the bearer token from the Authorization header.
 pub fn extract_bearer_token(req: &HttpRequest) -> Option<String> {
     req.headers()
         .get(header::AUTHORIZATION)?
