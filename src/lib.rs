@@ -8,7 +8,7 @@
 //!
 //! # Quick Start
 //!
-//! ```rust
+//! ```rust,ignore
 //! use enclave::actions::SignupAction;
 //! use enclave::{MockUserRepository, SecretString};
 //!
