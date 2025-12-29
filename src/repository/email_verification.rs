@@ -7,7 +7,7 @@ use crate::{AuthError, SecretString};
 #[derive(Clone, Serialize, Deserialize)]
 pub struct EmailVerificationToken {
     pub token: SecretString,
-    pub user_id: u64,
+    pub user_id: i64,
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
 }
@@ -27,7 +27,7 @@ impl std::fmt::Debug for EmailVerificationToken {
 pub trait EmailVerificationRepository {
     async fn create_verification_token(
         &self,
-        user_id: u64,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<EmailVerificationToken, AuthError>;
 
@@ -38,5 +38,5 @@ pub trait EmailVerificationRepository {
 
     async fn delete_verification_token(&self, token: &str) -> Result<(), AuthError>;
 
-    async fn prune_expired(&self) -> Result<u64, AuthError>;
+    async fn prune_expired(&self) -> Result<i64, AuthError>;
 }

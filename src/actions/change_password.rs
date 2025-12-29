@@ -135,7 +135,7 @@ impl<U: UserRepository, H: PasswordHasher> ChangePasswordAction<U, NoTokenRevoca
     )]
     pub async fn execute(
         &self,
-        user_id: u64,
+        user_id: i64,
         current_password: &SecretString,
         new_password: &SecretString,
     ) -> Result<(), AuthError> {
@@ -166,7 +166,7 @@ impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
     )]
     pub async fn execute(
         &self,
-        user_id: u64,
+        user_id: i64,
         current_password: &SecretString,
         new_password: &SecretString,
     ) -> Result<(), AuthError> {
@@ -186,7 +186,7 @@ impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
 impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
     async fn execute_password_change(
         &self,
-        user_id: u64,
+        user_id: i64,
         current_password: &SecretString,
         new_password: &SecretString,
     ) -> Result<(), AuthError> {

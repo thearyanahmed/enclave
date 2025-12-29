@@ -108,7 +108,7 @@ impl SessionRepository for FileSessionRepository {
         Ok(())
     }
 
-    async fn destroy_user_sessions(&self, user_id: u64) -> Result<(), AuthError> {
+    async fn destroy_user_sessions(&self, user_id: i64) -> Result<(), AuthError> {
         let entries = std::fs::read_dir(&self.directory).map_err(|e| {
             AuthError::DatabaseError(format!("Failed to read session directory: {e}"))
         })?;
@@ -164,7 +164,7 @@ mod tests {
 
     use super::*;
 
-    fn create_test_session_data(user_id: u64) -> SessionData {
+    fn create_test_session_data(user_id: i64) -> SessionData {
         SessionData {
             user_id,
             email: format!("user{user_id}@example.com"),

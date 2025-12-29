@@ -87,7 +87,7 @@ impl SessionRepository for InMemorySessionRepository {
         Ok(())
     }
 
-    async fn destroy_user_sessions(&self, user_id: u64) -> Result<(), AuthError> {
+    async fn destroy_user_sessions(&self, user_id: i64) -> Result<(), AuthError> {
         self.sessions
             .write()
             .map_err(|_| AuthError::DatabaseError("Lock poisoned".to_owned()))?
@@ -119,7 +119,7 @@ mod tests {
 
     use super::*;
 
-    fn create_test_session_data(user_id: u64) -> SessionData {
+    fn create_test_session_data(user_id: i64) -> SessionData {
         SessionData {
             user_id,
             email: format!("user{user_id}@example.com"),

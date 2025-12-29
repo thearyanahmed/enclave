@@ -22,7 +22,7 @@ impl RateLimitInfo {
 #[async_trait]
 pub trait RateLimitStore: Send + Sync {
     /// creates key with 1 attempt if it doesn't exist
-    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError>;
+    async fn increment(&self, key: &str, window_secs: i64) -> Result<RateLimitInfo, AuthError>;
 
     async fn get(&self, key: &str) -> Result<Option<RateLimitInfo>, AuthError>;
 
@@ -66,7 +66,7 @@ impl InMemoryStore {
 #[async_trait]
 #[allow(clippy::significant_drop_tightening)]
 impl RateLimitStore for InMemoryStore {
-    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
+    async fn increment(&self, key: &str, window_secs: i64) -> Result<RateLimitInfo, AuthError> {
         let now = Utc::now();
         let window = chrono::Duration::seconds(i64::try_from(window_secs).unwrap_or(i64::MAX));
 

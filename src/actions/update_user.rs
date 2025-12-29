@@ -16,7 +16,7 @@ impl<U: UserRepository> UpdateUserAction<U> {
     )]
     pub async fn execute(
         &self,
-        user_id: u64,
+        user_id: i64,
         name: &str,
         email: &str,
     ) -> Result<AuthUser, AuthError> {

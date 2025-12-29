@@ -62,7 +62,7 @@ pub struct VerifyMagicLinkRequest {
 
 #[derive(Debug, Serialize)]
 pub struct UserResponse {
-    pub id: u64,
+    pub id: i64,
     pub email: String,
     pub name: String,
     pub email_verified_at: Option<DateTime<Utc>>,
@@ -155,13 +155,13 @@ pub struct UpdateTeamRequest {
 #[cfg(feature = "teams")]
 #[derive(Debug, Deserialize)]
 pub struct TransferOwnershipRequest {
-    pub new_owner_id: u64,
+    pub new_owner_id: i64,
 }
 
 #[cfg(feature = "teams")]
 #[derive(Debug, Deserialize)]
 pub struct AddMemberRequest {
-    pub user_id: u64,
+    pub user_id: i64,
     pub role: String,
 }
 
@@ -187,16 +187,16 @@ pub struct AcceptInvitationRequest {
 #[cfg(feature = "teams")]
 #[derive(Debug, Deserialize)]
 pub struct SetCurrentTeamRequest {
-    pub team_id: u64,
+    pub team_id: i64,
 }
 
 #[cfg(feature = "teams")]
 #[derive(Debug, Serialize)]
 pub struct TeamResponse {
-    pub id: u64,
+    pub id: i64,
     pub name: String,
     pub slug: String,
-    pub owner_id: u64,
+    pub owner_id: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -218,9 +218,9 @@ impl From<crate::teams::Team> for TeamResponse {
 #[cfg(feature = "teams")]
 #[derive(Debug, Serialize)]
 pub struct TeamMembershipResponse {
-    pub id: u64,
-    pub team_id: u64,
-    pub user_id: u64,
+    pub id: i64,
+    pub team_id: i64,
+    pub user_id: i64,
     pub role: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -243,11 +243,11 @@ impl From<crate::teams::TeamMembership> for TeamMembershipResponse {
 #[cfg(feature = "teams")]
 #[derive(Debug, Serialize)]
 pub struct TeamInvitationResponse {
-    pub id: u64,
-    pub team_id: u64,
+    pub id: i64,
+    pub team_id: i64,
     pub email: String,
     pub role: String,
-    pub invited_by: u64,
+    pub invited_by: i64,
     pub expires_at: DateTime<Utc>,
     pub accepted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
@@ -272,8 +272,8 @@ impl From<crate::teams::TeamInvitation> for TeamInvitationResponse {
 #[cfg(feature = "teams")]
 #[derive(Debug, Serialize)]
 pub struct UserTeamContextResponse {
-    pub user_id: u64,
-    pub current_team_id: u64,
+    pub user_id: i64,
+    pub current_team_id: i64,
     pub updated_at: DateTime<Utc>,
 }
 

@@ -6,7 +6,7 @@ use crate::AuthError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthUser {
-    pub id: u64,
+    pub id: i64,
     pub email: String,
     pub name: String,
     #[serde(skip_serializing)]
@@ -66,16 +66,16 @@ impl AuthUser {
 
 #[async_trait]
 pub trait UserRepository {
-    async fn find_user_by_id(&self, id: u64) -> Result<Option<AuthUser>, AuthError>;
+    async fn find_user_by_id(&self, id: i64) -> Result<Option<AuthUser>, AuthError>;
     async fn find_user_by_email(&self, email: &str) -> Result<Option<AuthUser>, AuthError>;
     async fn create_user(&self, email: &str, hashed_password: &str) -> Result<AuthUser, AuthError>;
-    async fn update_password(&self, user_id: u64, hashed_password: &str) -> Result<(), AuthError>;
-    async fn verify_email(&self, user_id: u64) -> Result<(), AuthError>;
+    async fn update_password(&self, user_id: i64, hashed_password: &str) -> Result<(), AuthError>;
+    async fn verify_email(&self, user_id: i64) -> Result<(), AuthError>;
     async fn update_user(
         &self,
-        user_id: u64,
+        user_id: i64,
         name: &str,
         email: &str,
     ) -> Result<AuthUser, AuthError>;
-    async fn delete_user(&self, user_id: u64) -> Result<(), AuthError>;
+    async fn delete_user(&self, user_id: i64) -> Result<(), AuthError>;
 }

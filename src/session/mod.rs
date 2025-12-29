@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionData {
-    pub user_id: u64,
+    pub user_id: i64,
     pub email: String,
     pub name: String,
     pub created_at: DateTime<Utc>,

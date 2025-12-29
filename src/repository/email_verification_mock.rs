@@ -29,7 +29,7 @@ impl MockEmailVerificationRepository {
 impl EmailVerificationRepository for MockEmailVerificationRepository {
     async fn create_verification_token(
         &self,
-        user_id: u64,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<EmailVerificationToken, AuthError> {
         let token = EmailVerificationToken {
@@ -64,13 +64,13 @@ impl EmailVerificationRepository for MockEmailVerificationRepository {
         Ok(())
     }
 
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
+    async fn prune_expired(&self) -> Result<i64, AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         let now = Utc::now();
         let before = tokens.len();
         tokens.retain(|t| t.expires_at > now);
         let removed = before - tokens.len();
         drop(tokens);
-        Ok(u64::try_from(removed).unwrap_or(u64::MAX))
+        Ok(removed as i64)
     }
 }

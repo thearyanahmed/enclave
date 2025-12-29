@@ -33,10 +33,10 @@ struct TeamRecord {
 impl From<TeamRecord> for Team {
     fn from(row: TeamRecord) -> Self {
         Team {
-            id: row.id as u64,
+            id: row.id,
             name: row.name,
             slug: row.slug,
-            owner_id: row.owner_id as u64,
+            owner_id: row.owner_id,
             created_at: row.created_at,
             updated_at: row.updated_at,
         }
@@ -56,7 +56,7 @@ impl TeamRepository for SqliteTeamRepository {
         )
         .bind(&data.name)
         .bind(&data.slug)
-        .bind(data.owner_id as i64)
+        .bind(data.owner_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
@@ -68,11 +68,11 @@ impl TeamRepository for SqliteTeamRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_by_id(&self, id: u64) -> Result<Option<Team>, AuthError> {
+    async fn find_by_id(&self, id: i64) -> Result<Option<Team>, AuthError> {
         let row: Option<TeamRecord> = sqlx::query_as(
             "SELECT id, name, slug, owner_id, created_at, updated_at FROM teams WHERE id = ?",
         )
-        .bind(id as i64)
+        .bind(id)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
@@ -102,7 +102,7 @@ impl TeamRepository for SqliteTeamRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn update(
         &self,
-        id: u64,
+        id: i64,
         name: Option<&str>,
         slug: Option<&str>,
     ) -> Result<Team, AuthError> {
@@ -120,7 +120,7 @@ impl TeamRepository for SqliteTeamRepository {
                 .bind(n)
                 .bind(s)
                 .bind(now)
-                .bind(id as i64)
+                .bind(id)
                 .fetch_one(&self.pool)
                 .await
             }
@@ -134,7 +134,7 @@ impl TeamRepository for SqliteTeamRepository {
                 )
                 .bind(n)
                 .bind(now)
-                .bind(id as i64)
+                .bind(id)
                 .fetch_one(&self.pool)
                 .await
             }
@@ -148,7 +148,7 @@ impl TeamRepository for SqliteTeamRepository {
                 )
                 .bind(s)
                 .bind(now)
-                .bind(id as i64)
+                .bind(id)
                 .fetch_one(&self.pool)
                 .await
             }
@@ -156,7 +156,7 @@ impl TeamRepository for SqliteTeamRepository {
                 sqlx::query_as(
                     "SELECT id, name, slug, owner_id, created_at, updated_at FROM teams WHERE id = ?",
                 )
-                .bind(id as i64)
+                .bind(id)
                 .fetch_one(&self.pool)
                 .await
             }
@@ -173,9 +173,9 @@ impl TeamRepository for SqliteTeamRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete(&self, id: u64) -> Result<(), AuthError> {
+    async fn delete(&self, id: i64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM teams WHERE id = ?")
-            .bind(id as i64)
+            .bind(id)
             .execute(&self.pool)
             .await
             .map_err(|e| {
@@ -187,11 +187,11 @@ impl TeamRepository for SqliteTeamRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_by_owner(&self, owner_id: u64) -> Result<Vec<Team>, AuthError> {
+    async fn find_by_owner(&self, owner_id: i64) -> Result<Vec<Team>, AuthError> {
         let rows: Vec<TeamRecord> = sqlx::query_as(
             "SELECT id, name, slug, owner_id, created_at, updated_at FROM teams WHERE owner_id = ? ORDER BY created_at DESC",
         )
-        .bind(owner_id as i64)
+        .bind(owner_id)
         .fetch_all(&self.pool)
         .await
         .map_err(|e| {
@@ -203,7 +203,7 @@ impl TeamRepository for SqliteTeamRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn transfer_ownership(&self, team_id: u64, new_owner_id: u64) -> Result<Team, AuthError> {
+    async fn transfer_ownership(&self, team_id: i64, new_owner_id: i64) -> Result<Team, AuthError> {
         let now = Utc::now();
 
         let row: TeamRecord = sqlx::query_as(
@@ -213,9 +213,9 @@ impl TeamRepository for SqliteTeamRepository {
             RETURNING id, name, slug, owner_id, created_at, updated_at
             ",
         )
-        .bind(new_owner_id as i64)
+        .bind(new_owner_id)
         .bind(now)
-        .bind(team_id as i64)
+        .bind(team_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| match e {

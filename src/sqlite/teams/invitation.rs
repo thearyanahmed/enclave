@@ -36,12 +36,12 @@ struct InvitationRecord {
 impl From<InvitationRecord> for TeamInvitation {
     fn from(row: InvitationRecord) -> Self {
         TeamInvitation {
-            id: row.id as u64,
-            team_id: row.team_id as u64,
+            id: row.id,
+            team_id: row.team_id,
             email: row.email,
             role: row.role,
             token_hash: row.token_hash,
-            invited_by: row.invited_by as u64,
+            invited_by: row.invited_by,
             expires_at: row.expires_at,
             accepted_at: row.accepted_at,
             created_at: row.created_at,
@@ -60,11 +60,11 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
             RETURNING id, team_id, email, role, token_hash, invited_by, expires_at, accepted_at, created_at
             ",
         )
-        .bind(data.team_id as i64)
+        .bind(data.team_id)
         .bind(&data.email)
         .bind(&data.role)
         .bind(&data.token_hash)
-        .bind(data.invited_by as i64)
+        .bind(data.invited_by)
         .bind(data.expires_at)
         .fetch_one(&self.pool)
         .await
@@ -77,11 +77,11 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_by_id(&self, id: u64) -> Result<Option<TeamInvitation>, AuthError> {
+    async fn find_by_id(&self, id: i64) -> Result<Option<TeamInvitation>, AuthError> {
         let row: Option<InvitationRecord> = sqlx::query_as(
             "SELECT id, team_id, email, role, token_hash, invited_by, expires_at, accepted_at, created_at FROM team_invitations WHERE id = ?",
         )
-        .bind(id as i64)
+        .bind(id)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
@@ -112,7 +112,7 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_pending_by_team(&self, team_id: u64) -> Result<Vec<TeamInvitation>, AuthError> {
+    async fn find_pending_by_team(&self, team_id: i64) -> Result<Vec<TeamInvitation>, AuthError> {
         let now = Utc::now();
 
         let rows: Vec<InvitationRecord> = sqlx::query_as(
@@ -123,7 +123,7 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
             ORDER BY created_at DESC
             ",
         )
-        .bind(team_id as i64)
+        .bind(team_id)
         .bind(now)
         .fetch_all(&self.pool)
         .await
@@ -160,7 +160,7 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn mark_accepted(&self, id: u64) -> Result<TeamInvitation, AuthError> {
+    async fn mark_accepted(&self, id: i64) -> Result<TeamInvitation, AuthError> {
         let now = Utc::now();
 
         let row: InvitationRecord = sqlx::query_as(
@@ -171,7 +171,7 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
             ",
         )
         .bind(now)
-        .bind(id as i64)
+        .bind(id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| match e {
@@ -186,9 +186,9 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete(&self, id: u64) -> Result<(), AuthError> {
+    async fn delete(&self, id: i64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM team_invitations WHERE id = ?")
-            .bind(id as i64)
+            .bind(id)
             .execute(&self.pool)
             .await
             .map_err(|e| {
@@ -200,7 +200,7 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete_expired(&self) -> Result<u64, AuthError> {
+    async fn delete_expired(&self) -> Result<i64, AuthError> {
         let now = Utc::now();
 
         let result = sqlx::query("DELETE FROM team_invitations WHERE expires_at < ?")
@@ -212,6 +212,6 @@ impl TeamInvitationRepository for SqliteTeamInvitationRepository {
                 AuthError::DatabaseError(e.to_string())
             })?;
 
-        Ok(result.rows_affected())
+        Ok(result.rows_affected() as i64)
     }
 }

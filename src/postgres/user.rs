@@ -29,7 +29,7 @@ struct UserRecord {
 impl From<UserRecord> for AuthUser {
     fn from(row: UserRecord) -> Self {
         AuthUser {
-            id: row.id as u64,
+            id: row.id,
             email: row.email,
             name: row.name,
             hashed_password: row.hashed_password,
@@ -43,11 +43,11 @@ impl From<UserRecord> for AuthUser {
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_user_by_id(&self, id: u64) -> Result<Option<AuthUser>, AuthError> {
+    async fn find_user_by_id(&self, id: i64) -> Result<Option<AuthUser>, AuthError> {
         let row: Option<UserRecord> = sqlx::query_as(
             "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE id = $1"
         )
-        .bind(id as i64)
+        .bind(id)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
@@ -98,11 +98,11 @@ impl UserRepository for PostgresUserRepository {
         feature = "tracing",
         tracing::instrument(skip(self, hashed_password), err)
     )]
-    async fn update_password(&self, user_id: u64, hashed_password: &str) -> Result<(), AuthError> {
+    async fn update_password(&self, user_id: i64, hashed_password: &str) -> Result<(), AuthError> {
         let result =
             sqlx::query("UPDATE users SET hashed_password = $1, updated_at = NOW() WHERE id = $2")
                 .bind(hashed_password)
-                .bind(user_id as i64)
+                .bind(user_id)
                 .execute(&self.pool)
                 .await
                 .map_err(|e| {
@@ -118,11 +118,11 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn verify_email(&self, user_id: u64) -> Result<(), AuthError> {
+    async fn verify_email(&self, user_id: i64) -> Result<(), AuthError> {
         let result = sqlx::query(
             "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1",
         )
-        .bind(user_id as i64)
+        .bind(user_id)
         .execute(&self.pool)
         .await
         .map_err(|e| {
@@ -140,7 +140,7 @@ impl UserRepository for PostgresUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, name, email), err))]
     async fn update_user(
         &self,
-        user_id: u64,
+        user_id: i64,
         name: &str,
         email: &str,
     ) -> Result<AuthUser, AuthError> {
@@ -149,7 +149,7 @@ impl UserRepository for PostgresUserRepository {
         )
         .bind(name)
         .bind(email)
-        .bind(user_id as i64)
+        .bind(user_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| match e {
@@ -164,9 +164,9 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete_user(&self, user_id: u64) -> Result<(), AuthError> {
+    async fn delete_user(&self, user_id: i64) -> Result<(), AuthError> {
         let result = sqlx::query("DELETE FROM users WHERE id = $1")
-            .bind(user_id as i64)
+            .bind(user_id)
             .execute(&self.pool)
             .await
             .map_err(|e| {

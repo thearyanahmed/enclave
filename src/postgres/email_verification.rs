@@ -28,7 +28,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_verification_token(
         &self,
-        user_id: u64,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<EmailVerificationToken, AuthError> {
         let plain_token = generate_token_default();
@@ -38,7 +38,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
             "INSERT INTO email_verification_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3) RETURNING token_hash, user_id, expires_at, created_at"
         )
         .bind(&token_hash)
-        .bind(user_id as i64)
+        .bind(user_id)
         .bind(expires_at)
         .fetch_one(&self.pool)
         .await
@@ -49,7 +49,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
 
         Ok(EmailVerificationToken {
             token: SecretString::new(plain_token),
-            user_id: row.user_id as u64,
+            user_id: row.user_id,
             expires_at: row.expires_at,
             created_at: row.created_at,
         })
@@ -75,7 +75,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
 
         Ok(row.map(|r| EmailVerificationToken {
             token: SecretString::new(token),
-            user_id: r.user_id as u64,
+            user_id: r.user_id,
             expires_at: r.expires_at,
             created_at: r.created_at,
         }))
@@ -98,7 +98,7 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
+    async fn prune_expired(&self) -> Result<i64, AuthError> {
         let result = sqlx::query("DELETE FROM email_verification_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)
             .await
@@ -107,6 +107,6 @@ impl EmailVerificationRepository for PostgresEmailVerificationRepository {
                 AuthError::DatabaseError(e.to_string())
             })?;
 
-        Ok(result.rows_affected())
+        Ok(result.rows_affected() as i64)
     }
 }

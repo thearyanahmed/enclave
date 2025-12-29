@@ -29,7 +29,7 @@ impl JwtTokenProvider {
 impl TokenRepository for JwtTokenProvider {
     async fn create_token(
         &self,
-        user_id: u64,
+        user_id: i64,
         _expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError> {
         self.create_token_with_options(user_id, _expires_at, CreateTokenOptions::default())
@@ -38,7 +38,7 @@ impl TokenRepository for JwtTokenProvider {
 
     async fn create_token_with_options(
         &self,
-        user_id: u64,
+        user_id: i64,
         _expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError> {

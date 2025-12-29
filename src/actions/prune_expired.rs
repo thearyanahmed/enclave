@@ -6,13 +6,13 @@ use crate::{
 
 #[derive(Debug, Clone, Default)]
 pub struct PruneResult {
-    pub access_tokens: u64,
-    pub password_reset_tokens: u64,
-    pub email_verification_tokens: u64,
+    pub access_tokens: i64,
+    pub password_reset_tokens: i64,
+    pub email_verification_tokens: i64,
 }
 
 impl PruneResult {
-    pub fn total(&self) -> u64 {
+    pub fn total(&self) -> i64 {
         self.access_tokens + self.password_reset_tokens + self.email_verification_tokens
     }
 }
