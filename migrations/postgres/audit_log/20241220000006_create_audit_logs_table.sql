@@ -1,6 +1,6 @@
 CREATE TABLE audit_logs (
     id BIGSERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     event_type VARCHAR(50) NOT NULL,
     ip_address VARCHAR(45),
     user_agent TEXT,

@@ -1,5 +1,5 @@
 CREATE TABLE user_team_contexts (
-    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    current_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    current_team_id BIGINT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
