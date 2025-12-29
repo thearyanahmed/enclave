@@ -11,7 +11,10 @@ pub enum RateLimitResult {
         remaining: u32,
         reset_at: chrono::DateTime<chrono::Utc>,
     },
-    Limited { retry_after: i64, message: String },
+    Limited {
+        retry_after: i64,
+        message: String,
+    },
 }
 
 impl RateLimitResult {
