@@ -380,7 +380,7 @@ impl TeamInvitationRepository for MockTeamInvitationRepository {
         let before = invitations.len();
         invitations.retain(|_, i| i.expires_at > now);
         let after = invitations.len();
-        #[allow(clippy::as_conversions)]
+        #[allow(clippy::as_conversions, clippy::cast_possible_wrap)]
         Ok((before - after) as i64)
     }
 }

@@ -71,6 +71,6 @@ impl EmailVerificationRepository for MockEmailVerificationRepository {
         tokens.retain(|t| t.expires_at > now);
         let removed = before - tokens.len();
         drop(tokens);
-        Ok(removed as i64)
+        Ok(i64::try_from(removed).unwrap_or(0))
     }
 }

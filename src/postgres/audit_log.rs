@@ -79,7 +79,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
         let row: AuditLogRecord = sqlx::query_as(
             "INSERT INTO audit_logs (user_id, event_type, ip_address, user_agent, metadata) VALUES ($1, $2, $3, $4, $5) RETURNING id, user_id, event_type, ip_address, user_agent, metadata, created_at"
         )
-        .bind(user_id.map(|id| id))
+        .bind(user_id)
         .bind(event_type_str)
         .bind(ip_address)
         .bind(user_agent)
@@ -93,7 +93,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
 
         Ok(AuditLog {
             id: row.id,
-            user_id: row.user_id.map(|id| id),
+            user_id: row.user_id,
             event_type: string_to_event_type(&row.event_type),
             ip_address: row.ip_address,
             user_agent: row.user_agent,
@@ -124,7 +124,7 @@ impl AuditLogRepository for PostgresAuditLogRepository {
             .into_iter()
             .map(|r| AuditLog {
                 id: r.id,
-                user_id: r.user_id.map(|id| id),
+                user_id: r.user_id,
                 event_type: string_to_event_type(&r.event_type),
                 ip_address: r.ip_address,
                 user_agent: r.user_agent,

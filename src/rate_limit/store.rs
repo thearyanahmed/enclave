@@ -68,7 +68,7 @@ impl InMemoryStore {
 impl RateLimitStore for InMemoryStore {
     async fn increment(&self, key: &str, window_secs: i64) -> Result<RateLimitInfo, AuthError> {
         let now = Utc::now();
-        let window = chrono::Duration::seconds(i64::try_from(window_secs).unwrap_or(i64::MAX));
+        let window = chrono::Duration::seconds(window_secs);
 
         let mut entries = self
             .entries

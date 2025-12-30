@@ -64,7 +64,7 @@ impl RateLimitStore for SqliteRateLimitStore {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn increment(&self, key: &str, window_secs: i64) -> Result<RateLimitInfo, AuthError> {
         let now = Utc::now();
-        let new_reset_at = now + Duration::seconds(i64::try_from(window_secs).unwrap_or(i64::MAX));
+        let new_reset_at = now + Duration::seconds(window_secs);
 
         // Use UPSERT to atomically increment or create
         // SQLite 3.24.0+ supports ON CONFLICT ... DO UPDATE
