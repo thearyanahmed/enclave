@@ -122,6 +122,9 @@ pub mod sqlite;
 pub mod teams;
 pub mod validators;
 
+pub mod events;
+pub use events::register_event_listeners;
+
 use std::fmt;
 
 pub use config::{AuthConfig, RateLimitConfig, TokenConfig};
