@@ -8,5 +8,6 @@ mod logging;
 mod tracing;
 
 pub use logging::LoggingListener;
+
 #[cfg(feature = "tracing")]
 pub use self::tracing::TracingListener;

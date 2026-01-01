@@ -123,8 +123,6 @@ pub mod teams;
 pub mod validators;
 
 pub mod events;
-pub use events::register_event_listeners;
-
 use std::fmt;
 
 pub use config::{AuthConfig, RateLimitConfig, TokenConfig};
@@ -132,6 +130,7 @@ pub use crypto::{
     Argon2Hasher, DEFAULT_TOKEN_LENGTH, PasswordHasher, generate_token, generate_token_default,
     hash_token,
 };
+pub use events::register_event_listeners;
 #[cfg(feature = "audit_log")]
 pub use repository::AuditEventType;
 #[cfg(feature = "audit_log")]

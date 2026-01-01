@@ -53,8 +53,9 @@ impl Listener for LoggingListener {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use chrono::Utc;
+
+    use super::*;
 
     #[test]
     fn test_logging_listener_new() {

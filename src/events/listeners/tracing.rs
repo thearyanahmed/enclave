@@ -32,8 +32,9 @@ impl Listener for TracingListener {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use chrono::Utc;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_tracing_listener_handle() {

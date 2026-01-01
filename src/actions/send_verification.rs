@@ -1,8 +1,8 @@
 use chrono::{Duration, Utc};
 
-use crate::events::{AuthEvent, dispatch};
 #[cfg(feature = "rate_limit")]
 use super::forgot_password::RateLimitConfig;
+use crate::events::{AuthEvent, dispatch};
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
 
 #[derive(Debug, Clone)]

@@ -127,7 +127,11 @@ mod tests {
         );
 
         assert_eq!(
-            AuthEvent::UserDeleted { user_id: 1, at: now }.name(),
+            AuthEvent::UserDeleted {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "user.deleted"
         );
 
@@ -152,12 +156,20 @@ mod tests {
         );
 
         assert_eq!(
-            AuthEvent::LogoutSuccess { user_id: 1, at: now }.name(),
+            AuthEvent::LogoutSuccess {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "auth.logout.success"
         );
 
         assert_eq!(
-            AuthEvent::PasswordChanged { user_id: 1, at: now }.name(),
+            AuthEvent::PasswordChanged {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "auth.password.changed"
         );
 
@@ -171,7 +183,11 @@ mod tests {
         );
 
         assert_eq!(
-            AuthEvent::PasswordResetCompleted { user_id: 1, at: now }.name(),
+            AuthEvent::PasswordResetCompleted {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "auth.password.reset_completed"
         );
 
@@ -186,17 +202,29 @@ mod tests {
         );
 
         assert_eq!(
-            AuthEvent::EmailVerified { user_id: 1, at: now }.name(),
+            AuthEvent::EmailVerified {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "auth.email.verified"
         );
 
         assert_eq!(
-            AuthEvent::TokenRefreshed { user_id: 1, at: now }.name(),
+            AuthEvent::TokenRefreshed {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "auth.token.refreshed"
         );
 
         assert_eq!(
-            AuthEvent::AllTokensRevoked { user_id: 1, at: now }.name(),
+            AuthEvent::AllTokensRevoked {
+                user_id: 1,
+                at: now
+            }
+            .name(),
             "auth.token.all_revoked"
         );
     }
