@@ -25,7 +25,11 @@ impl IntoResponse for AppError {
             | AuthError::Validation(_)
             | AuthError::UserAlreadyExists
             | AuthError::TokenInvalid
-            | AuthError::EmailAlreadyVerified => StatusCode::BAD_REQUEST,
+            | AuthError::EmailAlreadyVerified
+            | AuthError::AlreadyMember
+            | AuthError::InvitationAlreadyAccepted
+            | AuthError::EmailMismatch => StatusCode::BAD_REQUEST,
+            AuthError::Forbidden => StatusCode::FORBIDDEN,
             AuthError::InvalidCredentials | AuthError::UserNotFound | AuthError::TokenExpired => {
                 StatusCode::UNAUTHORIZED
             }

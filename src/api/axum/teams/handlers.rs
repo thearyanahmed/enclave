@@ -2,7 +2,6 @@ use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use chrono::{Duration, Utc};
 
 use super::middleware::TeamsAuthenticatedUser;
 use super::routes::TeamsState;
@@ -13,10 +12,10 @@ use crate::api::{
     UpdateTeamRequest, UserTeamContextResponse,
 };
 use crate::teams::{
-    CreateInvitation, CreateMembership, CreateTeam, TeamInvitationRepository,
-    TeamMembershipRepository, TeamRepository, UserTeamContextRepository,
+    AcceptInvitationAction, CreateMembership, CreateTeam, InviteToTeamAction, InviteToTeamInput,
+    TeamInvitationRepository, TeamMembershipRepository, TeamRepository, UserTeamContextRepository,
 };
-use crate::{TokenRepository, UserRepository, crypto};
+use crate::{AuthError, SecretString, TokenRepository, UserRepository};
 
 pub async fn create_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
@@ -655,60 +654,39 @@ where
     IM: TeamInvitationRepository + Clone + Send + Sync + 'static,
     CM: Clone + Send + Sync + 'static,
 {
-    // Check if user is the owner
-    match state.team_repo.find_by_id(team_id).await {
-        Ok(Some(team)) => {
-            if team.owner_id != user.user().id {
-                return (
-                    StatusCode::FORBIDDEN,
-                    Json(ErrorResponse {
-                        error: "only the team owner can create invitations".to_owned(),
-                    }),
-                )
-                    .into_response();
-            }
-        }
-        Ok(None) => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(ErrorResponse {
-                    error: "team not found".to_owned(),
-                }),
-            )
-                .into_response();
-        }
-        Err(err) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse::from(err)),
-            )
-                .into_response();
-        }
-    }
+    let action = InviteToTeamAction::new(state.team_repo.clone(), state.invitation_repo.clone());
 
-    // Generate invitation token
-    let token = crypto::generate_token_default();
-    let token_hash = crypto::hash_token(&token);
-
-    let data = CreateInvitation {
+    let input = InviteToTeamInput {
         team_id,
         email: body.email,
         role: body.role,
-        token_hash,
         invited_by: user.user().id,
-        expires_at: Utc::now() + Duration::days(7),
     };
 
-    match state.invitation_repo.create(data).await {
-        Ok(invitation) => {
-            // In a real application, you would send an email with the token here
-            // For now, we return the invitation info (without the token for security)
+    match action.execute(input).await {
+        Ok(output) => {
+            // note: output.token contains the plain token to send via email
+            // the handler doesn't expose it in the response for security
             (
                 StatusCode::CREATED,
-                Json(TeamInvitationResponse::from(invitation)),
+                Json(TeamInvitationResponse::from(output.invitation)),
             )
                 .into_response()
         }
+        Err(AuthError::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "team not found".to_owned(),
+            }),
+        )
+            .into_response(),
+        Err(AuthError::Forbidden) => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "only the team owner can create invitations".to_owned(),
+            }),
+        )
+            .into_response(),
         Err(err) => {
             let error_response = ErrorResponse::from(err);
             (StatusCode::BAD_REQUEST, Json(error_response)).into_response()
@@ -878,115 +856,58 @@ where
     IM: TeamInvitationRepository + Clone + Send + Sync + 'static,
     CM: Clone + Send + Sync + 'static,
 {
-    let token_hash = crypto::hash_token(&body.token);
+    let action = AcceptInvitationAction::new(
+        state.invitation_repo.clone(),
+        state.membership_repo.clone(),
+        state.user_repo.clone(),
+    );
 
-    // Find the invitation
-    let invitation = match state.invitation_repo.find_by_token_hash(&token_hash).await {
-        Ok(Some(inv)) => inv,
-        Ok(None) => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(ErrorResponse {
-                    error: "invitation not found".to_owned(),
-                }),
-            )
-                .into_response();
-        }
-        Err(err) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse::from(err)),
-            )
-                .into_response();
-        }
-    };
+    let token = SecretString::new(body.token);
 
-    // Check if invitation is for this user's email
-    if invitation.email != user.user().email {
-        return (
-            StatusCode::FORBIDDEN,
+    match action.execute(&token, user.user().id).await {
+        Ok(membership) => (StatusCode::OK, Json(TeamMembershipResponse::from(membership)))
+            .into_response(),
+        // EmailMismatch returns same response as TokenInvalid to avoid information leakage
+        Err(AuthError::TokenInvalid | AuthError::EmailMismatch) => (
+            StatusCode::NOT_FOUND,
             Json(ErrorResponse {
-                error: "invitation is for a different email address".to_owned(),
+                error: "invitation not found".to_owned(),
             }),
         )
-            .into_response();
-    }
-
-    // Check if invitation is expired
-    if invitation.is_expired() {
-        return (
+            .into_response(),
+        Err(AuthError::TokenExpired) => (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
                 error: "invitation has expired".to_owned(),
             }),
         )
-            .into_response();
-    }
-
-    // Check if invitation is already accepted
-    if invitation.is_accepted() {
-        return (
+            .into_response(),
+        Err(AuthError::UserNotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "user not found".to_owned(),
+            }),
+        )
+            .into_response(),
+        Err(AuthError::InvitationAlreadyAccepted) => (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
                 error: "invitation has already been accepted".to_owned(),
             }),
         )
-            .into_response();
-    }
-
-    // Check if user is already a member
-    match state
-        .membership_repo
-        .find_by_team_and_user(invitation.team_id, user.user().id)
-        .await
-    {
-        Ok(Some(_)) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json(ErrorResponse {
-                    error: "you are already a member of this team".to_owned(),
-                }),
-            )
-                .into_response();
-        }
-        Ok(None) => {}
+            .into_response(),
+        Err(AuthError::AlreadyMember) => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "you are already a member of this team".to_owned(),
+            }),
+        )
+            .into_response(),
         Err(err) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse::from(err)),
-            )
-                .into_response();
+            let error_response = ErrorResponse::from(err);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)).into_response()
         }
     }
-
-    // Create membership
-    let data = CreateMembership {
-        team_id: invitation.team_id,
-        user_id: user.user().id,
-        role: invitation.role.clone(),
-    };
-
-    let membership = match state.membership_repo.create(data).await {
-        Ok(m) => m,
-        Err(err) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse::from(err)),
-            )
-                .into_response();
-        }
-    };
-
-    // Mark invitation as accepted
-    if let Err(e) = state.invitation_repo.mark_accepted(invitation.id).await {
-        log::error!(target: "enclave_auth", "msg=\"failed to mark invitation as accepted\", error=\"{e}\"");
-    }
-
-    (
-        StatusCode::OK,
-        Json(TeamMembershipResponse::from(membership)),
-    )
-        .into_response()
 }
 
 pub async fn get_current_team<U, T, TM, MM, IM, CM>(
