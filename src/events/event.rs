@@ -113,19 +113,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_event_names() {
+    fn test_user_event_names() {
         let now = Utc::now();
-
         assert_eq!(
             AuthEvent::UserRegistered {
                 user_id: 1,
-                email: "test@example.com".to_owned(),
+                email: "a@b.com".to_owned(),
                 at: now
             }
             .name(),
             "user.registered"
         );
-
         assert_eq!(
             AuthEvent::UserDeleted {
                 user_id: 1,
@@ -134,27 +132,29 @@ mod tests {
             .name(),
             "user.deleted"
         );
+    }
 
+    #[test]
+    fn test_auth_event_names() {
+        let now = Utc::now();
         assert_eq!(
             AuthEvent::LoginSuccess {
                 user_id: 1,
-                email: "test@example.com".to_owned(),
+                email: "a@b.com".to_owned(),
                 at: now
             }
             .name(),
             "auth.login.success"
         );
-
         assert_eq!(
             AuthEvent::LoginFailed {
-                email: "test@example.com".to_owned(),
-                reason: "invalid password".to_owned(),
+                email: "a@b.com".to_owned(),
+                reason: "invalid".to_owned(),
                 at: now
             }
             .name(),
             "auth.login.failed"
         );
-
         assert_eq!(
             AuthEvent::LogoutSuccess {
                 user_id: 1,
@@ -163,7 +163,11 @@ mod tests {
             .name(),
             "auth.logout.success"
         );
+    }
 
+    #[test]
+    fn test_password_event_names() {
+        let now = Utc::now();
         assert_eq!(
             AuthEvent::PasswordChanged {
                 user_id: 1,
@@ -172,16 +176,14 @@ mod tests {
             .name(),
             "auth.password.changed"
         );
-
         assert_eq!(
             AuthEvent::PasswordResetRequested {
-                email: "test@example.com".to_owned(),
+                email: "a@b.com".to_owned(),
                 at: now
             }
             .name(),
             "auth.password.reset_requested"
         );
-
         assert_eq!(
             AuthEvent::PasswordResetCompleted {
                 user_id: 1,
@@ -190,17 +192,20 @@ mod tests {
             .name(),
             "auth.password.reset_completed"
         );
+    }
 
+    #[test]
+    fn test_email_event_names() {
+        let now = Utc::now();
         assert_eq!(
             AuthEvent::EmailVerificationSent {
                 user_id: 1,
-                email: "test@example.com".to_owned(),
+                email: "a@b.com".to_owned(),
                 at: now
             }
             .name(),
             "auth.email.verification_sent"
         );
-
         assert_eq!(
             AuthEvent::EmailVerified {
                 user_id: 1,
@@ -209,7 +214,11 @@ mod tests {
             .name(),
             "auth.email.verified"
         );
+    }
 
+    #[test]
+    fn test_token_event_names() {
+        let now = Utc::now();
         assert_eq!(
             AuthEvent::TokenRefreshed {
                 user_id: 1,
@@ -218,7 +227,6 @@ mod tests {
             .name(),
             "auth.token.refreshed"
         );
-
         assert_eq!(
             AuthEvent::AllTokensRevoked {
                 user_id: 1,
