@@ -175,6 +175,15 @@ pub enum AuthError {
     EmailAlreadyVerified,
     TooManyAttempts,
     NotFound,
+    /// authorization failure (e.g., not the team owner)
+    Forbidden,
+    /// user is already a member of the team
+    AlreadyMember,
+    /// invitation has already been accepted
+    InvitationAlreadyAccepted,
+    /// invitation email doesn't match user's email.
+    /// Note: Display shows "Invalid token" to avoid leaking whether token exists
+    EmailMismatch,
     Validation(validators::ValidationError),
     ConfigurationError(String),
     DatabaseError(String),
@@ -202,12 +211,18 @@ impl fmt::Display for AuthError {
             AuthError::InvalidPassword => write!(f, "Invalid password"),
             AuthError::PasswordHashError => write!(f, "Failed to hash password"),
             AuthError::TokenExpired => write!(f, "Token has expired"),
-            AuthError::TokenInvalid => write!(f, "Invalid token"),
+            // EmailMismatch uses same message as TokenInvalid to avoid information leakage
+            AuthError::TokenInvalid | AuthError::EmailMismatch => write!(f, "Invalid token"),
             AuthError::EmailAlreadyVerified => write!(f, "Email is already verified"),
             AuthError::TooManyAttempts => {
                 write!(f, "Too many failed attempts, please try again later")
             }
             AuthError::NotFound => write!(f, "Resource not found"),
+            AuthError::Forbidden => write!(f, "Permission denied"),
+            AuthError::AlreadyMember => write!(f, "User is already a member of this team"),
+            AuthError::InvitationAlreadyAccepted => {
+                write!(f, "Invitation has already been accepted")
+            }
             AuthError::Validation(err) => write!(f, "Validation error: {err}"),
             AuthError::ConfigurationError(msg) => write!(f, "Configuration error: {msg}"),
             AuthError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
