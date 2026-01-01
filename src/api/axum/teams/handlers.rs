@@ -865,7 +865,10 @@ where
     let token = SecretString::new(body.token);
 
     match action.execute(&token, user.user().id).await {
-        Ok(membership) => (StatusCode::OK, Json(TeamMembershipResponse::from(membership)))
+        Ok(membership) => (
+            StatusCode::OK,
+            Json(TeamMembershipResponse::from(membership)),
+        )
             .into_response(),
         // EmailMismatch returns same response as TokenInvalid to avoid information leakage
         Err(AuthError::TokenInvalid | AuthError::EmailMismatch) => (

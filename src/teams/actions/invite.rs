@@ -255,7 +255,9 @@ mod tests {
         let output = result.unwrap();
         // check expiry is approximately 14 days from now
         let expected_expiry = Utc::now() + Duration::days(14);
-        let diff = (output.invitation.expires_at - expected_expiry).num_seconds().abs();
+        let diff = (output.invitation.expires_at - expected_expiry)
+            .num_seconds()
+            .abs();
         assert!(diff < 5, "expiry should be ~14 days from now");
     }
 }

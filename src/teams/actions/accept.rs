@@ -140,13 +140,14 @@ where
 
 #[cfg(all(test, feature = "mocks"))]
 mod tests {
+    use chrono::{Duration, Utc};
+
     use super::*;
     use crate::teams::{
         CreateInvitation, CreateTeam, MockTeamInvitationRepository, MockTeamMembershipRepository,
         MockTeamRepository, TeamRepository,
     };
     use crate::{AuthUser, MockUserRepository};
-    use chrono::{Duration, Utc};
 
     fn create_test_user(id: i64, email: &str) -> AuthUser {
         AuthUser {
