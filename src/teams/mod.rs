@@ -1,8 +1,13 @@
+mod actions;
 mod permission_set;
 mod repository;
 mod traits;
 mod types;
 
+pub use actions::{
+    AcceptInvitationAction, InvitationConfig, InviteToTeamAction, InviteToTeamInput,
+    InviteToTeamOutput,
+};
 pub use permission_set::{PermissionSet, PermissionSetBuilder};
 pub use repository::{
     CreateInvitation, CreateMembership, CreateTeam, TeamInvitationRepository,
