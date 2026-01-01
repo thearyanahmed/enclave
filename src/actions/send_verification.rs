@@ -100,11 +100,11 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
     )]
     pub async fn execute(
         &self,
-        user_id: i32,
+        user_id: i64,
         rate_limit_key: &str,
     ) -> Result<EmailVerificationToken, AuthError> {
         if let Some(ref rate_limit) = self.rate_limit {
-            let window_secs = u64::try_from(rate_limit.window.num_seconds().max(1)).unwrap_or(60);
+            let window_secs = rate_limit.window.num_seconds().max(1);
             let key = format!("send_verification:{rate_limit_key}");
             let info = rate_limit.store.increment(&key, window_secs).await?;
 
@@ -131,13 +131,13 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
         feature = "tracing",
         tracing::instrument(name = "send_verification", skip_all, err)
     )]
-    pub async fn execute(&self, user_id: i32) -> Result<EmailVerificationToken, AuthError> {
+    pub async fn execute(&self, user_id: i64) -> Result<EmailVerificationToken, AuthError> {
         self.execute_internal(user_id).await
     }
 }
 
 impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U, E> {
-    async fn execute_internal(&self, user_id: i32) -> Result<EmailVerificationToken, AuthError> {
+    async fn execute_internal(&self, user_id: i64) -> Result<EmailVerificationToken, AuthError> {
         let user = self.user_repository.find_user_by_id(user_id).await?;
 
         match user {

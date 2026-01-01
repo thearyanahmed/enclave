@@ -1,3 +1,11 @@
+// allow conversions between i64 (database type) and u64 (domain ID type)
+// these are intentional and safe for positive ID values stored in databases
+#![allow(
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss,
+    clippy::as_conversions
+)]
+
 #[cfg(feature = "audit_log")]
 mod audit_log;
 mod email_verification;

@@ -22,8 +22,8 @@ impl SqliteUserTeamContextRepository {
 
 #[derive(FromRow)]
 struct ContextRecord {
-    user_id: i32,
-    current_team_id: i32,
+    user_id: i64,
+    current_team_id: i64,
     updated_at: DateTime<Utc>,
 }
 
@@ -40,7 +40,7 @@ impl From<ContextRecord> for UserTeamContext {
 #[async_trait]
 impl UserTeamContextRepository for SqliteUserTeamContextRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn get_context(&self, user_id: i32) -> Result<Option<UserTeamContext>, AuthError> {
+    async fn get_context(&self, user_id: i64) -> Result<Option<UserTeamContext>, AuthError> {
         let row: Option<ContextRecord> = sqlx::query_as(
             "SELECT user_id, current_team_id, updated_at FROM user_team_contexts WHERE user_id = ?",
         )
@@ -58,8 +58,8 @@ impl UserTeamContextRepository for SqliteUserTeamContextRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn set_current_team(
         &self,
-        user_id: i32,
-        team_id: i32,
+        user_id: i64,
+        team_id: i64,
     ) -> Result<UserTeamContext, AuthError> {
         let now = Utc::now();
 
@@ -87,7 +87,7 @@ impl UserTeamContextRepository for SqliteUserTeamContextRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn clear_context(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn clear_context(&self, user_id: i64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM user_team_contexts WHERE user_id = ?")
             .bind(user_id)
             .execute(&self.pool)

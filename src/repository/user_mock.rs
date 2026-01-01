@@ -23,7 +23,7 @@ impl MockUserRepository {
 
 #[async_trait]
 impl UserRepository for MockUserRepository {
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<AuthUser>, AuthError> {
+    async fn find_user_by_id(&self, id: i64) -> Result<Option<AuthUser>, AuthError> {
         let users = self.users.lock().unwrap();
         Ok(users.iter().find(|u| u.id == id).cloned())
     }
@@ -43,7 +43,7 @@ impl UserRepository for MockUserRepository {
         Ok(user)
     }
 
-    async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
+    async fn update_password(&self, user_id: i64, hashed_password: &str) -> Result<(), AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
             hashed_password.clone_into(&mut user.hashed_password);
@@ -54,7 +54,7 @@ impl UserRepository for MockUserRepository {
         }
     }
 
-    async fn verify_email(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn verify_email(&self, user_id: i64) -> Result<(), AuthError> {
         let mut users = self.users.lock().unwrap();
         if let Some(user) = users.iter_mut().find(|u| u.id == user_id) {
             user.email_verified_at = Some(Utc::now());
@@ -67,7 +67,7 @@ impl UserRepository for MockUserRepository {
 
     async fn update_user(
         &self,
-        user_id: i32,
+        user_id: i64,
         name: &str,
         email: &str,
     ) -> Result<AuthUser, AuthError> {
@@ -82,7 +82,7 @@ impl UserRepository for MockUserRepository {
         }
     }
 
-    async fn delete_user(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn delete_user(&self, user_id: i64) -> Result<(), AuthError> {
         let mut users = self.users.lock().unwrap();
         let len_before = users.len();
         users.retain(|u| u.id != user_id);

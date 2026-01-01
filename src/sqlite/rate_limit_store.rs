@@ -38,7 +38,7 @@ impl SqliteRateLimitStore {
     /// Cleans up expired entries.
     ///
     /// Call this periodically to prevent table growth.
-    pub async fn cleanup_expired(&self) -> Result<u64, AuthError> {
+    pub async fn cleanup_expired(&self) -> Result<i64, AuthError> {
         let now = Utc::now();
         let result = sqlx::query("DELETE FROM rate_limits WHERE reset_at < ?")
             .bind(now)
@@ -49,7 +49,7 @@ impl SqliteRateLimitStore {
                 AuthError::DatabaseError(e.to_string())
             })?;
 
-        Ok(result.rows_affected())
+        Ok(result.rows_affected() as i64)
     }
 }
 
@@ -62,9 +62,9 @@ struct RateLimitRow {
 #[async_trait]
 impl RateLimitStore for SqliteRateLimitStore {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
+    async fn increment(&self, key: &str, window_secs: i64) -> Result<RateLimitInfo, AuthError> {
         let now = Utc::now();
-        let new_reset_at = now + Duration::seconds(i64::try_from(window_secs).unwrap_or(i64::MAX));
+        let new_reset_at = now + Duration::seconds(window_secs);
 
         // Use UPSERT to atomically increment or create
         // SQLite 3.24.0+ supports ON CONFLICT ... DO UPDATE

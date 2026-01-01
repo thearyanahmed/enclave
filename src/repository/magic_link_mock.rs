@@ -29,7 +29,7 @@ impl MockMagicLinkRepository {
 impl MagicLinkRepository for MockMagicLinkRepository {
     async fn create_magic_link_token(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<MagicLinkToken, AuthError> {
         let token = MagicLinkToken {
@@ -64,13 +64,14 @@ impl MagicLinkRepository for MockMagicLinkRepository {
         Ok(())
     }
 
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
+    async fn prune_expired(&self) -> Result<i64, AuthError> {
         let mut tokens = self.tokens.lock().unwrap();
         let now = Utc::now();
         let before = tokens.len();
         tokens.retain(|t| t.expires_at > now);
         let removed = before - tokens.len();
         drop(tokens);
-        Ok(u64::try_from(removed).unwrap_or(u64::MAX))
+        #[allow(clippy::cast_possible_wrap, clippy::as_conversions)]
+        Ok(removed as i64)
     }
 }

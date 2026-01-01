@@ -145,3 +145,11 @@ required-features = ["axum_api", "jwt", "mocks"]
 [[example]]
 name = "axum_postgres_server"
 required-features = ["axum_api", "sqlx_postgres"]
+
+[[example]]
+name = "sqlite_server"
+required-features = ["actix", "sqlx_sqlite"]
+
+[[example]]
+name = "axum_sqlite_server"
+required-features = ["axum_api", "sqlx_sqlite"]

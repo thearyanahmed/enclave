@@ -50,7 +50,7 @@ fn string_to_event_type(s: &str) -> AuditEventType {
 #[derive(FromRow)]
 struct AuditLogRecord {
     id: i64,
-    user_id: Option<i32>,
+    user_id: Option<i64>,
     event_type: String,
     ip_address: Option<String>,
     user_agent: Option<String>,
@@ -66,7 +66,7 @@ impl AuditLogRepository for SqliteAuditLogRepository {
     )]
     async fn log_event(
         &self,
-        user_id: Option<i32>,
+        user_id: Option<i64>,
         event_type: AuditEventType,
         ip_address: Option<&str>,
         user_agent: Option<&str>,
@@ -103,7 +103,7 @@ impl AuditLogRepository for SqliteAuditLogRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn get_user_events(
         &self,
-        user_id: i32,
+        user_id: i64,
         limit: usize,
     ) -> Result<Vec<AuditLog>, AuthError> {
         let rows: Vec<AuditLogRecord> = sqlx::query_as(

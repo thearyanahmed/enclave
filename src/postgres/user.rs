@@ -17,7 +17,7 @@ impl PostgresUserRepository {
 
 #[derive(FromRow)]
 struct UserRecord {
-    id: i32,
+    id: i64,
     email: String,
     name: String,
     hashed_password: String,
@@ -43,7 +43,7 @@ impl From<UserRecord> for AuthUser {
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_user_by_id(&self, id: i32) -> Result<Option<AuthUser>, AuthError> {
+    async fn find_user_by_id(&self, id: i64) -> Result<Option<AuthUser>, AuthError> {
         let row: Option<UserRecord> = sqlx::query_as(
             "SELECT id, email, name, hashed_password, email_verified_at, created_at, updated_at FROM users WHERE id = $1"
         )
@@ -98,7 +98,7 @@ impl UserRepository for PostgresUserRepository {
         feature = "tracing",
         tracing::instrument(skip(self, hashed_password), err)
     )]
-    async fn update_password(&self, user_id: i32, hashed_password: &str) -> Result<(), AuthError> {
+    async fn update_password(&self, user_id: i64, hashed_password: &str) -> Result<(), AuthError> {
         let result =
             sqlx::query("UPDATE users SET hashed_password = $1, updated_at = NOW() WHERE id = $2")
                 .bind(hashed_password)
@@ -118,7 +118,7 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn verify_email(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn verify_email(&self, user_id: i64) -> Result<(), AuthError> {
         let result = sqlx::query(
             "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1",
         )
@@ -140,7 +140,7 @@ impl UserRepository for PostgresUserRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, name, email), err))]
     async fn update_user(
         &self,
-        user_id: i32,
+        user_id: i64,
         name: &str,
         email: &str,
     ) -> Result<AuthUser, AuthError> {
@@ -164,7 +164,7 @@ impl UserRepository for PostgresUserRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete_user(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn delete_user(&self, user_id: i64) -> Result<(), AuthError> {
         let result = sqlx::query("DELETE FROM users WHERE id = $1")
             .bind(user_id)
             .execute(&self.pool)

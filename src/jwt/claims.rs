@@ -35,7 +35,7 @@ fn default_token_type() -> TokenType {
 }
 
 impl JwtClaims {
-    pub fn user_id(&self) -> Result<i32, AuthError> {
+    pub fn user_id(&self) -> Result<i64, AuthError> {
         self.sub.parse().map_err(|_| AuthError::TokenInvalid)
     }
 

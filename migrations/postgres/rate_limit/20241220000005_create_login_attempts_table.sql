@@ -1,5 +1,5 @@
 CREATE TABLE login_attempts (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     email VARCHAR(254) NOT NULL,
     success BOOLEAN NOT NULL,
     ip_address VARCHAR(45),

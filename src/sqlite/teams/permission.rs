@@ -51,8 +51,8 @@ where
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn get_permissions(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
     ) -> Result<PermissionSet<R, A>, AuthError> {
         let row: Option<PermissionRecord> = sqlx::query_as(
             "SELECT permissions FROM team_member_permissions WHERE team_id = ? AND user_id = ?",
@@ -78,8 +78,8 @@ where
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, permissions), err))]
     async fn set_permissions(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         permissions: &PermissionSet<R, A>,
     ) -> Result<(), AuthError> {
         let json_str = permissions.to_json();
@@ -114,8 +114,8 @@ where
     )]
     async fn grant_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         resource: R,
         action: A,
     ) -> Result<(), AuthError> {
@@ -130,8 +130,8 @@ where
     )]
     async fn revoke_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         resource: &R,
         action: &A,
     ) -> Result<(), AuthError> {
@@ -146,8 +146,8 @@ where
     )]
     async fn has_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         resource: &R,
         action: &A,
     ) -> Result<bool, AuthError> {

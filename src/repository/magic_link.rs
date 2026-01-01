@@ -7,7 +7,7 @@ use crate::{AuthError, SecretString};
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MagicLinkToken {
     pub token: SecretString,
-    pub user_id: i32,
+    pub user_id: i64,
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
 }
@@ -27,7 +27,7 @@ impl std::fmt::Debug for MagicLinkToken {
 pub trait MagicLinkRepository {
     async fn create_magic_link_token(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<MagicLinkToken, AuthError>;
 
@@ -36,5 +36,5 @@ pub trait MagicLinkRepository {
 
     async fn delete_magic_link_token(&self, token: &str) -> Result<(), AuthError>;
 
-    async fn prune_expired(&self) -> Result<u64, AuthError>;
+    async fn prune_expired(&self) -> Result<i64, AuthError>;
 }

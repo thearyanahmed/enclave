@@ -22,9 +22,9 @@ impl SqliteTeamMembershipRepository {
 
 #[derive(FromRow)]
 struct MembershipRecord {
-    id: i32,
-    team_id: i32,
-    user_id: i32,
+    id: i64,
+    team_id: i64,
+    user_id: i64,
     role: String,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
@@ -68,7 +68,7 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_by_id(&self, id: i32) -> Result<Option<TeamMembership>, AuthError> {
+    async fn find_by_id(&self, id: i64) -> Result<Option<TeamMembership>, AuthError> {
         let row: Option<MembershipRecord> = sqlx::query_as(
             "SELECT id, team_id, user_id, role, created_at, updated_at FROM team_memberships WHERE id = ?",
         )
@@ -86,8 +86,8 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn find_by_team_and_user(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
     ) -> Result<Option<TeamMembership>, AuthError> {
         let row: Option<MembershipRecord> = sqlx::query_as(
             "SELECT id, team_id, user_id, role, created_at, updated_at FROM team_memberships WHERE team_id = ? AND user_id = ?",
@@ -105,7 +105,7 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_by_team(&self, team_id: i32) -> Result<Vec<TeamMembership>, AuthError> {
+    async fn find_by_team(&self, team_id: i64) -> Result<Vec<TeamMembership>, AuthError> {
         let rows: Vec<MembershipRecord> = sqlx::query_as(
             "SELECT id, team_id, user_id, role, created_at, updated_at FROM team_memberships WHERE team_id = ? ORDER BY created_at ASC",
         )
@@ -121,7 +121,7 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn find_by_user(&self, user_id: i32) -> Result<Vec<TeamMembership>, AuthError> {
+    async fn find_by_user(&self, user_id: i64) -> Result<Vec<TeamMembership>, AuthError> {
         let rows: Vec<MembershipRecord> = sqlx::query_as(
             "SELECT id, team_id, user_id, role, created_at, updated_at FROM team_memberships WHERE user_id = ? ORDER BY created_at ASC",
         )
@@ -137,7 +137,7 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn update_role(&self, id: i32, role: &str) -> Result<TeamMembership, AuthError> {
+    async fn update_role(&self, id: i64, role: &str) -> Result<TeamMembership, AuthError> {
         let now = Utc::now();
 
         let row: MembershipRecord = sqlx::query_as(
@@ -164,7 +164,7 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete(&self, id: i32) -> Result<(), AuthError> {
+    async fn delete(&self, id: i64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM team_memberships WHERE id = ?")
             .bind(id)
             .execute(&self.pool)
@@ -178,7 +178,7 @@ impl TeamMembershipRepository for SqliteTeamMembershipRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn delete_by_team_and_user(&self, team_id: i32, user_id: i32) -> Result<(), AuthError> {
+    async fn delete_by_team_and_user(&self, team_id: i64, user_id: i64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM team_memberships WHERE team_id = ? AND user_id = ?")
             .bind(team_id)
             .bind(user_id)

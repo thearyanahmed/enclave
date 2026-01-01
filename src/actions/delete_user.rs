@@ -13,7 +13,7 @@ impl<U: UserRepository> DeleteUserAction<U> {
         feature = "tracing",
         tracing::instrument(name = "delete_user", skip_all, err)
     )]
-    pub async fn execute(&self, user_id: i32) -> Result<(), AuthError> {
+    pub async fn execute(&self, user_id: i64) -> Result<(), AuthError> {
         self.user_repository.delete_user(user_id).await?;
 
         log::info!(

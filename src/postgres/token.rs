@@ -19,7 +19,7 @@ impl PostgresTokenRepository {
 
 #[derive(FromRow)]
 struct TokenRecord {
-    user_id: i32,
+    user_id: i64,
     name: Option<String>,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
@@ -42,7 +42,7 @@ impl TokenRepository for PostgresTokenRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_token(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<AccessToken, AuthError> {
         self.create_token_with_options(user_id, expires_at, CreateTokenOptions::default())
@@ -52,7 +52,7 @@ impl TokenRepository for PostgresTokenRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, options), err))]
     async fn create_token_with_options(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: DateTime<Utc>,
         options: CreateTokenOptions,
     ) -> Result<AccessToken, AuthError> {
@@ -117,7 +117,7 @@ impl StatefulTokenRepository for PostgresTokenRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn revoke_all_user_tokens(&self, user_id: i32) -> Result<(), AuthError> {
+    async fn revoke_all_user_tokens(&self, user_id: i64) -> Result<(), AuthError> {
         sqlx::query("DELETE FROM access_tokens WHERE user_id = $1")
             .bind(user_id)
             .execute(&self.pool)
@@ -131,7 +131,7 @@ impl StatefulTokenRepository for PostgresTokenRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
+    async fn prune_expired(&self) -> Result<i64, AuthError> {
         let result = sqlx::query("DELETE FROM access_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)
             .await
@@ -140,6 +140,6 @@ impl StatefulTokenRepository for PostgresTokenRepository {
                 AuthError::DatabaseError(e.to_string())
             })?;
 
-        Ok(result.rows_affected())
+        Ok(result.rows_affected() as i64)
     }
 }

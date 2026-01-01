@@ -18,7 +18,7 @@ impl SqliteEmailVerificationRepository {
 
 #[derive(FromRow)]
 struct VerificationTokenRecord {
-    user_id: i32,
+    user_id: i64,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
 }
@@ -28,7 +28,7 @@ impl EmailVerificationRepository for SqliteEmailVerificationRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_verification_token(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<EmailVerificationToken, AuthError> {
         let plain_token = generate_token_default();
@@ -98,7 +98,7 @@ impl EmailVerificationRepository for SqliteEmailVerificationRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
+    async fn prune_expired(&self) -> Result<i64, AuthError> {
         let now = Utc::now();
         let result = sqlx::query("DELETE FROM email_verification_tokens WHERE expires_at < ?")
             .bind(now)
@@ -109,6 +109,6 @@ impl EmailVerificationRepository for SqliteEmailVerificationRepository {
                 AuthError::DatabaseError(e.to_string())
             })?;
 
-        Ok(result.rows_affected())
+        Ok(result.rows_affected() as i64)
     }
 }

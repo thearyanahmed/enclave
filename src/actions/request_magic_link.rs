@@ -142,7 +142,7 @@ impl<U: UserRepository, M: MagicLinkRepository> RequestMagicLinkAction<U, M> {
         rate_limit_key: &str,
     ) -> Result<Option<MagicLinkToken>, AuthError> {
         if let Some(ref rate_limit) = self.rate_limit {
-            let window_secs = u64::try_from(rate_limit.window.num_seconds().max(1)).unwrap_or(60);
+            let window_secs = rate_limit.window.num_seconds().max(1);
             let key = format!("magic_link:{rate_limit_key}");
             let info = rate_limit.store.increment(&key, window_secs).await?;
 

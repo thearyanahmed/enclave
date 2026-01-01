@@ -14,6 +14,6 @@ pub trait SessionRepository: Send + Sync {
         new_expires_at: DateTime<Utc>,
     ) -> Result<(), AuthError>;
     async fn destroy(&self, session_id: &str) -> Result<(), AuthError>;
-    async fn destroy_user_sessions(&self, user_id: i32) -> Result<(), AuthError>;
+    async fn destroy_user_sessions(&self, user_id: i64) -> Result<(), AuthError>;
     async fn prune_expired(&self) -> Result<u64, AuthError>;
 }

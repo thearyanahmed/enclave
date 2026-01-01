@@ -53,7 +53,7 @@ struct RateLimitRow {
 #[async_trait]
 impl RateLimitStore for PostgresRateLimitStore {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn increment(&self, key: &str, window_secs: u64) -> Result<RateLimitInfo, AuthError> {
+    async fn increment(&self, key: &str, window_secs: i64) -> Result<RateLimitInfo, AuthError> {
         let window_interval = format!("{window_secs} seconds");
 
         // Use UPSERT to atomically increment or create

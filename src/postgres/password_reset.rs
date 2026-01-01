@@ -18,7 +18,7 @@ impl PostgresPasswordResetRepository {
 
 #[derive(FromRow)]
 struct ResetTokenRecord {
-    user_id: i32,
+    user_id: i64,
     expires_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
 }
@@ -28,7 +28,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
     async fn create_reset_token(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: DateTime<Utc>,
     ) -> Result<PasswordResetToken, AuthError> {
         let plain_token = generate_token_default();
@@ -95,7 +95,7 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
     }
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), err))]
-    async fn prune_expired(&self) -> Result<u64, AuthError> {
+    async fn prune_expired(&self) -> Result<i64, AuthError> {
         let result = sqlx::query("DELETE FROM password_reset_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)
             .await
@@ -104,6 +104,6 @@ impl PasswordResetRepository for PostgresPasswordResetRepository {
                 AuthError::DatabaseError(e.to_string())
             })?;
 
-        Ok(result.rows_affected())
+        Ok(result.rows_affected() as i64)
     }
 }

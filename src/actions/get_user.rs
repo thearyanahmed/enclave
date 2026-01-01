@@ -13,7 +13,7 @@ impl<U: UserRepository> GetUserAction<U> {
         feature = "tracing",
         tracing::instrument(name = "get_user", skip_all, err)
     )]
-    pub async fn execute(&self, user_id: i32) -> Result<AuthUser, AuthError> {
+    pub async fn execute(&self, user_id: i64) -> Result<AuthUser, AuthError> {
         self.user_repository
             .find_user_by_id(user_id)
             .await?

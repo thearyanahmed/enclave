@@ -90,7 +90,7 @@ where
 pub async fn get_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -144,7 +144,7 @@ where
 pub async fn update_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
     Json(body): Json<UpdateTeamRequest>,
 ) -> impl IntoResponse
 where
@@ -202,7 +202,7 @@ where
 pub async fn delete_team<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -261,7 +261,7 @@ where
 pub async fn transfer_ownership<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
     Json(body): Json<TransferOwnershipRequest>,
 ) -> impl IntoResponse
 where
@@ -344,7 +344,7 @@ where
 pub async fn list_members<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -397,7 +397,7 @@ where
 pub async fn add_member<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
     Json(body): Json<AddMemberRequest>,
 ) -> impl IntoResponse
 where
@@ -486,7 +486,7 @@ where
 pub async fn update_member_role<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path((team_id, target_user_id)): Path<(i32, i32)>,
+    Path((team_id, target_user_id)): Path<(i64, i64)>,
     Json(body): Json<UpdateMemberRoleRequest>,
 ) -> impl IntoResponse
 where
@@ -569,7 +569,7 @@ where
 pub async fn remove_member<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path((team_id, target_user_id)): Path<(i32, i32)>,
+    Path((team_id, target_user_id)): Path<(i64, i64)>,
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -644,7 +644,7 @@ where
 pub async fn create_invitation<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
     Json(body): Json<InviteMemberRequest>,
 ) -> impl IntoResponse
 where
@@ -719,7 +719,7 @@ where
 pub async fn list_invitations<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path(team_id): Path<i32>,
+    Path(team_id): Path<i64>,
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,
@@ -778,7 +778,7 @@ where
 pub async fn delete_invitation<U, T, TM, MM, IM, CM>(
     State(state): State<TeamsState<U, T, TM, MM, IM, CM>>,
     user: TeamsAuthenticatedUser<U, T>,
-    Path((team_id, invitation_id)): Path<(i32, i32)>,
+    Path((team_id, invitation_id)): Path<(i64, i64)>,
 ) -> impl IntoResponse
 where
     U: UserRepository + Clone + Send + Sync + 'static,

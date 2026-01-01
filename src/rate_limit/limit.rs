@@ -104,8 +104,8 @@ impl Limit {
         self
     }
 
-    pub fn window_secs(&self) -> u64 {
-        u64::try_from(self.window.num_seconds()).unwrap_or(u64::MAX)
+    pub fn window_secs(&self) -> i64 {
+        self.window.num_seconds()
     }
 
     pub fn max_attempts(&self) -> u32 {

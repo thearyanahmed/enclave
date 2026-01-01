@@ -10,71 +10,71 @@ use crate::AuthError;
 pub struct CreateTeam {
     pub name: String,
     pub slug: String,
-    pub owner_id: i32,
+    pub owner_id: i64,
 }
 
 #[derive(Debug, Clone)]
 pub struct CreateMembership {
-    pub team_id: i32,
-    pub user_id: i32,
+    pub team_id: i64,
+    pub user_id: i64,
     pub role: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct CreateInvitation {
-    pub team_id: i32,
+    pub team_id: i64,
     pub email: String,
     pub role: String,
     pub token_hash: String,
-    pub invited_by: i32,
+    pub invited_by: i64,
     pub expires_at: DateTime<Utc>,
 }
 
 #[async_trait]
 pub trait TeamRepository: Send + Sync {
     async fn create(&self, data: CreateTeam) -> Result<Team, AuthError>;
-    async fn find_by_id(&self, id: i32) -> Result<Option<Team>, AuthError>;
+    async fn find_by_id(&self, id: i64) -> Result<Option<Team>, AuthError>;
     async fn find_by_slug(&self, slug: &str) -> Result<Option<Team>, AuthError>;
     async fn update(
         &self,
-        id: i32,
+        id: i64,
         name: Option<&str>,
         slug: Option<&str>,
     ) -> Result<Team, AuthError>;
-    async fn delete(&self, id: i32) -> Result<(), AuthError>;
-    async fn find_by_owner(&self, owner_id: i32) -> Result<Vec<Team>, AuthError>;
-    async fn transfer_ownership(&self, team_id: i32, new_owner_id: i32) -> Result<Team, AuthError>;
+    async fn delete(&self, id: i64) -> Result<(), AuthError>;
+    async fn find_by_owner(&self, owner_id: i64) -> Result<Vec<Team>, AuthError>;
+    async fn transfer_ownership(&self, team_id: i64, new_owner_id: i64) -> Result<Team, AuthError>;
 }
 
 #[async_trait]
 pub trait TeamMembershipRepository: Send + Sync {
     async fn create(&self, data: CreateMembership) -> Result<TeamMembership, AuthError>;
-    async fn find_by_id(&self, id: i32) -> Result<Option<TeamMembership>, AuthError>;
+    async fn find_by_id(&self, id: i64) -> Result<Option<TeamMembership>, AuthError>;
     async fn find_by_team_and_user(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
     ) -> Result<Option<TeamMembership>, AuthError>;
-    async fn find_by_team(&self, team_id: i32) -> Result<Vec<TeamMembership>, AuthError>;
-    async fn find_by_user(&self, user_id: i32) -> Result<Vec<TeamMembership>, AuthError>;
-    async fn update_role(&self, id: i32, role: &str) -> Result<TeamMembership, AuthError>;
-    async fn delete(&self, id: i32) -> Result<(), AuthError>;
-    async fn delete_by_team_and_user(&self, team_id: i32, user_id: i32) -> Result<(), AuthError>;
+    async fn find_by_team(&self, team_id: i64) -> Result<Vec<TeamMembership>, AuthError>;
+    async fn find_by_user(&self, user_id: i64) -> Result<Vec<TeamMembership>, AuthError>;
+    async fn update_role(&self, id: i64, role: &str) -> Result<TeamMembership, AuthError>;
+    async fn delete(&self, id: i64) -> Result<(), AuthError>;
+    async fn delete_by_team_and_user(&self, team_id: i64, user_id: i64) -> Result<(), AuthError>;
 }
 
 #[async_trait]
 pub trait TeamInvitationRepository: Send + Sync {
     async fn create(&self, data: CreateInvitation) -> Result<TeamInvitation, AuthError>;
-    async fn find_by_id(&self, id: i32) -> Result<Option<TeamInvitation>, AuthError>;
+    async fn find_by_id(&self, id: i64) -> Result<Option<TeamInvitation>, AuthError>;
     async fn find_by_token_hash(
         &self,
         token_hash: &str,
     ) -> Result<Option<TeamInvitation>, AuthError>;
-    async fn find_pending_by_team(&self, team_id: i32) -> Result<Vec<TeamInvitation>, AuthError>;
+    async fn find_pending_by_team(&self, team_id: i64) -> Result<Vec<TeamInvitation>, AuthError>;
     async fn find_pending_by_email(&self, email: &str) -> Result<Vec<TeamInvitation>, AuthError>;
-    async fn mark_accepted(&self, id: i32) -> Result<TeamInvitation, AuthError>;
-    async fn delete(&self, id: i32) -> Result<(), AuthError>;
-    async fn delete_expired(&self) -> Result<u64, AuthError>;
+    async fn mark_accepted(&self, id: i64) -> Result<TeamInvitation, AuthError>;
+    async fn delete(&self, id: i64) -> Result<(), AuthError>;
+    async fn delete_expired(&self) -> Result<i64, AuthError>;
 }
 
 /// separate from membership - permissions may be stored in JSON or separate table
@@ -86,37 +86,37 @@ where
 {
     async fn get_permissions(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
     ) -> Result<PermissionSet<R, A>, AuthError>;
 
     async fn set_permissions(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         permissions: &PermissionSet<R, A>,
     ) -> Result<(), AuthError>;
 
     async fn grant_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         resource: R,
         action: A,
     ) -> Result<(), AuthError>;
 
     async fn revoke_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         resource: &R,
         action: &A,
     ) -> Result<(), AuthError>;
 
     async fn has_permission(
         &self,
-        team_id: i32,
-        user_id: i32,
+        team_id: i64,
+        user_id: i64,
         resource: &R,
         action: &A,
     ) -> Result<bool, AuthError>;
@@ -124,11 +124,11 @@ where
 
 #[async_trait]
 pub trait UserTeamContextRepository: Send + Sync {
-    async fn get_context(&self, user_id: i32) -> Result<Option<UserTeamContext>, AuthError>;
+    async fn get_context(&self, user_id: i64) -> Result<Option<UserTeamContext>, AuthError>;
     async fn set_current_team(
         &self,
-        user_id: i32,
-        team_id: i32,
+        user_id: i64,
+        team_id: i64,
     ) -> Result<UserTeamContext, AuthError>;
-    async fn clear_context(&self, user_id: i32) -> Result<(), AuthError>;
+    async fn clear_context(&self, user_id: i64) -> Result<(), AuthError>;
 }

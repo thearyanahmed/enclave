@@ -12,7 +12,7 @@ use crate::{AuthError, RateLimiterRepository, SecretString, UserRepository};
 
 #[derive(Debug, serde::Serialize)]
 pub struct SessionUserResponse {
-    pub user_id: i32,
+    pub user_id: i64,
     pub email: String,
     pub name: String,
 }
@@ -154,7 +154,7 @@ struct MockTokenRepo;
 impl crate::TokenRepository for MockTokenRepo {
     async fn create_token(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: chrono::DateTime<Utc>,
     ) -> Result<crate::AccessToken, AuthError> {
         // Return a dummy token - it won't be used
@@ -169,7 +169,7 @@ impl crate::TokenRepository for MockTokenRepo {
 
     async fn create_token_with_options(
         &self,
-        user_id: i32,
+        user_id: i64,
         expires_at: chrono::DateTime<Utc>,
         options: crate::repository::CreateTokenOptions,
     ) -> Result<crate::AccessToken, AuthError> {

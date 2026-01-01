@@ -27,7 +27,7 @@ impl MockAuditLogRepository {
 impl AuditLogRepository for MockAuditLogRepository {
     async fn log_event(
         &self,
-        user_id: Option<i32>,
+        user_id: Option<i64>,
         event_type: AuditEventType,
         ip_address: Option<&str>,
         user_agent: Option<&str>,
@@ -59,7 +59,7 @@ impl AuditLogRepository for MockAuditLogRepository {
 
     async fn get_user_events(
         &self,
-        user_id: i32,
+        user_id: i64,
         limit: usize,
     ) -> Result<Vec<AuditLog>, AuthError> {
         let user_logs = {
