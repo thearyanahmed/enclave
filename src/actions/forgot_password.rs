@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use chrono::{Duration, Utc};
 
+use crate::events::{AuthEvent, dispatch};
 #[cfg(feature = "rate_limit")]
 use crate::rate_limit::RateLimitStore;
 use crate::{AuthError, PasswordResetRepository, PasswordResetToken, UserRepository};
@@ -184,6 +185,12 @@ impl<U: UserRepository, P: PasswordResetRepository> ForgotPasswordAction<U, P> {
                     .reset_repository
                     .create_reset_token(user.id, expires_at)
                     .await?;
+
+                dispatch(AuthEvent::PasswordResetRequested {
+                    email: email.to_owned(),
+                    at: Utc::now(),
+                })
+                .await;
 
                 log::info!(
                     target: "enclave_auth",

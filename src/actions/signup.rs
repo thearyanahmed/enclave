@@ -1,4 +1,7 @@
+use chrono::Utc;
+
 use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::events::{AuthEvent, dispatch};
 use crate::validators::{PasswordPolicy, validate_email};
 use crate::{AuthError, AuthUser, SecretString, UserRepository};
 
@@ -77,10 +80,17 @@ impl<R: UserRepository, H: PasswordHasher> SignupAction<R, H> {
         let hashed = self.hasher.hash(password.expose_secret())?;
         let user = self.repository.create_user(email, &hashed).await?;
 
-        let user_id = user.id;
+        dispatch(AuthEvent::UserRegistered {
+            user_id: user.id,
+            email: user.email.clone(),
+            at: Utc::now(),
+        })
+        .await;
+
         log::info!(
             target: "enclave_auth",
-            "msg=\"signup success\", user_id={user_id}"
+            "msg=\"signup success\", user_id={}",
+            user.id
         );
 
         Ok(user)

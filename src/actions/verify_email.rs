@@ -1,5 +1,6 @@
 use chrono::Utc;
 
+use crate::events::{AuthEvent, dispatch};
 use crate::{AuthError, EmailVerificationRepository, UserRepository};
 
 pub struct VerifyEmailAction<U: UserRepository, E: EmailVerificationRepository> {
@@ -39,6 +40,12 @@ impl<U: UserRepository, E: EmailVerificationRepository> VerifyEmailAction<U, E> 
                 self.verification_repository
                     .delete_verification_token(token)
                     .await?;
+
+                dispatch(AuthEvent::EmailVerified {
+                    user_id,
+                    at: Utc::now(),
+                })
+                .await;
 
                 log::info!(
                     target: "enclave_auth",

@@ -2,6 +2,7 @@ use chrono::{Duration, Utc};
 
 use crate::config::{RateLimitConfig, TokenConfig};
 use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::events::{AuthEvent, dispatch};
 use crate::{
     AccessToken, AuthError, AuthUser, RateLimiterRepository, SecretString, TokenRepository,
     UserRepository,
@@ -140,6 +141,12 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             .get_recent_failed_attempts(email, since)
             .await?;
         if failed_attempts >= self.config.max_failed_attempts {
+            dispatch(AuthEvent::LoginFailed {
+                email: email.to_owned(),
+                reason: "too many attempts".to_owned(),
+                at: Utc::now(),
+            })
+            .await;
             return Err(AuthError::TooManyAttempts);
         }
 
@@ -147,6 +154,12 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             Some(u) => u,
             None => {
                 self.rate_limiter.record_attempt(email, false, None).await?;
+                dispatch(AuthEvent::LoginFailed {
+                    email: email.to_owned(),
+                    reason: "invalid credentials".to_owned(),
+                    at: Utc::now(),
+                })
+                .await;
                 return Err(AuthError::InvalidCredentials);
             }
         };
@@ -156,6 +169,12 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             .verify(password.expose_secret(), &user.hashed_password)?
         {
             self.rate_limiter.record_attempt(email, false, None).await?;
+            dispatch(AuthEvent::LoginFailed {
+                email: email.to_owned(),
+                reason: "invalid credentials".to_owned(),
+                at: Utc::now(),
+            })
+            .await;
             return Err(AuthError::InvalidCredentials);
         }
 
@@ -169,10 +188,17 @@ impl<U: UserRepository, T: TokenRepository, R: RateLimiterRepository, H: Passwor
             .create_token(user.id, expires_at)
             .await?;
 
-        let user_id = user.id;
+        dispatch(AuthEvent::LoginSuccess {
+            user_id: user.id,
+            email: user.email.clone(),
+            at: Utc::now(),
+        })
+        .await;
+
         log::info!(
             target: "enclave_auth",
-            "msg=\"login success\", user_id={user_id}"
+            "msg=\"login success\", user_id={}",
+            user.id
         );
 
         Ok((user, token))

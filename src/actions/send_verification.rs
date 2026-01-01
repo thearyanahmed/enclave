@@ -1,5 +1,6 @@
 use chrono::{Duration, Utc};
 
+use crate::events::{AuthEvent, dispatch};
 #[cfg(feature = "rate_limit")]
 use super::forgot_password::RateLimitConfig;
 use crate::{AuthError, EmailVerificationRepository, EmailVerificationToken, UserRepository};
@@ -151,6 +152,13 @@ impl<U: UserRepository, E: EmailVerificationRepository> SendVerificationAction<U
                     .verification_repository
                     .create_verification_token(user.id, expires_at)
                     .await?;
+
+                dispatch(AuthEvent::EmailVerificationSent {
+                    user_id: user.id,
+                    email: user.email.clone(),
+                    at: Utc::now(),
+                })
+                .await;
 
                 log::info!(
                     target: "enclave_auth",

@@ -1,3 +1,6 @@
+use chrono::Utc;
+
+use crate::events::{AuthEvent, dispatch};
 use crate::{AuthError, StatefulTokenRepository};
 
 /// requires `StatefulTokenRepository` - JWT tokens are stateless and cannot be revoked server-side
@@ -24,7 +27,19 @@ impl<T: StatefulTokenRepository> LogoutAction<T> {
         tracing::instrument(name = "logout", skip_all, err)
     )]
     pub async fn execute(&self, token: &str) -> Result<(), AuthError> {
+        // find token to get user_id for the event
+        let access_token = self.token_repository.find_token(token).await?;
+        let user_id = access_token.map(|t| t.user_id);
+
         self.token_repository.revoke_token(token).await?;
+
+        if let Some(user_id) = user_id {
+            dispatch(AuthEvent::LogoutSuccess {
+                user_id,
+                at: Utc::now(),
+            })
+            .await;
+        }
 
         log::info!(
             target: "enclave_auth",

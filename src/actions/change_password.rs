@@ -1,4 +1,7 @@
+use chrono::Utc;
+
 use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::events::{AuthEvent, dispatch};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, SecretString, StatefulTokenRepository, UserRepository};
 
@@ -177,6 +180,12 @@ impl<U: UserRepository, T: StatefulTokenRepository, H: PasswordHasher>
             self.token_repository
                 .revoke_all_user_tokens(user_id)
                 .await?;
+
+            dispatch(AuthEvent::AllTokensRevoked {
+                user_id,
+                at: Utc::now(),
+            })
+            .await;
         }
 
         Ok(())
@@ -208,6 +217,12 @@ impl<U: UserRepository, T, H: PasswordHasher> ChangePasswordAction<U, T, H> {
                 self.user_repository
                     .update_password(user_id, &hashed)
                     .await?;
+
+                dispatch(AuthEvent::PasswordChanged {
+                    user_id,
+                    at: Utc::now(),
+                })
+                .await;
 
                 log::info!(
                     target: "enclave_auth",

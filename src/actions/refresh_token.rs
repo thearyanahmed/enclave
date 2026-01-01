@@ -1,5 +1,6 @@
 use chrono::{Duration, Utc};
 
+use crate::events::{AuthEvent, dispatch};
 use crate::{AccessToken, AuthError, StatefulTokenRepository};
 
 #[derive(Debug, Clone)]
@@ -83,10 +84,16 @@ impl<T: StatefulTokenRepository> RefreshTokenAction<T> {
                     .create_token(token.user_id, new_expires_at)
                     .await?;
 
-                let user_id = token.user_id;
+                dispatch(AuthEvent::TokenRefreshed {
+                    user_id: token.user_id,
+                    at: Utc::now(),
+                })
+                .await;
+
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"token refreshed\", user_id={user_id}"
+                    "msg=\"token refreshed\", user_id={}",
+                    token.user_id
                 );
 
                 Ok(new_token)

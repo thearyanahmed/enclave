@@ -1,3 +1,6 @@
+use chrono::Utc;
+
+use crate::events::{AuthEvent, dispatch};
 use crate::{AuthError, UserRepository};
 
 pub struct DeleteUserAction<U: UserRepository> {
@@ -15,6 +18,12 @@ impl<U: UserRepository> DeleteUserAction<U> {
     )]
     pub async fn execute(&self, user_id: i64) -> Result<(), AuthError> {
         self.user_repository.delete_user(user_id).await?;
+
+        dispatch(AuthEvent::UserDeleted {
+            user_id,
+            at: Utc::now(),
+        })
+        .await;
 
         log::info!(
             target: "enclave_auth",

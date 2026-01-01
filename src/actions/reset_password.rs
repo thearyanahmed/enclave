@@ -1,6 +1,7 @@
 use chrono::Utc;
 
 use crate::crypto::{Argon2Hasher, PasswordHasher};
+use crate::events::{AuthEvent, dispatch};
 use crate::validators::PasswordPolicy;
 use crate::{AuthError, PasswordResetRepository, SecretString, UserRepository};
 
@@ -103,10 +104,16 @@ impl<U: UserRepository, P: PasswordResetRepository, H: PasswordHasher>
                     .await?;
                 self.reset_repository.delete_reset_token(token).await?;
 
-                let user_id = reset_token.user_id;
+                dispatch(AuthEvent::PasswordResetCompleted {
+                    user_id: reset_token.user_id,
+                    at: Utc::now(),
+                })
+                .await;
+
                 log::info!(
                     target: "enclave_auth",
-                    "msg=\"password reset success\", user_id={user_id}"
+                    "msg=\"password reset success\", user_id={}",
+                    reset_token.user_id
                 );
 
                 Ok(())
