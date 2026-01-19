@@ -17,7 +17,7 @@ actix-web = { version = "4", optional = true }
 actix-cors = { version = "0.7", optional = true }
 argon2 = "0.5.3"
 async-trait = "0.1.89"
-chrono = { version = "0.4.42", features = ["serde"] }
+chrono = { version = "0.4.43", features = ["serde"] }
 password-hash = { version = "0.5.0", features = ["getrandom"] }
 regex = "1.11"
 serde = { version = "1.0", features = ["derive"] }
